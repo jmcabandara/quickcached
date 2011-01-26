@@ -12,6 +12,7 @@ package org.quickcached;
 public class DataCarrier implements java.io.Serializable {
 	private byte data[];
 	private String flags;
+	private int cas;
 
 	
 
@@ -24,7 +25,7 @@ public class DataCarrier implements java.io.Serializable {
 	}
 
 	public DataCarrier(byte data[]) {
-		this.data = data;
+		setData(data);
 	}
 
 	public byte[] getData() {
@@ -33,6 +34,15 @@ public class DataCarrier implements java.io.Serializable {
 
 	public void setData(byte[] data) {
 		this.data = data;
+		setCas(getCas() + 1);
+	}
+
+	public int getCas() {
+		return cas;
+	}
+
+	public void setCas(int cas) {
+		this.cas = cas;
 	}
 	
 }

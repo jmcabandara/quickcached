@@ -1,7 +1,14 @@
+
 <project name="QuickCached.Project" default="jar" basedir=".">
-    <property name="app.name"   value="QuickCached" />
-    <property name="build.dir"  value="build/classes" />
+	<property name="app.name"   value="QuickCached" />
+	<property name="build.dir"  value="build/classes" />
+	<property name="test.build.dir"  value="build/testcases" />
 	<property name="dist.dir"   value="dist" />
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${test.build.dir}" />
+	</target>
 
 	<path id="project.classpath">
 		<fileset dir="./lib/">
@@ -9,24 +16,56 @@
 		</fileset>
 	</path>
 
-    <target name="compile"  depends="clean">
-        <mkdir dir="${build.dir}"/>
-        <javac srcdir="src/main/" destdir="${build.dir}" debug="on" deprecation="on" optimize="on">
-            <include name="**/*.java"/>
+	<target name="compile"  depends="clean">
+		<mkdir dir="${build.dir}"/>
+		<javac srcdir="src/main/" destdir="${build.dir}" debug="on" deprecation="on" optimize="on" includeantruntime="false">
+			<include name="**/*.java"/>
 			<classpath refid="project.classpath"/>
-
-        </javac>
-    </target>
-
-	<target name="clean">
-		<delete dir="${build.dir}" />
+			<compilerarg line="-source 1.5" />
+		</javac>
 	</target>
 
 	<target name="jar" depends="compile">
-      <mkdir dir="${dist.dir}"/>
-		<jar jarfile="${dist.dir}/${app.name}.jar" 
+		<mkdir dir="${dist.dir}"/>
+		<jar jarfile="${dist.dir}/${app.name}.jar"
 			basedir="${build.dir}" includes="**" manifest="src/QuickCached.MF"/>
-    </target>
+	</target>
+
+	<target name="build" depends="jar, compileTests" />
+
+	<!-- junit task -->
+	<path id="project.classpath.test">
+		<fileset dir="libtest">
+			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="${test.build.dir}" >
+			<include name="*.class"/>
+		</fileset>
+	</path>
+	
+	<target name="compileTests">
+		<mkdir dir="${test.build.dir}"/>
+		<javac srcdir="src/test/" destdir="${test.build.dir}" includeantruntime="false">
+			<classpath refid="project.classpath.test"/>
+			<include name="**/*.java"/>
+			<compilerarg line="-source 1.5" />
+		</javac>
+	</target>
+
+	<target name="test" depends="compileTests">
+		<java fork="yes" classname="junit.textui.TestRunner"
+            taskname="junit" failonerror="true">
+			<arg value="org.quickcached.AllJUnitTests"/>
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
+	<!-- junit task -->
 
 </project>
 

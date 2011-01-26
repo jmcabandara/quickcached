@@ -3,8 +3,12 @@ package org.quickcached;
 import org.quickserver.net.server.*;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
+import org.quickcached.binary.BinaryPacket;
+import org.quickcached.binary.Header;
+import org.quickcached.binary.RequestHeader;
 
 
 public class Data implements ClientData {
@@ -19,6 +23,21 @@ public class Data implements ClientData {
 	private long exptime = -1;
 	private boolean noreplay;
 
+	public String getCommand() {
+		byte input[] = baos.toByteArray();
+		String data = new String(input);
+		int index = data.indexOf("\r\n");
+		if(index!=-1) {
+			data = data.substring(0, index);
+			baos.reset();
+			index = index+2;
+			baos.write(input, index, input.length-index);
+		} else {
+			data = null;
+		}
+		return data;
+	}
+
 	public byte[] getDataByte() {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		byte data[] =  baos.toByteArray();
@@ -27,6 +46,41 @@ public class Data implements ClientData {
 		int consumed = (int) dataRequiredLength+2;
 		baos.write(data, consumed, data.length-consumed);
 		return out.toByteArray();
+	}
+
+	public boolean isBinaryCommand() {
+		byte data[] =  baos.toByteArray();
+		if(HexUtil.encode(data[0]).equals("80")) {
+			return true;
+		}
+		return false;
+	}
+
+	public BinaryPacket getBinaryCommandHeader() throws Exception {
+		if(baos.size()<24) return null;
+
+		byte input[] = baos.toByteArray();
+
+		byte headerData[] = new byte[24];
+		System.arraycopy(input, 0, headerData, 0, 24);
+		RequestHeader header = RequestHeader.parse(headerData);
+
+		int lenToRead = header.getTotalBodyLength();
+		if(baos.size()<(24+lenToRead)) {
+			//todo may be it not good idea to descard parsed header
+			return null;
+		}
+
+		byte bodyData[] = new byte[lenToRead];
+		System.arraycopy(input, 24, bodyData, 0, lenToRead);
+
+		BinaryPacket packet = BinaryPacket.parseRequest(header, bodyData);
+			
+		baos.reset();
+		int index = lenToRead+24;
+		baos.write(input, index, input.length-index);
+		
+		return packet;
 	}
 
 	public boolean isMoreCommandToProcess() {
@@ -58,20 +112,7 @@ public class Data implements ClientData {
 	}
 
 
-	public String getCommand() {
-		byte input[] = baos.toByteArray();
-		String data = new String(input);
-		int index = data.indexOf("\r\n");
-		if(index!=-1) {
-			data = data.substring(0, index);
-			baos.reset();
-			index = index+2;
-			baos.write(input, index, input.length-index);
-		} else {
-			data = null;
-		}
-		return data;
-	}
+	
 
 	/**
 	 * @return the dataRequiredLength
