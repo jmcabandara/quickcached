@@ -9,7 +9,7 @@ import org.quickserver.util.logging.*;
 
 public class QuickCached {
 	public static String version = "1.0.0";
-	public static boolean DEBUG = true;
+	public static boolean DEBUG = false;
 
 	private static final int KEY_MAX_LENGTH = 250;
 

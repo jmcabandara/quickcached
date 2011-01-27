@@ -117,7 +117,7 @@
 		<debug-non-blocking-mode>false</debug-non-blocking-mode> 
 	</advanced-settings>
 
-
+	<!--
 	<qsadmin-server>
 		<port>4124</port>
 		<bind-address>127.0.0.1</bind-address>
@@ -145,5 +145,6 @@
 		  </ip-filter> 
 		</access-constraint> 
 	</qsadmin-server>
+	-->
 
 </quickserver>
