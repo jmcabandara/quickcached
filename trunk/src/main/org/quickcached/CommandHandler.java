@@ -77,7 +77,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		while(data.isMoreCommandToProcess()) {
 			if(data.isBinaryCommand()) {
-				logger.fine("BinaryCommand");
+				if(QuickCached.DEBUG) logger.fine("BinaryCommand");
 				BinaryPacket bp = null;
 				try {
 					bp = data.getBinaryCommandHeader();
@@ -87,9 +87,9 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 				}
 
 				if(bp!=null) {
-					logger.fine("BinaryCommand Start");
+					if(QuickCached.DEBUG) logger.fine("BinaryCommand Start");
 					binaryCommandProcessor.handleBinaryCommand(handler, bp);
-					logger.fine("BinaryCommand End");
+					if(QuickCached.DEBUG) logger.fine("BinaryCommand End");
 				} else {
 					break;
 				}
