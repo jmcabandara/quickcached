@@ -1,5 +1,5 @@
 
-<project name="QuickCached.Project" default="jar" basedir=".">
+<project name="QuickCached.Project" default="all" basedir=".">
 	<property name="app.name"   value="QuickCached" />
 	<property name="build.dir"  value="build/classes" />
 	<property name="test.build.dir"  value="build/testcases" />
@@ -18,10 +18,9 @@
 
 	<target name="compile"  depends="clean">
 		<mkdir dir="${build.dir}"/>
-		<javac srcdir="src/main/" destdir="${build.dir}" debug="on" deprecation="on" optimize="on" includeantruntime="false">
+		<javac srcdir="src/main/" destdir="${build.dir}" debug="on" deprecation="on" optimize="on" includeantruntime="false" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath"/>
-			<compilerarg line="-source 1.5" />
 		</javac>
 	</target>
 
@@ -31,7 +30,7 @@
 			basedir="${build.dir}" includes="**" manifest="src/QuickCached.MF"/>
 	</target>
 
-	<target name="build" depends="jar, compileTests" />
+	<target name="all" depends="jar, compileTests" />
 
 	<!-- junit task -->
 	<path id="project.classpath.test">
@@ -45,10 +44,9 @@
 	
 	<target name="compileTests">
 		<mkdir dir="${test.build.dir}"/>
-		<javac srcdir="src/test/" destdir="${test.build.dir}" includeantruntime="false">
+		<javac srcdir="src/test/" destdir="${test.build.dir}" includeantruntime="false"  target="1.5">
 			<classpath refid="project.classpath.test"/>
 			<include name="**/*.java"/>
-			<compilerarg line="-source 1.5" />
 		</javac>
 	</target>
 

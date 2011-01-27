@@ -1,5 +1,5 @@
 @echo off
-set JAVA_HOME=d:\jdk1.5.0_16
+set JAVA_HOME=g:\jdk1.5.0_16
 set JAVA=%JAVA_HOME%\bin\java
 
 set cp1=%JAVA_HOME%\lib\tools.jar;.;

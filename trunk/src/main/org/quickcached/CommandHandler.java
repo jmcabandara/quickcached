@@ -83,7 +83,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 					bp = data.getBinaryCommandHeader();
 				} catch (Exception ex) {
 					Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
-					throw new IOException(ex);
+					throw new IOException(""+ex);
 				}
 
 				if(bp!=null) {
