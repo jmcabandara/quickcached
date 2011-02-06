@@ -7,77 +7,86 @@ import java.io.*;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
-	public static String version = "1.0.0";
-	public static boolean DEBUG = false;
-	
-	private static final int KEY_MAX_LENGTH = 250;
 
-	public static void main(String args[]) throws Exception {
-		int i = 0;
+    public static String version = "1.0.0";
+    public static boolean DEBUG = false;
+    private static final int KEY_MAX_LENGTH = 250;
+
+    public static void main(String args[]) throws Exception {
+        int i = 0;
         String arg;
-		String value;
-		while(i < args.length && args[i].startsWith("-")) {
+        String value;
+        while (i < args.length && args[i].startsWith("-")) {
             arg = args[i++];
 
-			if(arg.equals("-v") || arg.equals("-vv")) {
-				SetupLoggingHook.setMakeLogFile(true);
-			}
+            if (arg.equals("-v") || arg.equals("-vv")) {
+                SetupLoggingHook.setMakeLogFile(true);
+            }
 
-			if(arg.equals("-vv")) {
-				DEBUG = true;
-			} else {
-				DOMConfigurator.configure("conf/log4j.xml");
-			}
-		}
+            if (arg.equals("-vv")) {
+                DEBUG = true;
+            } else {
+                DOMConfigurator.configure("conf/log4j.xml");
+            }
+        }
 
-		String confFile = "conf" + File.separator + "QuickCached.xml";
-		Object config[] = new Object[] {confFile};
-		
-		QuickServer quickcached = new QuickServer();
-		quickcached.initService(config);
+        String confFile = "conf" + File.separator + "QuickCached.xml";
+        Object config[] = new Object[]{confFile};
 
-		//CLI
-		//-l <ip_addr>
-			//Listen on <ip_addr>; default to INDRR_ANY.
-			//This is an important option to consider as there is no other way to secure the installation.
-			//Binding to an internal or firewalled network interface is suggested
-		//-c <num>
-			//Use <num> max simultaneous connections; the default is 1024.
-		//-p <num>
-			//Listen on TCP port <num>, the default is port 11211.
-		//-v
-			//Be verbose during the event loop; print out errors and warnings.
-		//-vv
-			//Be even more verbose; same as -v but also print client commands and responses.
+        QuickServer quickcached = new QuickServer();
+        quickcached.initService(config);
 
-		i = 0;
-		while(i < args.length && args[i].startsWith("-")) {
+        //CLI
+        //-l <ip_addr>
+        //Listen on <ip_addr>; default to INDRR_ANY.
+        //This is an important option to consider as there is no other way to secure the installation.
+        //Binding to an internal or firewalled network interface is suggested
+        //-c <num>
+        //Use <num> max simultaneous connections; the default is 1024.
+        //-p <num>
+        //Listen on TCP port <num>, the default is port 11211.
+        //-v
+        //Be verbose during the event loop; print out errors and warnings.
+        //-vv
+        //Be even more verbose; same as -v but also print client commands and responses.
+
+        i = 0;
+        while (i < args.length && args[i].startsWith("-")) {
             arg = args[i++];
 
-			if(arg.equals("-l")) {
-				value = args[i++];
-				quickcached.setBindAddr(value);
-			} else if(arg.equals("-p")) {
-				value = args[i++];
-				quickcached.setPort(Integer.parseInt(value));
-			} else if(arg.equals("-c")) {
-				value = args[i++];
-				quickcached.setMaxConnection(Integer.parseInt(value));
-			} else if(arg.equals("-h")) {
-				System.out.println("QuickCached CLI");
-				return;
-			} else {
-				//print help - TODO
-				System.out.println("Error: Bad argument passed - "+arg);
-				return;
-			}
-		}
+            if (arg.equals("-l")) {
+                value = args[i++];
+                quickcached.setBindAddr(value);
+            } else if (arg.equals("-p")) {
+                value = args[i++];
+                quickcached.setPort(Integer.parseInt(value));
+            } else if (arg.equals("-c")) {
+                value = args[i++];
+                quickcached.setMaxConnection(Integer.parseInt(value));
+            } else if (arg.equals("-h")) {
+                System.out.println("QuickCached " + version);
+                System.out.println("-p <num>      TCP port number to listen on (default: 11211)");
+                System.out.println("-l <ip_addr>  interface to listen on (default: INADDR_ANY, all addresses)");
+                System.out.println("-c <num>      max simultaneous connections");
+                System.out.println("-v            verbose (print errors/warnings while in event loop). Creates logs in log folder");
+                System.out.println("-vv           very verbose (also print client commands/reponses). Debut Mode");
+                System.out.println("-h            print this help and exit");
 
-		try {
-			if(quickcached!=null) quickcached.startServer();
-		} catch (AppException e) {
-			System.out.println("Error starting server : " + e);
-			e.printStackTrace();
-		}
-	}
+                return;
+            } else {
+                //print help - TODO
+                System.out.println("Error: Bad argument passed - " + arg);
+                return;
+            }
+        }
+
+        try {
+            if (quickcached != null) {
+                quickcached.startServer();
+            }
+        } catch (AppException e) {
+            System.out.println("Error starting server : " + e);
+            e.printStackTrace();
+        }
+    }
 }
