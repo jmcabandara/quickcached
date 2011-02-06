@@ -37,7 +37,7 @@
 		<data-type-out>Binary</data-type-out>
 	</default-data-mode>	
 
-	<console-logging-level>INFO</console-logging-level>
+	<console-logging-level>WARNING</console-logging-level>
 	<console-logging-formatter>
 		org.quickserver.util.logging.SimpleConsoleFormatter
 	</console-logging-formatter>
@@ -80,15 +80,12 @@
 	<application-configuration>
 		<prompt-type>gui</prompt-type>
 		<!--<prompt-type>console</prompt-type>-->
-		<!--
+		
 		<property>
-			<property-name>APP_PARAM1</property-name>
-			<property-value>test value</property-value>
+			<property-name>CACHE_IMPL_CLASS</property-name>
+			<property-value>org.quickcached.cache.WhirlycottCacheImpl</property-value>
 		</property>
-		<property>
-			<property-name>APP_SECRET1</property-name>
-		</property>
-		-->
+		
 	</application-configuration>
 
 	<access-constraint>
@@ -107,6 +104,10 @@
 	<init-server-hooks>
 		<class-name>org.quickcached.SetupLoggingHook</class-name>
 	</init-server-hooks>
+	<server-hooks>
+		<class-name>org.quickcached.PrepareHook</class-name>
+	</server-hooks>
+
 
 	<advanced-settings>
 		<charset>ISO-8859-1</charset>
@@ -123,7 +124,7 @@
 		<bind-address>127.0.0.1</bind-address>
 
 		<command-shell>
-			<enable>true</enable>
+			<enable>false</enable>
 		</command-shell>
 
 		<communication-logging>
@@ -146,5 +147,4 @@
 		</access-constraint> 
 	</qsadmin-server>
 	-->
-
 </quickserver>

@@ -30,6 +30,19 @@
 			basedir="${build.dir}" includes="**" manifest="src/QuickCached.MF"/>
 	</target>
 
+	<target name="run" depends="jar">
+		<java fork="yes" classname="org.quickcached.QuickCached"
+            taskname="QuickCached" failonerror="true">
+			<arg line="-l 127.0.0.1 -p 11211"/>
+			<classpath refid="project.classpath"/>
+			<classpath>
+				<fileset dir="dist">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
+
 	<target name="all" depends="jar, compileTests" />
 
 	<!-- junit task -->

@@ -18,4 +18,6 @@ version 1.0.0 [26-Jan-2011]
 	no-op or noop
 	version (not yet fully working)
 	stats (not yet fully working)
-
++ Support CLI
++ Supports plugable cache implementation. 
++ Comes with WhirlycottCache implementation

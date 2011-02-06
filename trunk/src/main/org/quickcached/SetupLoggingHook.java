@@ -12,6 +12,8 @@ import org.apache.log4j.xml.DOMConfigurator;
 public class SetupLoggingHook implements InitServerHook {
 	private QuickServer quickserver;
 
+	private static boolean makeLogFile;
+
 	public String info() {
 		return "Init Server Hook to setup logging.";
 	}
@@ -19,46 +21,42 @@ public class SetupLoggingHook implements InitServerHook {
 	public void handleInit(QuickServer quickserver) throws Exception {
 		Logger logger = null;
 		FileHandler txtLog = null;
-		File log = new File("./log/");
-		if(!log.canRead())
-			log.mkdir();
+
+		if(isMakeLogFile()) {
+			File log = new File("./log/");
+			if(!log.canRead())
+				log.mkdir();
+			DOMConfigurator.configure("conf/log4j_debug.xml");
+		}
+		
 		try	{
 			logger = Logger.getLogger("");
 			logger.setLevel(Level.FINEST);
 
-			/*
-			logger = Logger.getLogger("");
-			txtLog = new FileHandler("log/QuickCached_Full%u%g.txt", 
-				1024*1024, 5, true);
-			txtLog.setFormatter(new SimpleTextFormatter());
-			txtLog.setLevel(Level.FINEST);
-			logger.addHandler(txtLog);
-			
-
-			logger = Logger.getLogger("org.quickserver");
-			txtLog = new FileHandler("log/QuickCached_QuickServer%u%g.txt", 
-				1024*1024, 20, true);
-			txtLog.setFormatter(new SimpleTextFormatter());
-			txtLog.setLevel(Level.INFO);
-			logger.addHandler(txtLog);
-			 */
-			
 			logger = Logger.getLogger("org.quickcached");
-			txtLog = new FileHandler("log/QuickCached%u%g.txt", 
-				1024*1024, 20, true);
-			txtLog.setFormatter(new SimpleTextFormatter());
-			txtLog.setLevel(Level.FINEST);
-			logger.addHandler(txtLog);
+			
+			if(isMakeLogFile()) {
+				txtLog = new FileHandler("log/QuickCached_"+quickserver.getPort()+"_%u%g.txt",
+					1024*1024, 20, true);
+				txtLog.setLevel(Level.FINEST);
+				txtLog.setFormatter(new SimpleTextFormatter());				
+				logger.addHandler(txtLog);
+			} else {
+				logger.setLevel(Level.WARNING);
+			}
 
-			quickserver.setAppLogger(logger); //img
-
-			//debug non-blocking mode 
-			//quickserver.debugNonBlockingMode(false);
-
-			DOMConfigurator.configure("conf/log4j.xml");
+			quickserver.setAppLogger(logger); //img			
 		} catch(IOException e){
 			System.err.println("Could not create txtLog FileHandler : "+e);
 			throw e;
 		}
+	}
+
+	public static boolean isMakeLogFile() {
+		return makeLogFile;
+	}
+
+	public static void setMakeLogFile(boolean flag) {
+		makeLogFile = flag;
 	}
 }
