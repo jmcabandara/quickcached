@@ -30,14 +30,14 @@
             </folders>
             <ide-actions>
                 <action name="build">
-                    <target>build</target>
+                    <target>all</target>
                 </action>
                 <action name="clean">
                     <target>clean</target>
                 </action>
                 <action name="rebuild">
                     <target>clean</target>
-                    <target>build</target>
+                    <target>all</target>
                 </action>
                 <action name="compile.single">
                     <script>nbproject/ide-file-targets.xml</script>
@@ -68,11 +68,14 @@
                 <action name="test">
                     <target>test</target>
                 </action>
+                <action name="run">
+                    <target>run</target>
+                </action>
             </ide-actions>
             <export>
                 <type>jar</type>
                 <location>dist/QuickCached.jar</location>
-                <build-target>build</build-target>
+                <build-target>all</build-target>
             </export>
             <view>
                 <items>
@@ -92,6 +95,7 @@
                     <ide-action name="build"/>
                     <ide-action name="rebuild"/>
                     <ide-action name="clean"/>
+                    <ide-action name="run"/>
                     <ide-action name="test"/>
                 </context-menu>
             </view>

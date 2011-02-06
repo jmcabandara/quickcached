@@ -6,8 +6,10 @@
 package org.quickcached;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.net.SocketTimeoutException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.binary.Extras;
@@ -126,13 +128,19 @@ public class BinaryCommandProcessor {
 			} else if("10".equals(opcode)) {//Stat
 				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 
-				String pid = ManagementFactory.getRuntimeMXBean().getName();
-				int i = pid.indexOf("@");
-				pid = pid.substring(0, i);
+				Map stats = CommandHandler.getStats(handler.getServer());
+				Set keySet = stats.keySet();
+				Iterator iterator = keySet.iterator();
+				String key = null;
+				String value = null;
+				while(iterator.hasNext()) {
+					key = (String) iterator.next();
+					value = (String) stats.get(key);
 
-				binaryPacket.setKey("pid");
-				binaryPacket.setValue(pid.getBytes("utf-8"));
-				sendResponse(handler, binaryPacket);
+					binaryPacket.setKey(key);
+					binaryPacket.setValue(value.getBytes("utf-8"));
+					sendResponse(handler, binaryPacket);
+				}
 
 				binaryPacket.setKey(null);
 				binaryPacket.setValue(null);

@@ -11,7 +11,9 @@ import java.util.logging.Logger;
 import org.quickcached.cache.CacheInterface;
 import org.quickserver.net.server.ClientHandler;
 
-import java.lang.management.ManagementFactory;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -63,10 +65,17 @@ public class TextCommandProcessor {
 		} else if(command.startsWith("flush_all")) {
 			handleFlushAll(command);
 			sendResponse(handler, "OK\r\n");
-		} else if(command.equals("stats")) {
-			String pid = ManagementFactory.getRuntimeMXBean().getName();
-			int i = pid.indexOf("@");
-			sendResponse(handler, "PID "+pid.substring(0, i)+"\r\n");
+		} else if(command.equals("stats")) {			
+			Map stats = CommandHandler.getStats(handler.getServer());
+			Set keySet = stats.keySet();
+			Iterator iterator = keySet.iterator();
+			String key = null;
+			String value = null;
+			while(iterator.hasNext()) {
+				key = (String) iterator.next();
+				value = (String) stats.get(key);
+				sendResponse(handler, key + " " + value + "\r\n");
+			}
 			sendResponse(handler, "END\r\n");
 		} else if(command.startsWith("stats ")) {
 			//todo
