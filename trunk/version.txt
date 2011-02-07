@@ -10,14 +10,14 @@ version 1.0.0 [26-Jan-2011]
 ---------------------------
 + Added support for TCP Port
 + Added support Text and Binary  Protocol
-+ Commands implemented: 
-	set, setq
-	get, getq 
-	delete, deleteq
-	flush
-	no-op or noop
-	version (not yet fully working)
-	stats (not yet fully working)
-+ Support CLI
-+ Supports plugable cache implementation. 
++ Commands implemented:  
+    set, setq
+    get, getq  
+    delete, deleteq
+    flush
+    no-op or noop
+    version (not yet fully working)
+    stats (not yet fully working)
++ Supports CLI
++ Supports plug-able cache implementation.  
 + Comes with WhirlycottCache implementation
