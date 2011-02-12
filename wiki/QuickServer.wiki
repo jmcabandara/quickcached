@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+# QuickServer is an open source Java library/framework for quick creation of robust multi-client TCP server applications. 
 
 = Introduction =
 
