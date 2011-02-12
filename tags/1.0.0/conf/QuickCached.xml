@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<quickserver>
+	<name>QuickCached</name>
+	<port>11211</port>
+	<bind-address>0.0.0.0</bind-address>
+
+	<!-- business logic classes -->
+	<client-event-handler>
+		org.quickcached.CommandHandler
+	</client-event-handler>
+
+	<client-binary-handler>
+		org.quickcached.CommandHandler
+	</client-binary-handler>	
+	<client-data>
+		org.quickcached.Data
+	</client-data>
+
+	<timeout>0</timeout>
+
+	<max-connection-msg>Server Busy - Max Connection Reached</max-connection-msg>
+	<timeout-msg>-ERR Timeout</timeout-msg>
+	<max-auth-try-msg>-ERR Max Auth Try Reached</max-auth-try-msg>
+	<!-- OR -->
+	<!-- 
+	<client-extended-event-handler>
+		echoserver.EchoExtendedEventHandler
+	</client-extended-event-handler>
+	-->
+
+	<server-mode>
+		<blocking>true</blocking>
+	</server-mode>
+
+	<default-data-mode>
+		<data-type-in>Binary</data-type-in>
+		<data-type-out>Binary</data-type-out>
+	</default-data-mode>	
+
+	<console-logging-level>WARNING</console-logging-level>
+	<console-logging-formatter>
+		org.quickserver.util.logging.SimpleConsoleFormatter
+	</console-logging-formatter>
+
+	<object-pool>
+		<max-active>-1</max-active>
+		<max-idle>50</max-idle>
+		<init-size>20</init-size>
+
+		<thread-object-pool>
+			<max-active>-1</max-active>
+			<max-idle>50</max-idle>
+			<init-size>20</init-size>
+		</thread-object-pool>
+
+		<client-handler-object-pool>
+			<max-active>-1</max-active>
+			<max-idle>50</max-idle>
+			<init-size>30</init-size>
+		</client-handler-object-pool>
+
+		<byte-buffer-object-pool>
+			<max-active>-1</max-active>
+			<max-idle>50</max-idle>
+			<init-size>20</init-size>
+		</byte-buffer-object-pool>
+		
+		<client-data-object-pool>
+			<max-active>-1</max-active>
+			<max-idle>50</max-idle>
+			<init-size>20</init-size>
+		</client-data-object-pool>
+	</object-pool>
+
+	<communication-logging>
+		<enable>false</enable>
+	</communication-logging>	
+
+
+	<application-configuration>
+		<prompt-type>gui</prompt-type>
+		<!--<prompt-type>console</prompt-type>-->
+		
+		<property>
+			<property-name>CACHE_IMPL_CLASS</property-name>
+			<property-value>org.quickcached.cache.WhirlycottCacheImpl</property-value>
+		</property>
+		
+	</application-configuration>
+
+	<access-constraint>
+	  <ip-filter> 
+	    <enable>false</enable>
+	    <allow-access>false</allow-access>
+	    <ip-collection>
+		  <client-ip-address>127.0.0.1</client-ip-address> 
+	    </ip-collection>
+	  </ip-filter> 
+	</access-constraint>
+
+	<application-jar-path>../dist/QuickCached.jar</application-jar-path>
+
+		
+	<init-server-hooks>
+		<class-name>org.quickcached.SetupLoggingHook</class-name>
+	</init-server-hooks>
+	<server-hooks>
+		<class-name>org.quickcached.PrepareHook</class-name>
+	</server-hooks>
+
+
+	<advanced-settings>
+		<charset>ISO-8859-1</charset>
+		<use-direct-byte-buffer>true</use-direct-byte-buffer>
+		<!--<byte-buffer-size>61440</byte-buffer-size>-->
+		<backlog>1024</backlog>		
+		<socket-linger>-1</socket-linger>
+		<debug-non-blocking-mode>false</debug-non-blocking-mode> 
+	</advanced-settings>
+
+	<!--
+	<qsadmin-server>
+		<port>4124</port>
+		<bind-address>127.0.0.1</bind-address>
+
+		<command-shell>
+			<enable>false</enable>
+		</command-shell>
+
+		<communication-logging>
+			<enable>false</enable>
+		</communication-logging>
+
+		<server-mode>
+			<blocking>false</blocking>
+		</server-mode>
+
+		<access-constraint>
+		  <ip-filter> 
+			<enable>false</enable>
+			<allow-access>true</allow-access>
+			<ip-collection>
+			  <client-ip-address>127.0.0.1</client-ip-address> 
+			 <client-ip-address>192.168.1.100</client-ip-address>
+			</ip-collection>
+		  </ip-filter> 
+		</access-constraint> 
+	</qsadmin-server>
+	-->
+</quickserver>
