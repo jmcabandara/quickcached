@@ -10,9 +10,10 @@ QuickCached is simple yet powerful. Its simple design promotes quick deployment,
 
 = Details =
 Currently Support Following commands
-* Text and Binary Protocol
-* Commands: set, setq, get, getq, delete, deleteq, flush, no-op, version, stats
+  * Text and Binary Protocol
+  * Commands: set, setq, get, getq, delete, deleteq, flush, no-op, version, stats
+  * CLI options to set port, IP binding, max connection
 
 To be Implemented:
-* All other commands
-* UDP support
+  * All other commands
+  * UDP support
