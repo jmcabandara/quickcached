@@ -1,5 +1,5 @@
 #labels Featured,Phase-Deploy
-# Getting started using QuickCached -  A memcached implementation in Java.
+#Getting started using QuickCached -  A memcached implementation in Java.
 
 = Installation =
 First download the latest build from http://code.google.com/p/quickcached/downloads/list
