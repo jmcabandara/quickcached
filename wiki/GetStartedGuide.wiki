@@ -4,6 +4,8 @@ Getting started using QuickCached -  A memcached implementation in Java.
 = Installation =
 First download the latest build from http://code.google.com/p/quickcached/downloads/list
 
+== Requirements ==
+QuickCached needs Java VM v 1.5 or higher installed.
 
 = Windows =
 First extract the archive to a directory. Say "d:\quickcached". Now open a command prompt and type the following.
