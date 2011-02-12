@@ -53,3 +53,10 @@ VALUE key1 0 4
 ABCD
 END
 }}}
+
+
+= Client API =
+Client API's / libraries - http://code.google.com/p/memcached/wiki/Clients
+
+= Using in your Code =
+Here is a nice article on how to use Quickcached/Memcached in Java http://sacharya.com/using-memcached-with-java/
