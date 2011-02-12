@@ -8,7 +8,7 @@ First download the latest build from http://code.google.com/p/quickcached/downlo
 = Windows =
 First extract the archive to a directory. Say "d:\quickcached". Now open a command prompt and type the following.
 
-`
+{{{
 c:\>d:
 d:\>cd d:\quickcached
 D:\QuickCached>QuickCached.bat -p 11211 -l 0.0.0.0
@@ -19,11 +19,11 @@ Loading QuickServer v1.4.7 ... Done
  Name : QuickCached
  Port : 11211
 -------------------------------
-`
+}}}
 
 = Linux/Solaris/HP-Unix =
 First extract the archive to a directory. Say "/home/user/quickcached". Now open a command prompt and type the following.
-<pre>
+{{{
 $ cd /home/user/quickcached
 $ sh QuickCached.sh -p 11211 -l 0.0.0.0
 Loading QuickServer v1.4.7 ... Done
@@ -33,10 +33,10 @@ Loading QuickServer v1.4.7 ... Done
  Name : QuickCached
  Port : 11211
 -------------------------------
-</pre>
+}}}
 
 = Testing =
-<pre>
+{{{
 $ telnet localhost 11211
 Trying ::1...
 Connected to localhost.
@@ -50,4 +50,4 @@ get key1
 VALUE key1 0 4
 ABCD
 END
-</pre>
+}}}
