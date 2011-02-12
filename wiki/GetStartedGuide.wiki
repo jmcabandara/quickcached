@@ -1,0 +1,53 @@
+#labels Featured,Phase-Deploy
+Getting started using QuickCached -  A memcached implementation in Java.
+
+= Installation =
+First download the latest build from http://code.google.com/p/quickcached/downloads/list
+
+
+= Windows =
+First extract the archive to a directory. Say "d:\quickcached". Now open a command prompt and type the following.
+
+<pre>
+c:\>d:
+d:\>cd d:\quickcached
+D:\QuickCached>QuickCached.bat -p 11211 -l 0.0.0.0
+Loading QuickServer v1.4.7 ... Done
+23:06:18,042 WARN  (main) [CacheManager] Could not load /whirlycache.xml file. Falling back to defaults.
+
+-------------------------------
+ Name : QuickCached
+ Port : 11211
+-------------------------------
+</pre>
+
+= Linux/Solaris/HP-Unix =
+First extract the archive to a directory. Say "/home/user/quickcached". Now open a command prompt and type the following.
+<pre>
+$ cd /home/user/quickcached
+$ sh QuickCached.sh -p 11211 -l 0.0.0.0
+Loading QuickServer v1.4.7 ... Done
+23:06:18,042 WARN  (main) [CacheManager] Could not load /whirlycache.xml file. Falling back to defaults.
+
+-------------------------------
+ Name : QuickCached
+ Port : 11211
+-------------------------------
+</pre>
+
+= Testing =
+<pre>
+$ telnet localhost 11211
+Trying ::1...
+Connected to localhost.
+Escape character is '^]'.
+get key1
+END
+set key1 0 3600 4 (Note: TTL 3600 and 4 bytes)
+ABCD
+STORED
+get key1 
+VALUE key1 0 4
+ABCD
+END
+</pre>
