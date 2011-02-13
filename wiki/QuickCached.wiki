@@ -16,7 +16,7 @@ Currently Support Following commands
   * Plugable cache implementation.
 
 To be Implemented:
-  * Other commands - increment, decriment operations
+  * Other commands - increment, decrement operations
   * UDP support
 
 Check out our [http://code.google.com/p/quickcached/wiki/GetStartedGuide Get Started Guide] to get going.
