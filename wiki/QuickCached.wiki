@@ -19,4 +19,4 @@ To be Implemented:
   * Other commands - increment, decriment operations
   * UDP support
 
-Chech out our [http://code.google.com/p/quickcached/wiki/GetStartedGuide GetStartedGuide] to get going.
+Check out our [http://code.google.com/p/quickcached/wiki/GetStartedGuide Get Started Guide] to get going.
