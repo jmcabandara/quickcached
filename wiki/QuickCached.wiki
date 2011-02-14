@@ -13,7 +13,7 @@ Currently Support Following commands
   * Text and Binary Protocol
   * Commands: set, setq, get, getq, delete, deleteq, flush, no-op, version, stats
   * CLI options to set port, IP binding, max connection
-  * Plugable cache implementation.
+  * Plug-able cache implementation.
 
 To be Implemented:
   * Other commands - increment, decrement operations
