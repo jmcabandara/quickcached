@@ -38,9 +38,9 @@ Loading QuickServer v1.4.7 ... Done
 }}}
 
 = Memory Sizing =
-By defalut QuickCached will use maximum of 512MB of RAM, if you need it to use different amount, just edit the .bat file or .sh file and change the -xMX value. 
+By default QuickCached will use maximum of 512MB of RAM, if you need it to use different amount, just edit the .bat file or .sh file and change the `-xMX` value. 
 
-One can also run multiple instances on the same system or different systems across the network to achive more available memory/cache. Running muliple instances is always recommended over running one big instance.
+One can also run multiple instances on the same system or different systems across the network to archive more available memory/cache. Running multiple instances is always recommended over running one big instance.
 
 = Testing =
 {{{
