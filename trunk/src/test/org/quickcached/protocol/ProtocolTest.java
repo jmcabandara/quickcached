@@ -61,7 +61,34 @@ public class ProtocolTest extends TestCase  {
 		c.delete("Hello");
 		readObject = (String) c.get("Hello");
 		assertNull(readObject);
-	}	
+	}
+
+	public void testVersion() {
+		Map ver = c.getVersions();
+		assertNotNull(ver);
+		System.out.println("ver: "+ver);
+		Iterator iterator = ver.keySet().iterator();
+		InetSocketAddress key = null;
+		while(iterator.hasNext()) {
+			key = (InetSocketAddress) iterator.next();
+			assertNotNull(key);
+			assertEquals("1.0.0",  (String) ver.get(key));
+		}
+	}
+
+
+	public void testStats() {
+		Map stats = c.getStats();
+		assertNotNull(stats);
+
+		Iterator iterator = stats.keySet().iterator();
+		InetSocketAddress key = null;
+		while(iterator.hasNext()) {
+			key = (InetSocketAddress) iterator.next();
+			assertNotNull(key);
+			System.out.println("Stat for "+key+" " +stats.get(key));
+		}
+	}
 	
 	public void testFlush() {
 		c.set("Hello", 3600, "World");
