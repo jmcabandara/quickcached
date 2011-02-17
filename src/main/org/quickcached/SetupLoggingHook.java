@@ -22,13 +22,7 @@ public class SetupLoggingHook implements InitServerHook {
 		Logger logger = null;
 		FileHandler txtLog = null;
 
-		if(isMakeLogFile()) {
-			File log = new File("./log/");
-			if(!log.canRead())
-				log.mkdir();
-			DOMConfigurator.configure("conf/log4j_debug.xml");
-		}
-		
+
 		try	{
 			logger = Logger.getLogger("");
 			logger.setLevel(Level.FINEST);
