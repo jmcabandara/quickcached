@@ -76,6 +76,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	}
 
 	public static void init(Map config) {
+		logger.fine("in init");
 		String implClass = (String) config.get("CACHE_IMPL_CLASS");
 		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
 		try {

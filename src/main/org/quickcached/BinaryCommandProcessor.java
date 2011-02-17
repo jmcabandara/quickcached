@@ -78,7 +78,7 @@ public class BinaryCommandProcessor {
 				
 				if("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
 					binaryPacket.setKey(command.getKey());
-					rh.setKeyLength(binaryPacket.getEncodedKey().length());
+					rh.setKeyLength(binaryPacket.getKey().length());
 				}
 
 				DataCarrier dc = (DataCarrier) cache.get(command.getKey());
@@ -124,6 +124,8 @@ public class BinaryCommandProcessor {
 			} else if("0B".equals(opcode)) {//version
 				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 				binaryPacket.setValue(QuickCached.version.getBytes("utf-8"));
+				rh.setTotalBodyLength(rh.getKeyLength()+
+					rh.getExtrasLength()+binaryPacket.getValue().length);
 				sendResponse(handler, binaryPacket);
 			} else if("10".equals(opcode)) {//Stat
 				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
@@ -136,14 +138,23 @@ public class BinaryCommandProcessor {
 				while(iterator.hasNext()) {
 					key = (String) iterator.next();
 					value = (String) stats.get(key);
-
+					
 					binaryPacket.setKey(key);
+					rh.setKeyLength(binaryPacket.getKey().length());
+
 					binaryPacket.setValue(value.getBytes("utf-8"));
+
+					rh.setTotalBodyLength(rh.getKeyLength()+
+						rh.getExtrasLength()+binaryPacket.getValue().length);
+					
 					sendResponse(handler, binaryPacket);
 				}
 
 				binaryPacket.setKey(null);
+				rh.setKeyLength(0);
+
 				binaryPacket.setValue(null);
+				rh.setTotalBodyLength(0);
 				sendResponse(handler, binaryPacket);
 			} else {
 				rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
