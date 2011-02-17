@@ -18,7 +18,6 @@ public class AllJUnitTests extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite(SkeletonTest.class);
 
-		//suite.addTest(new TestSuite(StatVerTest.class));
         suite.addTest(new TestSuite(TextProtocolTest.class));
 		suite.addTest(new TestSuite(BinaryProtocolTest.class));
         return suite;
