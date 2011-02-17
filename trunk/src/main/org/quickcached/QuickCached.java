@@ -14,21 +14,40 @@ public class QuickCached {
 
     public static void main(String args[]) throws Exception {
         int i = 0;
-        String arg;
-        String value;
-        while (i < args.length && args[i].startsWith("-")) {
-            arg = args[i++];
+        String arg = null;
+        String value = null;
 
-            if (arg.equals("-v") || arg.equals("-vv")) {
-                SetupLoggingHook.setMakeLogFile(true);
-            }
+		
+		if(args.length!=0) {
+			while (i < args.length) {
+				arg = args[i];
+				i++;
+				
+				if(arg.startsWith("-")==false) continue;
+				
+				if (arg.equals("-v") || arg.equals("-vv")) {
+					SetupLoggingHook.setMakeLogFile(true);
 
-            if (arg.equals("-vv")) {
-                DEBUG = true;
-            } else {
-                DOMConfigurator.configure("conf/log4j.xml");
-            }
-        }
+					File log = new File("./log/");
+
+					if(log.canRead()==false) {
+						boolean flag = log.mkdirs();
+						if(flag==false) {
+							System.out.println("Unable to create log folder!");
+						}
+					}
+					DOMConfigurator.configure("conf/log4j_debug.xml");
+				} else {
+					DOMConfigurator.configure("conf/log4j.xml");
+				}
+
+				if (arg.equals("-vv")) {
+					DEBUG = true;
+				}
+			}
+		} else {
+			DOMConfigurator.configure("conf/log4j.xml");
+		}
 
         String confFile = "conf" + File.separator + "QuickCached.xml";
         Object config[] = new Object[]{confFile};
@@ -51,17 +70,18 @@ public class QuickCached {
         //Be even more verbose; same as -v but also print client commands and responses.
 
         i = 0;
-        while (i < args.length && args[i].startsWith("-")) {
-            arg = args[i++];
+        while (i < args.length) {
+            arg = args[i];
+			i++;
+			if(i < args.length) value = args[i];
 
-            if (arg.equals("-l")) {
-                value = args[i++];
+			if(arg.startsWith("-")==false) continue;
+
+            if (arg.equals("-l")) {    
                 quickcached.setBindAddr(value);
             } else if (arg.equals("-p")) {
-                value = args[i++];
                 quickcached.setPort(Integer.parseInt(value));
             } else if (arg.equals("-c")) {
-                value = args[i++];
                 quickcached.setMaxConnection(Integer.parseInt(value));
             } else if (arg.equals("-h")) {
                 System.out.println("QuickCached " + version);
@@ -73,7 +93,9 @@ public class QuickCached {
                 System.out.println("-h            print this help and exit");
 
                 return;
-            } else {
+            } else if (arg.equals("-v") || arg.equals("-vv")) {
+				//nothing here
+			} else {
                 //print help - TODO
                 System.out.println("Error: Bad argument passed - " + arg);
                 return;
