@@ -74,11 +74,13 @@ public class TextCommandProcessor {
 			while(iterator.hasNext()) {
 				key = (String) iterator.next();
 				value = (String) stats.get(key);
-				sendResponse(handler, key + " " + value + "\r\n");
+				sendResponse(handler, "STAT " + key + " " + value + "\r\n");
 			}
 			sendResponse(handler, "END\r\n");
 		} else if(command.startsWith("stats ")) {
 			//todo
+		} else if(command.equals("version")) {
+			sendResponse(handler, "VERSION "+QuickCached.version+"\r\n");
 		} else if(command.equals("quit")) {
 			handler.closeConnection();
 		} else {
