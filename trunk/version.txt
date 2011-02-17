@@ -20,4 +20,10 @@ version 1.0.0 [26-Jan-2011]
     stats (not yet fully working)
 + Supports CLI
 + Supports plug-able cache implementation.  
-+ Comes with WhirlycottCache implementation
++ Comes with WhirlycottCache implementation 
+
+version 1.0.1 [17-Feb-2011]
+---------------------------
+! Bug fixes for stats, verison and get command
+! Bug fixes for CLI and logging
+
