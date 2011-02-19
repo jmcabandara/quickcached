@@ -1,0 +1,26 @@
+Comand to use: ant loadtest1
+
+
+-- Output On --
+Ubuntu 10.10
+Ram 4GB
+CPU: Intel Core2 Duo (each CPU @ 1.30Ghz)
+---------------
+
+== QuickCached ==
+[loadtest1] =============
+[loadtest1] Total Txn: 100000
+[loadtest1] Total Threads: 10
+[loadtest1] Total Time: 8252.0 ms
+[loadtest1] Avg Time: 0.0825200006365776 ms
+[loadtest1] =============
+=====
+
+== Memcached ==
+[loadtest1] =============
+[loadtest1] Total Txn: 100000
+[loadtest1] Total Threads: 10
+[loadtest1] Total Time: 25982.0 ms
+[loadtest1] Avg Time: 0.25982001423835754 ms
+[loadtest1] =============
+=====
