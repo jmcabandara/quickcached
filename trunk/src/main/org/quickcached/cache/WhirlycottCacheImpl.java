@@ -1,7 +1,7 @@
 package org.quickcached.cache;
 
 import com.whirlycott.cache.*;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -17,6 +17,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	private long totalItems;
 	private long cmdGets;
 	private long cmdSets;
+	private long cmdFlushs;
 	private long getHits;
 	private long getMisses;
 	private long deleteMisses;
@@ -32,7 +33,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	}
 
 	public Map getStats() {
-		Map stats = new HashMap();
+		Map stats = new LinkedHashMap();
 
 		//curr_items - Current number of items stored by the server
 		stats.put("curr_items", "" + cache.size());
@@ -45,6 +46,9 @@ public class WhirlycottCacheImpl implements CacheInterface {
 
 		//cmd_set           Cumulative number of storage reqs
 		stats.put("cmd_set", "" + cmdSets);
+
+		//cmd_flush
+		stats.put("cmd_flush", "" + cmdFlushs);
 
 		//get_hits          Number of keys that have been requested and found present
 		stats.put("get_hits", "" + getHits);
@@ -91,5 +95,6 @@ public class WhirlycottCacheImpl implements CacheInterface {
 
 	public void flush() {
 		cache.clear();
+		cmdFlushs++;
 	}
 }

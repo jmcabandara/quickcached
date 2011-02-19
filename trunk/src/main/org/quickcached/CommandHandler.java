@@ -6,14 +6,13 @@ import org.quickserver.net.server.ClientHandler;
 import org.quickserver.net.server.ClientEventHandler;
 
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.*;
 
 
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.cache.CacheInterface;
-import org.quickcached.cache.WhirlycottCacheImpl;
 import org.quickserver.net.server.ClientBinaryHandler;
 import org.quickserver.net.server.QuickServer;
 
@@ -29,7 +28,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	//private static long bytesWritten;
 
 	public static Map getStats(QuickServer server) {
-		Map stats = new HashMap();
+		Map stats = new LinkedHashMap();
 
 		//pid
 		String pid = ManagementFactory.getRuntimeMXBean().getName();

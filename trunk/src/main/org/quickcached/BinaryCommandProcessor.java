@@ -162,7 +162,7 @@ public class BinaryCommandProcessor {
 			}			
 		} catch(Exception e) {
 			logger.warning("Error: "+e);
-			e.printStackTrace();
+			if(QuickCached.DEBUG) e.printStackTrace();
 			rh.setStatus(ResponseHeader.INTERNAL_ERROR);
 			sendResponse(handler, binaryPacket);
 		}		
