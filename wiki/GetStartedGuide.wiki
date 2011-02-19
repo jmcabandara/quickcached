@@ -1,5 +1,5 @@
 #summary Getting started using QuickCached -  A memcached server implementation in Java.
-#labels Featured,Phase-Deploy
+#labels Featured,Phase-Deploy,Phase-Requirements
 
 = Installation =
 First download the latest build from http://code.google.com/p/quickcached/downloads/list
