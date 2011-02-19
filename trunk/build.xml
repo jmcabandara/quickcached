@@ -81,7 +81,8 @@
 	<target name="loadtest1" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadTest"
             taskname="loadtest1" failonerror="true">
-			<arg value="10000"/>
+			<arg line="m 10 127.0.0.1:11211 10000"/>
+			<!--arg line="s 1 127.0.0.1:11211 10000"/-->
 			<classpath refid="project.classpath.test"/>
 			<classpath>
 				<pathelement location="${test.build.dir}" />
