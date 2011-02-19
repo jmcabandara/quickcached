@@ -1,7 +1,7 @@
 #summary QuickCached A memcached server implementation in Java
 
 = Introduction =
-QuickCached is a pure Java implementation of Memcached server based on QuickServer. It is an open source, high-performance, distributed memory object caching system, generic in nature, but intended for use in speeding up dynamic web applications by alleviating database load. 
+QuickCached is memcached server implementation in Java based on QuickServer. It is an open source, high-performance, distributed memory object caching system, generic in nature, but intended for use in speeding up dynamic web applications by alleviating database load. 
 
 QuickCached is an in-memory key-value store for small chunks of arbitrary data (strings, objects) from results of database calls, API calls, or page rendering. 
 
