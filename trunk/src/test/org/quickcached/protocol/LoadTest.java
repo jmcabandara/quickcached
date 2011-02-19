@@ -93,6 +93,7 @@ public class LoadTest {
 		System.out.println("=============");
 
 		System.out.println("=============");
+		System.out.println("Host List: "+host);
 		System.out.println("Total Txn: "+txn);
 		System.out.println("Total Threads: "+threads);
 		System.out.println("Total Time: "+ttime+ " ms");
