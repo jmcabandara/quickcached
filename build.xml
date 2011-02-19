@@ -57,7 +57,7 @@
 	
 	<target name="compileTests">
 		<mkdir dir="${test.build.dir}"/>
-		<javac srcdir="src/test/" destdir="${test.build.dir}" includeantruntime="false"  target="1.5">
+		<javac srcdir="src/test/" destdir="${test.build.dir}" includeantruntime="false"  debug="on"  target="1.5">
 			<classpath refid="project.classpath.test"/>
 			<include name="**/*.java"/>
 		</javac>
@@ -77,6 +77,20 @@
 		</java>
 	</target>
 	<!-- junit task -->
+
+	<target name="loadtest1" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.protocol.LoadTest"
+            taskname="loadtest1" failonerror="true">
+			<arg value="10000"/>
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
 
 </project>
 
