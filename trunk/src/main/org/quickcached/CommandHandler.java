@@ -31,9 +31,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		Map stats = new LinkedHashMap();
 
 		//pid
-		String pid = ManagementFactory.getRuntimeMXBean().getName();
-		int i = pid.indexOf("@");
-		pid = pid.substring(0, i);
+		String pid = QuickCached.getPID();
 		stats.put("pid", pid);
 
 		//uptime

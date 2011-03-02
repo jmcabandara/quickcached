@@ -4,6 +4,7 @@ import org.quickserver.net.*;
 import org.quickserver.net.server.*;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
@@ -111,4 +112,11 @@ public class QuickCached {
             e.printStackTrace();
         }
     }
+
+	public static String getPID() {
+		String pid = ManagementFactory.getRuntimeMXBean().getName();
+		int i = pid.indexOf("@");
+		pid = pid.substring(0, i);
+		return pid;
+	}
 }

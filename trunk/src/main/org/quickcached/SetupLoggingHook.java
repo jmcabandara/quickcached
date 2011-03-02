@@ -1,49 +1,64 @@
 package org.quickcached;
 
 import org.quickserver.net.server.*;
-import org.quickserver.net.InitServerHook;
+import org.quickserver.net.ServerHook;
 
 import java.io.*;
 
 import org.quickserver.util.logging.*;
 import java.util.logging.*;
-import org.apache.log4j.xml.DOMConfigurator;
 
-public class SetupLoggingHook implements InitServerHook {
+public class SetupLoggingHook implements ServerHook {
 	private QuickServer quickserver;
 
+	private static boolean init;
 	private static boolean makeLogFile;
 
 	public String info() {
 		return "Init Server Hook to setup logging.";
 	}
 
-	public void handleInit(QuickServer quickserver) throws Exception {
-		Logger logger = null;
-		FileHandler txtLog = null;
+	public void initHook(QuickServer quickserver) {
+		this.quickserver = quickserver;
+	}
 
-
-		try	{
-			logger = Logger.getLogger("");
-			logger.setLevel(Level.FINEST);
-
-			logger = Logger.getLogger("org.quickcached");
-			
-			if(isMakeLogFile()) {
-				txtLog = new FileHandler("log/QuickCached_"+quickserver.getPort()+"_%u%g.txt",
-					1024*1024, 20, true);
-				txtLog.setLevel(Level.FINEST);
-				txtLog.setFormatter(new SimpleTextFormatter());				
-				logger.addHandler(txtLog);
+	public boolean handleEvent(int event) {
+		if(event==ServerHook.PRE_STARTUP) {
+			if(init==false) {
+				init = true;
 			} else {
-				logger.setLevel(Level.WARNING);
+				return false;
 			}
+			
+			Logger logger = null;
+			FileHandler txtLog = null;
 
-			quickserver.setAppLogger(logger); //img			
-		} catch(IOException e){
-			System.err.println("Could not create txtLog FileHandler : "+e);
-			throw e;
+
+			try	{
+				logger = Logger.getLogger("");
+				logger.setLevel(Level.FINEST);
+
+				logger = Logger.getLogger("org.quickcached");
+
+				if(isMakeLogFile()) {
+					txtLog = new FileHandler("log/QuickCached_"+quickserver.getPort()+"_%u%g.txt",
+						1024*1024, 20, true);
+					txtLog.setLevel(Level.FINEST);
+					txtLog.setFormatter(new SimpleTextFormatter());
+					logger.addHandler(txtLog);
+				} else {
+					logger.setLevel(Level.WARNING);
+				}
+
+				quickserver.setAppLogger(logger); //img
+
+				return true;
+			} catch(IOException e){
+				System.err.println("Could not create txtLog FileHandler : "+e);
+			}
 		}
+
+		return false;
 	}
 
 	public static boolean isMakeLogFile() {
