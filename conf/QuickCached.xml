@@ -101,10 +101,8 @@
 	<application-jar-path>../dist/QuickCached.jar</application-jar-path>
 
 		
-	<init-server-hooks>
-		<class-name>org.quickcached.SetupLoggingHook</class-name>
-	</init-server-hooks>
 	<server-hooks>
+		<class-name>org.quickcached.SetupLoggingHook</class-name>
 		<class-name>org.quickcached.PrepareHook</class-name>
 	</server-hooks>
 

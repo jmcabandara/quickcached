@@ -17,6 +17,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	private long totalItems;
 	private long cmdGets;
 	private long cmdSets;
+	private long cmdDeletes;
 	private long cmdFlushs;
 	private long getHits;
 	private long getMisses;
@@ -46,6 +47,9 @@ public class WhirlycottCacheImpl implements CacheInterface {
 
 		//cmd_set           Cumulative number of storage reqs
 		stats.put("cmd_set", "" + cmdSets);
+
+		//cmd_delete
+		stats.put("cmd_delete", "" + cmdDeletes);
 
 		//cmd_flush
 		stats.put("cmd_flush", "" + cmdFlushs);
@@ -83,6 +87,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	}
 
 	public Object delete(Object key) {
+		cmdDeletes++;
 		Object obj = cache.remove(key);
 		if(obj!=null) {
 			deleteHits++;
