@@ -16,11 +16,11 @@
 		org.quickcached.Data
 	</client-data>
 
-	<timeout>0</timeout>
+	<!-- 3 hours - in miliseconds-->
+	<timeout>10800000</timeout>
 
-	<max-connection-msg>Server Busy - Max Connection Reached</max-connection-msg>
-	<timeout-msg>-ERR Timeout</timeout-msg>
-	<max-auth-try-msg>-ERR Max Auth Try Reached</max-auth-try-msg>
+	<max-connection-msg>SERVER_ERROR Server Busy - Max Connection Reached</max-connection-msg>
+	<timeout-msg>SERVER_ERROR Timeout</timeout-msg>
 	<!-- OR -->
 	<!-- 
 	<client-extended-event-handler>
@@ -85,7 +85,12 @@
 			<property-name>CACHE_IMPL_CLASS</property-name>
 			<property-value>org.quickcached.cache.WhirlycottCacheImpl</property-value>
 		</property>
-		
+
+		<property>
+			<property-name>FLUSH_ON_LOW_MEMORY_PERCENT</property-name>
+			<!-- 0.9 = 90%; will call flush if reached; make if blank to skip this-->
+			<property-value>0.95</property-value>
+		</property>		
 	</application-configuration>
 
 	<access-constraint>

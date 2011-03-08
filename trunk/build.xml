@@ -93,5 +93,20 @@
 		</java>
 	</target>
 
+	<target name="loadmemtest1" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.protocol.LoadMemTest"
+            taskname="loadtest1" failonerror="true">
+			<arg line="m 10 127.0.0.1:11211 500000"/>
+			<!--arg line="s 1 127.0.0.1:11211 10000"/-->
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
+
 </project>
 
