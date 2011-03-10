@@ -1,14 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.quickcached.binary;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 import org.quickcached.HexUtil;
 import org.quickcached.QuickCached;
+import org.quickcached.Util;
 
 /**
  *
@@ -54,7 +50,9 @@ public class BinaryPacket {
 			sb.append(getHeader().encodedString());
 			if(getExtras()!=null) sb.append(getExtras().encodedString());
 			if(getKey()!=null) sb.append(getEncodedKey());			
-			if(getValue()!=null) sb.append(HexUtil.encode(getValue()));
+			if(getValue()!=null) {
+				sb.append(HexUtil.encode(getValue()));
+			}
 
 			String encodedValue = sb.toString();
 			if(QuickCached.DEBUG) logger.fine("encodedValue: "+encodedValue);
@@ -78,13 +76,30 @@ public class BinaryPacket {
 			int pos = 0;
 			if(header.getExtrasLength()>0) {
 				Extras extras = new Extras();
-				if(header.getExtrasLength()>=4) {//flag
-					extras.setFlags(hexData.substring(0, 8));
-					pos = 8;
-				}
-				if(header.getExtrasLength()==8) {//Expiration
-					extras.setExpiration(hexData.substring(8, 16));
-					pos = 16;
+				
+				if(header.getOpcode().equals("05") || header.getOpcode().equals("06") ||
+						header.getOpcode().equals("15") || header.getOpcode().equals("16")) {//incr/decr
+					if(header.getExtrasLength()>=8) {//Delta
+						extras.setDelta(hexData.substring(0, 16));
+						pos = 16;
+					}
+					if(header.getExtrasLength()>=16) {//InitalValue
+						extras.setInitalValue(hexData.substring(pos, pos+16));
+						pos = pos + 16;
+					}
+					if(header.getExtrasLength()>=20) {//Expiration
+						extras.setExpiration(hexData.substring(pos, pos+8));
+						pos = pos + 8;
+					}
+				} else {
+					if(header.getExtrasLength()>=4) {//flag
+						extras.setFlags(hexData.substring(0, 8));
+						pos = 8;
+					}
+					if(header.getExtrasLength()>=8) {//Expiration
+						extras.setExpiration(hexData.substring(pos, pos + 8));
+						pos = pos + 8;
+					}
 				}
 				bp.setExtras(extras);
 			}
