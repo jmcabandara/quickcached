@@ -20,7 +20,11 @@ public class PrepareHook implements ServerHook {
 	public boolean handleEvent(int event) {
 		if(event==ServerHook.PRE_STARTUP) {
 			Map config = quickserver.getConfig().getApplicationConfiguration();
-			CommandHandler.init(config);
+			try {
+				CommandHandler.init(config);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 			return true;
 		}
 		return false;
