@@ -15,8 +15,12 @@ import org.quickcached.Util;
 public class ResponseHeader  extends Header {
 	public static final String STATUS_NO_ERROR = "0000";
 	public static final String KEY_NOT_FOUND  = "0001";
+	public static final String KEY_EXISTS = "0002";
+	public static final String INVALID_ARGUMENTS = "0004";
+	public static final String ITEM_NOT_STORED = "0005";
 	public static final String UNKNOWN_COMMAND = "0081";
-	public static final String INTERNAL_ERROR = "0084";	
+	public static final String INTERNAL_ERROR = "0084";
+	
 	
 	private String status;
 
