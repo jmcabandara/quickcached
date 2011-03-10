@@ -13,6 +13,7 @@ import java.util.logging.*;
 
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.cache.CacheInterface;
+import org.quickcached.mem.MemoryWarningSystem;
 import org.quickserver.net.server.ClientBinaryHandler;
 import org.quickserver.net.server.QuickServer;
 
@@ -72,22 +73,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		return stats;
 	}
 
-	public static void init(Map config) {
-		logger.fine("in init");
-		String implClass = (String) config.get("CACHE_IMPL_CLASS");
-		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
-		try {
-			cache = (CacheInterface) Class.forName(implClass).newInstance();
-		} catch (Exception ex) {
-			Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
-		}
-
-		textCommandProcessor = new TextCommandProcessor();
-		textCommandProcessor.setCache(cache);
-
-		binaryCommandProcessor = new BinaryCommandProcessor();
-		binaryCommandProcessor.setCache(cache);
-	}
+	
 
 	public CommandHandler() {
 		
@@ -123,7 +109,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		bytesRead = bytesRead + command.length;
 
-		if(data.getDataRequiredLength()!=0) {
+		if(data.getDataRequiredLength()!=0) {//only used by text mode
 			try {
 				if(data.isAllDataIn()) {
 					textCommandProcessor.processStorageCommands(handler);
@@ -167,5 +153,54 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 				}
 			}
 		}
-	}	
+	}
+
+	private static boolean lowMemoryActionInit;
+	private static MemoryWarningSystem mws = new MemoryWarningSystem();
+
+	public static void init(Map config) {
+		logger.fine("in init");
+		String implClass = (String) config.get("CACHE_IMPL_CLASS");
+		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
+		try {
+			cache = (CacheInterface) Class.forName(implClass).newInstance();
+		} catch (Exception ex) {
+			Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+		}
+
+		textCommandProcessor = new TextCommandProcessor();
+		textCommandProcessor.setCache(cache);
+
+		binaryCommandProcessor = new BinaryCommandProcessor();
+		binaryCommandProcessor.setCache(cache);
+
+		String flushPercent = (String) config.get("FLUSH_ON_LOW_MEMORY_PERCENT");
+		if(flushPercent!=null && flushPercent.trim().equals("")==false) {
+			double fpercent = Double.parseDouble(flushPercent);
+			MemoryWarningSystem.setPercentageUsageThreshold(fpercent);//9.5=95%
+			logger.log(Level.INFO, "MemoryWarningSystem set to {0}; will flush if reached!", fpercent);
+
+			if(lowMemoryActionInit==false) {
+				lowMemoryActionInit = true;
+				mws.addListener(new MemoryWarningSystem.Listener() {
+					public void memoryUsageHigh(long usedMemory, long maxMemory) {
+						logger.log(Level.INFO,
+								"Memory usage high!: UsedMemory: {0};maxMemory:{1}",
+								new Object[]{usedMemory, maxMemory});
+						double percentageUsed = ((double) usedMemory) / maxMemory;
+						logger.log(Level.SEVERE,
+								"Memory usage high! Percentage of memory used: {0}",
+								percentageUsed);
+						logger.warning("Flushing cache to save JVM.");
+						cache.flush();
+						System.gc();
+						logger.fine("Done");
+					}
+				});
+			}
+		} else {
+			mws.removeAllListener();
+			lowMemoryActionInit = false;
+		}
+	}
 }
