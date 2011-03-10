@@ -7,7 +7,7 @@ import junit.framework.TestSuite;
 import org.quickcached.protocol.*;
 
 /**
- * Simple class to build a TestSuite out of the individual test classes.
+ * Class to build  TestSuite out of the individual test classes.
  */
 public class AllJUnitTests extends TestCase {
 

@@ -3,8 +3,14 @@
 +++++++++++++++++++++++++++++++++++
 
 
-Current Version: 1.0.1
+Current Version: 1.0.2
 
+version 1.0.2 [19-Feb-2011]
+---------------------------
++ Add, Replace, Append, Prepend, CAS, Increment, Decrement commands now supported.
++ Flush All with delay is also supported now.
+# Added 3hour socket timeout by default
++ Monitors JVM memory and will trigger flush_all if it reached 95% usage (configrable in xml) 
 
 
 version 1.0.1 [19-Feb-2011]

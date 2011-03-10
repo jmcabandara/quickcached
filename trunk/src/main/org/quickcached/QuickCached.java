@@ -9,7 +9,7 @@ import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
 
-    public static String version = "1.0.1";
+    public static String version = "1.0.2";
     public static boolean DEBUG = false;
     private static final int KEY_MAX_LENGTH = 250;
 
@@ -85,13 +85,7 @@ public class QuickCached {
             } else if (arg.equals("-c")) {
                 quickcached.setMaxConnection(Integer.parseInt(value));
             } else if (arg.equals("-h")) {
-                System.out.println("QuickCached " + version);
-                System.out.println("-p <num>      TCP port number to listen on (default: 11211)");
-                System.out.println("-l <ip_addr>  interface to listen on (default: INADDR_ANY, all addresses)");
-                System.out.println("-c <num>      max simultaneous connections");
-                System.out.println("-v            verbose (print errors/warnings while in event loop). Creates logs in log folder");
-                System.out.println("-vv           very verbose (also print client commands/reponses). Debut Mode");
-                System.out.println("-h            print this help and exit");
+                printHelp();
 
                 return;
             } else if (arg.equals("-v") || arg.equals("-vv")) {
@@ -99,6 +93,7 @@ public class QuickCached {
 			} else {
                 //print help - TODO
                 System.out.println("Error: Bad argument passed - " + arg);
+				printHelp();
                 return;
             }
         }
@@ -118,5 +113,15 @@ public class QuickCached {
 		int i = pid.indexOf("@");
 		pid = pid.substring(0, i);
 		return pid;
+	}
+
+	public static void printHelp() {
+		System.out.println("QuickCached " + version);
+		System.out.println("-p <num>      TCP port number to listen on (default: 11211)");
+		System.out.println("-l <ip_addr>  interface to listen on (default: INADDR_ANY, all addresses)");
+		System.out.println("-c <num>      max simultaneous connections");
+		System.out.println("-v            verbose (print errors/warnings while in event loop). Creates logs in log folder");
+		System.out.println("-vv           very verbose (also print client commands/reponses). Debut Mode");
+		System.out.println("-h            print this help and exit");
 	}
 }
