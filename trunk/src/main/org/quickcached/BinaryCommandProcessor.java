@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.quickcached;
 
 import java.io.IOException;
@@ -52,7 +47,30 @@ public class BinaryCommandProcessor {
 
 		try {
 			if("01".equals(opcode) || "11".equals(opcode)) {//Set,SetQ
+				if(command.getHeader().getCas()!=null) {
+					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+					if(olddc!=null) {
+						if("01".equals(opcode)) { //set
+							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+							sendResponse(handler, binaryPacket);
+						}
+						return;
+					}
+
+					if(olddc!=null && command.getHeader().getCas()!=null &&
+							olddc.checkCas(command.getHeader().getCas())==false) {
+						if("01".equals(opcode)) { //set
+							if(QuickCached.DEBUG) logger.fine(
+									"Cas did not match! OldCas:"+olddc.getCas()+
+									"NewCAS:"+command.getHeader().getCas());
+							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+							sendResponse(handler, binaryPacket);
+						}
+						return;
+					}
+				}
 				DataCarrier dc = new DataCarrier(command.getValue());
+				
 				dc.setFlags(command.getExtras().getFlags());
 				cache.set(command.getKey(), dc, command.getExtras().getExpirationInSec());
 				
@@ -62,7 +80,118 @@ public class BinaryCommandProcessor {
 
 					sendResponse(handler, binaryPacket);
 				}
-			} else if("04".equals(opcode) || "14".equals(opcode)) {//Delete, DeleteQ				
+			} else if("02".equals(opcode) || "12".equals(opcode)) {//Add, AddQ
+				DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+				if(olddc!=null) {
+					if("02".equals(opcode)) { //Add
+						rh.setStatus(ResponseHeader.KEY_EXISTS);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				DataCarrier dc = new DataCarrier(command.getValue());
+
+				if(command.getExtras().getFlags()!=null) dc.setFlags(command.getExtras().getFlags());
+				cache.set(command.getKey(), dc, command.getExtras().getExpirationInSec());
+				
+				if("12".equals(opcode)==false) {//AddQ
+					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+					sendResponse(handler, binaryPacket);
+				}
+			} else if("03".equals(opcode) || "13".equals(opcode)) {//Replace, ReplaceQ
+				DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+				if(olddc==null) {
+					if("03".equals(opcode)) { //Replace
+						rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				if(olddc!=null && command.getHeader().getCas()!=null &&
+						olddc.checkCas(command.getHeader().getCas())==false) {
+					if("03".equals(opcode)) { //Replace
+						if(QuickCached.DEBUG) logger.fine(
+								"Cas did not match! OldCas:"+olddc.getCas()+
+								"NewCAS:"+command.getHeader().getCas());
+						rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				if(command.getExtras().getFlags()!=null) olddc.setFlags(command.getExtras().getFlags());
+				olddc.setData(command.getValue());
+				
+				if("13".equals(opcode)==false) {//AddQ
+					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+					rh.setCas(olddc.getCas());
+
+					sendResponse(handler, binaryPacket);
+				}
+			} else if("0E".equals(opcode) || "19".equals(opcode)) {//Append, AppendQ
+				DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+				if(olddc==null) {
+					if("0E".equals(opcode)) { //Append
+						rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+
+				if(olddc!=null && command.getHeader().getCas()!=null &&
+						olddc.checkCas(command.getHeader().getCas())==false) {
+					if("0E".equals(opcode)) { //Append
+						if(QuickCached.DEBUG) logger.fine(
+								"Cas did not match! OldCas:"+olddc.getCas()+
+								"NewCAS:"+command.getHeader().getCas());
+						rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				olddc.append(command.getValue());
+
+				if("19".equals(opcode)==false) {//AppendQ
+					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+					rh.setCas(olddc.getCas());
+
+					sendResponse(handler, binaryPacket);
+				}
+			} else if("0F".equals(opcode) || "1A".equals(opcode)) {//Prepend, PrependQ
+				DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+				if(olddc==null) {
+					if("0F".equals(opcode)) { //Prepend
+						rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				if(olddc!=null && command.getHeader().getCas()!=null &&
+						olddc.checkCas(command.getHeader().getCas())==false) {
+					if("0F".equals(opcode)) { //Prepend
+						if(QuickCached.DEBUG) logger.fine(
+								"Cas did not match! OldCas:"+olddc.getCas()+
+								"NewCAS:"+command.getHeader().getCas());
+						rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				olddc.prepend(command.getValue());
+
+				if("1A".equals(opcode)==false) {//PrependQ
+					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+					rh.setCas(olddc.getCas());
+
+					sendResponse(handler, binaryPacket);
+				}
+			} else if ("04".equals(opcode) || "14".equals(opcode)) {//Delete, DeleteQ
 				Object obj = cache.delete(command.getKey());
 				if(obj==null) {
 					rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
@@ -73,7 +202,87 @@ public class BinaryCommandProcessor {
 						sendResponse(handler, binaryPacket);
 					}
 				}
-			} else if("00".equals(opcode) || "09".equals(opcode) ||
+			} else if ("05".equals(opcode) || "06".equals(opcode) ||//Increment, Decrement
+					"15".equals(opcode) || "16".equals(opcode)) {//IncrementQ, DecrementQ
+				Extras extras = command.getExtras();
+
+				DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+				if(olddc==null) {
+					if(extras.getExpiration().equals("ffffffff")==false) {
+						if("05".equals(opcode) || "06".equals(opcode)) { //Increment, Decrement
+							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+							sendResponse(handler, binaryPacket);
+						}
+						return;
+					} else {
+						String value = ""+extras.getInitalValueInDec();
+						olddc = new DataCarrier(value.getBytes("utf-8"));
+
+						if(extras.getFlags()!=null) olddc.setFlags(extras.getFlags());
+						cache.set(command.getKey(), olddc, extras.getExpirationInSec());
+						
+						if("05".equals(opcode) || "06".equals(opcode)) {
+							binaryPacket.setValue(olddc.getData());
+							rh.setTotalBodyLength(rh.getKeyLength()+
+									rh.getExtrasLength()+binaryPacket.getValue().length);
+							rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+							rh.setCas(olddc.getCas());
+	
+							sendResponse(handler, binaryPacket);
+						}
+						return;
+					}
+				}
+
+				
+				long value = 0;
+				try {
+					value = extras.getDeltaInDec();
+				} catch (Exception e) {
+					if(QuickCached.DEBUG) logger.warning("Error: "+e);
+					rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
+					sendResponse(handler, binaryPacket);
+					return;
+				}
+
+				synchronized (command.getKey()) {
+					try {
+						long oldvalue = Long.parseLong(new String(olddc.getData()));
+						if ("05".equals(opcode) || "15".equals(opcode)) {
+							value = oldvalue + value;
+						} else if ("06".equals(opcode) || "16".equals(opcode)) {
+							value = oldvalue - value;
+							if (value < 0) {
+								value = 0;
+							}
+						}
+						olddc.setData(("" + value).getBytes("utf-8"));
+					} catch (Exception e) {
+						if ("05".equals(opcode) || "06".equals(opcode)) {
+							rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+							sendResponse(handler, binaryPacket);
+							return;
+						}
+						return;
+					}
+				}
+				
+				if ("15".equals(opcode) || "16".equals(opcode)) {
+					return;
+				}
+
+				
+				binaryPacket.setValue(Util.prefixZerros(
+						new String(olddc.getData(), "utf-8"), 8).getBytes("utf-8"));
+
+				rh.setTotalBodyLength(rh.getKeyLength()+
+						rh.getExtrasLength()+binaryPacket.getValue().length);
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setCas(olddc.getCas());
+
+				sendResponse(handler, binaryPacket);
+
+			} else if ("00".equals(opcode) || "09".equals(opcode) ||
 					"0C".equals(opcode) || "0D".equals(opcode)) {//Get,GetQ, GetK, GetKQ
 				
 				if("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
