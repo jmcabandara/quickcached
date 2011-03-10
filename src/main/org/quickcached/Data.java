@@ -3,11 +3,9 @@ package org.quickcached;
 import org.quickserver.net.server.*;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Logger;
 import org.quickcached.binary.BinaryPacket;
-import org.quickcached.binary.Header;
 import org.quickcached.binary.RequestHeader;
 
 
@@ -21,6 +19,7 @@ public class Data implements ClientData {
 	private String key;
 	private String flags;
 	private long exptime = -1;
+	private String casunique;
 	private boolean noreplay;
 
 	public String getCommand() {
@@ -172,6 +171,14 @@ public class Data implements ClientData {
 
 	public void setNoreplay(boolean noreplay) {
 		this.noreplay = noreplay;
+	}
+
+	public void setCasUnique(String casunique) {
+		this.casunique = casunique;
+	}
+
+	public String getCasUnique() {
+		return casunique;
 	}
 }
 

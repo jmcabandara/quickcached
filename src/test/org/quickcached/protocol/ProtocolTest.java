@@ -40,7 +40,7 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("World",  readObject);
 
     }
-	
+
 	public void testGet() {
         Date value = new Date();
 
@@ -49,6 +49,118 @@ public class ProtocolTest extends TestCase  {
 
 		assertNotNull(readObject);
 		assertEquals(value.getTime(),  readObject.getTime());
+	}
+
+	public void testAppend() {
+        String value = "ABCD";
+
+		c.set("someKeyA", 3600, value);
+
+
+		c.append(1, "someKeyA", "EFGH");
+		String readObject = (String) c.get("someKeyA");
+
+		assertNotNull(readObject);
+		assertEquals(readObject,  "ABCDEFGH");
+	}
+
+	public void testPrepend() {
+        String value = "ABCD";
+
+		c.set("someKeyP", 3600, value);
+
+
+		c.prepend(1, "someKeyP", "EFGH");
+		String readObject = (String) c.get("someKeyP");
+
+		assertNotNull(readObject);
+		assertEquals(readObject,  "EFGHABCD");
+	}
+
+	public void testAdd() {
+        String value = "ABCD";
+
+		c.delete("someKeyAd");
+		boolean flag = false;
+
+		Future <Boolean> f = c.add("someKeyAd", 3600, value);
+		try {
+			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
+		} catch(Exception e) {
+			f.cancel(false);
+		}
+
+		assertTrue(flag);
+
+		f = c.add("someKeyAd", 3600, value);
+		try {
+			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
+		} catch(Exception e) {
+			f.cancel(false);
+		}
+		assertFalse(flag);
+	}
+
+	public void testReplace() {
+        String value = "ABCD";
+
+		c.set("someKey", 3600, "World");
+
+		boolean flag = false;
+
+		Future <Boolean> f = c.replace("someKey", 3600, value);
+		try {
+			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
+		} catch(Exception e) {
+			f.cancel(false);
+		}
+
+		assertTrue(flag);
+
+		c.delete("someKey");
+		f = c.replace("someKey", 3600, value);
+		try {
+			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
+		} catch(Exception e) {
+			f.cancel(false);
+		}
+		assertFalse(flag);
+	}
+
+	public void testIncrement() {
+        String value = "10";
+
+		c.set("someKeyI", 3600, value);
+		c.incr("someKeyI", 10);
+
+		String readObject = (String) c.get("someKeyI");
+		assertNotNull(readObject);
+		assertEquals(readObject, "20");
+
+		c.incr("someKeyI", 1);
+		readObject = (String) c.get("someKeyI");
+		assertNotNull(readObject);
+		assertEquals(readObject, "21");
+	}
+
+	public void testDecrement() {
+        String value = "10";
+
+		c.set("someKeyD", 3600, value);
+		c.decr("someKeyD", 7);
+
+		String readObject = (String) c.get("someKeyD");
+		readObject = readObject.trim();
+
+		assertNotNull(readObject);
+		assertEquals(readObject, "3");
+
+		c.decr("someKeyD", 4);
+		readObject = (String) c.get("someKeyD");
+		readObject = readObject.trim();
+
+		assertNotNull(readObject);
+		assertEquals(readObject, "0");
 	}
 
 	public void testDelete() {
@@ -89,7 +201,7 @@ public class ProtocolTest extends TestCase  {
 			System.out.println("Stat for "+key+" " +stats.get(key));
 		}
 	}
-	
+
 	public void testFlush() {
 		c.set("Hello", 3600, "World");
 		String readObject = (String) c.get("Hello");
@@ -98,7 +210,7 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("World",  readObject);
 
 		c.flush();
-		
+
 		readObject = (String) c.get("Hello");
 		assertNull(readObject);
 	}
