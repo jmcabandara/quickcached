@@ -366,6 +366,7 @@ public class BinaryCommandProcessor {
 				rh.setTotalBodyLength(0);
 				sendResponse(handler, binaryPacket);
 			} else {
+				logger.warning("unknown binary command! "+opcode);
 				rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
 				sendResponse(handler, binaryPacket);
 			}			

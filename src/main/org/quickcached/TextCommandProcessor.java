@@ -91,7 +91,7 @@ public class TextCommandProcessor {
 				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
 			}
 		} else {
-			logger.warning("unknown command!");
+			logger.warning("unknown command! "+command);
 			sendResponse(handler, "ERROR\r\n");
 		}
 	}
