@@ -38,7 +38,11 @@ public class SetupLoggingHook implements ServerHook {
 				logger = Logger.getLogger("");
 				logger.setLevel(Level.FINEST);
 
+				logger = Logger.getLogger("com.whirlycott");
+				logger.setLevel(Level.WARNING);
+
 				logger = Logger.getLogger("org.quickcached");
+				logger.setLevel(Level.FINEST);
 
 				if(isMakeLogFile()) {
 					txtLog = new FileHandler("log/QuickCached_"+quickserver.getPort()+"_%u%g.txt",
