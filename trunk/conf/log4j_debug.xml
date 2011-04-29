@@ -20,9 +20,6 @@
 		</layout>
 	</appender>
 
-	<category name="org.apache.commons.digester">
-		<priority value="WARN"/>
-	</category>
 
 	<category name="com.whirlycott.cache">
 		<priority value="WARN"/>

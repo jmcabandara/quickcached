@@ -3,11 +3,11 @@
     <type>org.netbeans.modules.ant.freeform</type>
     <configuration>
         <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
-            <name>QuickCached.Project</name>
+            <name>QuickCached</name>
         </general-data>
         <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
             <!-- Do not use Project Properties customizer when editing this file manually. -->
-            <name>QuickCached.Project</name>
+            <name>QuickCached</name>
             <properties/>
             <folders>
                 <source-folder>
