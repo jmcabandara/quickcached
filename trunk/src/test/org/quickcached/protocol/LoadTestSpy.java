@@ -1,16 +1,16 @@
 package org.quickcached.protocol;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.logging.*;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.BinaryConnectionFactory;
-
 /**
  *
  * @author akshath
  */
-public class LoadMemTest {
+public class LoadTestSpy {
 	private MemcachedClient c = null;
 	private int count;
 	private String name;
@@ -18,10 +18,10 @@ public class LoadMemTest {
 	private int timeouts;
 
 	public static void main(String args[]) {
-		String mode = "m";
+		String mode = "s";
 		int threads = 10;
-		String host = "127.0.0.1:11211";
-		int txn = 100000;
+		String host = "192.168.1.10:11211";
+		int txn = 10;
 
 		if(args.length==4) {
 			mode = args[0];
@@ -37,7 +37,7 @@ public class LoadMemTest {
     }
 
 	public static void doSingleThreadTest(String host, int txn) {
-		LoadMemTest ltu = new LoadMemTest("Test1", host, txn);
+		LoadTestSpy ltu = new LoadTestSpy("Test1", host, txn);
 		ltu.setUp();
 		long stime = System.currentTimeMillis();
         ltu.test1();
@@ -46,14 +46,16 @@ public class LoadMemTest {
 		float ttime = etime-stime;
 		double atime = ttime/txn;
 		ltu.tearDown();
+		System.out.println("Total Time for "+txn+" txn was "+ttime);
+		System.out.println("Avg Time for "+txn+" txn was "+atime);
 	}
 
 	public static void doMultiThreadTest(String host, int txn, int threads) {
 		int eachUnitCount = txn/threads;
 
-		final LoadMemTest ltu[] = new LoadMemTest[threads];
+		final LoadTestSpy ltu[] = new LoadTestSpy[threads];
 		for(int i=0;i<threads;i++) {
-			ltu[i] = new LoadMemTest("Test-"+i, host, eachUnitCount);
+			ltu[i] = new LoadTestSpy("Test-"+i, host, eachUnitCount);
 			ltu[i].setUp();
 		}
 
@@ -99,7 +101,7 @@ public class LoadMemTest {
 		System.out.println("Timeouts: "+timeoutCount);
 		System.out.println("Avg Time: "+atime+ " ms");
 		System.out.println("=============");
-
+		
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException ex) {
@@ -110,8 +112,8 @@ public class LoadMemTest {
 			ltu[i].tearDown();
 		}
 	}
-
-	public LoadMemTest(String name, String host, int count) {
+	
+	public LoadTestSpy(String name, String host, int count) {
         this.count = count;
 		this.name = name;
 		this.hostList = host;
@@ -133,18 +135,29 @@ public class LoadMemTest {
 	public void test1() {
 		for(int i=0;i<count;i++) {
 			doSet(i);
-			
-			System.out.print(".");
 		}
-		
 		for(int i=0;i<count;i++) {
 			doGet(i);
 		}
+		for(int i=0;i<count;i++) {
+			doDelete(i);
+		}
 	}
 
+	private String largeData = null;
     public void doSet(int i) {
 		String key = name+"-"+i;
-		String value = name+"-"+(i*2);
+		if(largeData==null) {
+			StringBuilder sb = new StringBuilder();
+			Random r = new Random();
+			char c = '0';
+			for(int k=0;k<400;k++) {
+				c = (char)(r.nextInt(26) + 'a');
+				sb.append(c);
+			}
+			largeData = sb.toString();
+		}
+		String value = name+"-"+(i*2)+"-"+largeData;
 		c.set(key, 3600, value);
 	}
 

@@ -97,6 +97,14 @@
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
                     <ide-action name="test"/>
+                    <action>
+                        <label>LoadTest Spy</label>
+                        <target>loadtestSpy</target>
+                    </action>
+                    <action>
+                        <label>LoadTest X</label>
+                        <target>loadtestX</target>
+                    </action>
                 </context-menu>
             </view>
             <subprojects/>
@@ -111,7 +119,7 @@
             <compilation-unit>
                 <package-root>src/test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">libtest/junit-4.9b2.jar;libtest/memcached-2.5.jar</classpath>
+                <classpath mode="compile">libtest/junit-4.9b2.jar;libtest/memcached-2.5.jar;libtest/slf4j-api-1.6.1.jar;libtest/slf4j-jdk14-1.6.1.jar;libtest/xmemcached-1.3.2.jar</classpath>
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>

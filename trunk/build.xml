@@ -78,11 +78,26 @@
 	</target>
 	<!-- junit task -->
 
-	<target name="loadtest1" depends="compileTests">
-		<java fork="yes" classname="org.quickcached.protocol.LoadTest"
-            taskname="loadtest1" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211 10000"/>
-			<!--arg line="s 1 127.0.0.1:11211 10000"/-->
+	<target name="loadtestSpy" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.protocol.LoadTestSpy"
+            taskname="loadtestSpy" failonerror="true">
+			<arg line="m 10 192.168.1.106:11212 100"/>
+			<!--arg line="s 1 192.168.1.106:11211 100"/-->
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
+	
+	<target name="loadtestX" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.protocol.LoadTestX"
+            taskname="loadtestX" failonerror="true">
+			<!--arg line="m 10 192.168.1.106:11212 100"/-->
+			<arg line="s 1 192.168.1.106:11211 100"/>
 			<classpath refid="project.classpath.test"/>
 			<classpath>
 				<pathelement location="${test.build.dir}" />
@@ -93,9 +108,9 @@
 		</java>
 	</target>
 
-	<target name="loadmemtest1" depends="compileTests">
+	<target name="loadmemtestMem" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadMemTest"
-            taskname="loadtest1" failonerror="true">
+            taskname="loadmemtestMem" failonerror="true">
 			<arg line="m 10 127.0.0.1:11211 500000"/>
 			<!--arg line="s 1 127.0.0.1:11211 10000"/-->
 			<classpath refid="project.classpath.test"/>
