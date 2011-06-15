@@ -16,8 +16,8 @@ import java.util.Set;
  * @author Akshathkumar Shetty
  */
 public class TextCommandProcessor {
-
 	private static final Logger logger = Logger.getLogger(TextCommandProcessor.class.getName());
+	
 	private CacheInterface cache;
 
 	public void setCache(CacheInterface cache) {
@@ -26,7 +26,6 @@ public class TextCommandProcessor {
 
 	public void handleTextCommand(ClientHandler handler, String command)
 			throws SocketTimeoutException, IOException {
-
 		if (QuickCached.DEBUG) {
 			logger.fine("command: " + command);
 		}
