@@ -1,8 +1,9 @@
 
 <project name="QuickCached.Project" default="all" basedir=".">
 	<property name="app.name"   value="QuickCached" />
-	<property name="build.dir"  value="build/classes" />
+	<property name="main.build.dir"  value="build/mainclasses" />
 	<property name="test.build.dir"  value="build/testcases" />
+	<property name="client.build.dir"  value="build/clientcases" />
 	<property name="dist.dir"   value="dist" />
 
 	<target name="clean">
@@ -12,26 +13,50 @@
 
 	<path id="project.classpath">
 		<fileset dir="./lib/">
-			<include name="*.jar"/>
-		</fileset>
+			<include name="**/*.jar"/>
+		</fileset>		
+	</path>
+	<path id="project.classpath.client">
+		<fileset dir="./libtest/">
+			<include name="**/*.jar"/>
+		</fileset>		
 	</path>
 
-	<target name="compile"  depends="clean">
-		<mkdir dir="${build.dir}"/>
-		<javac srcdir="src/main/" destdir="${build.dir}" debug="on" 
+	<!-- main jar -->
+	<target name="main_compile"  depends="clean">
+		<mkdir dir="${main.build.dir}"/>
+		<javac srcdir="src/main/" destdir="${main.build.dir}" debug="on" 
 				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath"/>
 		</javac>
 	</target>
 
-	<target name="jar" depends="compile">
+	<target name="main_jar" depends="main_compile">
 		<mkdir dir="${dist.dir}"/>
-		<jar jarfile="${dist.dir}/${app.name}.jar"
-			basedir="${build.dir}" includes="**" manifest="src/QuickCached.MF"/>
+		<jar jarfile="${dist.dir}/${app.name}-Server.jar"
+			basedir="${main.build.dir}" includes="**" manifest="src/QuickCached.MF"/>
+	</target>
+	<!-- main jar -->
+	
+	<!-- client jar -->
+	<target name="client_compile"  depends="clean">
+		<mkdir dir="${client.build.dir}"/>
+		<javac srcdir="src/client/" destdir="${client.build.dir}" debug="on" 
+				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
+			<include name="**/*.java"/>
+			<classpath refid="project.classpath.client"/>
+		</javac>
 	</target>
 
-	<target name="run" depends="jar">
+	<target name="client_jar" depends="client_compile">
+		<mkdir dir="${dist.dir}"/>
+		<jar jarfile="${dist.dir}/${app.name}-Client.jar"
+			basedir="${client.build.dir}" includes="**" />
+	</target>
+	<!-- client jar -->
+
+	<target name="run" depends="main_jar">
 		<java fork="yes" classname="org.quickcached.QuickCached"
             taskname="QuickCached" failonerror="true">
 			<arg line="-l 127.0.0.1 -p 11211"/>
@@ -43,6 +68,8 @@
 			</classpath>
 		</java>
 	</target>
+	
+	<target name="jar" depends="main_jar, client_jar" />
 
 	<target name="all" depends="jar, compileTests" />
 
@@ -53,6 +80,9 @@
 		</fileset>
 		<fileset dir="${test.build.dir}" >
 			<include name="*.class"/>
+		</fileset>
+		<fileset dir="./dist/">
+			<include name="*.jar"/>
 		</fileset>
 	</path>
 	
@@ -83,8 +113,8 @@
 	<target name="loadtestSpy" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadTestSpy"
             taskname="loadtestSpy" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211 100"/>
-			<!--arg line="s 1 192.168.1.106:11211 100"/-->
+			<arg line="m 10 192.168.2.3:11211 100"/>
+			<!--arg line="s 1 127.0.0.1:11211 100"/-->
 			<classpath refid="project.classpath.test"/>
 			<classpath>
 				<pathelement location="${test.build.dir}" />
@@ -98,7 +128,7 @@
 	<target name="loadtestX" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadTestX"
             taskname="loadtestX" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211 100"/>
+			<arg line="m 10 192.168.2.3:11211 100"/>
 			<!--arg line="s 1 127.0.0.1:11211 100"/-->
 			<classpath refid="project.classpath.test"/>
 			<classpath>
