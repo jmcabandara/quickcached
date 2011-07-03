@@ -57,13 +57,17 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		//todo
 
 		//bytes - Current number of bytes used by this server to store items
-		long heapSize = Runtime.getRuntime().totalMemory();
-		stats.put("bytes", "" + heapSize);
+		long usedMemory = Runtime.getRuntime().totalMemory() - 
+				Runtime.getRuntime().freeMemory();			        
+		stats.put("bytes", "" + usedMemory);
 
 		//limit_maxbytes    Number of bytes this server is allowed to use for storage.
 		long heapMaxSize = Runtime.getRuntime().maxMemory();
 		stats.put("limit_maxbytes", "" + heapMaxSize);
-
+		
+		long mem_percent_used = (long) (100.0*usedMemory/heapMaxSize);
+		stats.put("mem_percent_used", "" + mem_percent_used);
+		
 		//threads           Number of worker threads requested.
 		//stats.put("threads", );
 
