@@ -3,7 +3,16 @@
 +++++++++++++++++++++++++++++++++++
 
 
-Current Version: 1.0.2
+Current Version: 1.2.0
+
+version 1.2.0 [03-Jul-2011]
+---------------------------
++ Upgraded to QuickServer 1.4.8
++ Implemented alternate cache impl using h2databased in-memory database
++ Implemented client abstraction for using XMemcached and SpyMemcached  
+client API
+# Improved cache for better input stream handling.
+
 
 version 1.0.2 [19-Feb-2011]
 ---------------------------
