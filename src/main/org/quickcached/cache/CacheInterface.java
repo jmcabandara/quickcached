@@ -12,11 +12,12 @@ import java.util.Map;
  * @author akshath
  */
 public interface CacheInterface {
-	public void set(Object key, Object value, long expInSec);
+	public void set(String key, Object value, int objectSize, long expInSec);
+	public void update(String key, Object value, int objectSize);
 
-	public Object get(Object key);
+	public Object get(String key);
 	
-	public Object delete(Object key);
+	public boolean delete(String key);
 
 	public void flush();
 

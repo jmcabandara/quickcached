@@ -13,7 +13,7 @@ public abstract class MemcachedClient {
 	public static final String XMemcachedImpl = "XMemcached";
 	
 	private static String defaultImpl = XMemcachedImpl;
-	private static int defaultTimeoutSec = 10;
+	
 	
 	private static Map implMap = new HashMap();
 	public static void registerImpl(String implName, String fullClassName) {
@@ -31,14 +31,20 @@ public abstract class MemcachedClient {
 	static {
 		registerImpl(SpyMemcachedImpl, "org.quickcached.client.impl.SpyMemcachedImpl");
 		registerImpl(XMemcachedImpl, "org.quickcached.client.impl.XMemcachedImpl");
+		
+		String impl = System.getProperty("org.quickcached.client.defaultImpl");
+		if(impl!=null) {
+			defaultImpl = impl;
+		}
 	}
 
-	public static int getDefaultTimeoutSec() {
-		return defaultTimeoutSec;
+	private long defaultTimeoutMiliSec = 10000;//10sec
+	public long getDefaultTimeoutMiliSec() {
+		return defaultTimeoutMiliSec;
 	}
 
-	public static void setDefaultTimeoutSec(int aDefaultTimeoutSec) {
-		defaultTimeoutSec = aDefaultTimeoutSec;
+	public void setDefaultTimeoutMiliSec(int aDefaultTimeoutMiliSec) {
+		defaultTimeoutMiliSec = aDefaultTimeoutMiliSec;
 	}
 	
 	public abstract void setUseBinaryConnection(boolean flag);
@@ -52,20 +58,20 @@ public abstract class MemcachedClient {
 	public abstract void addServer(String list) throws IOException;
 	public abstract void removeServer(String list);
 	
-	public abstract void set(String key, int ttlSec, Object value, int timeoutSec) 
+	public abstract void set(String key, int ttlSec, Object value, long timeoutMiliSec) 
 			throws TimeoutException;
-	public abstract Object get(String key, int timeoutSec) throws TimeoutException;
-	public abstract boolean delete(String key, int timeoutSec) throws TimeoutException;
+	public abstract Object get(String key, long timeoutMiliSec) throws TimeoutException;
+	public abstract boolean delete(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract void flushAll() throws TimeoutException;
 	
 	public void set(String key, int ttlSec, Object value) 
 			throws TimeoutException {
-		set(key, ttlSec, value, defaultTimeoutSec);
+		set(key, ttlSec, value, defaultTimeoutMiliSec);
 	}
 	public Object get(String key) throws TimeoutException {
-		return get(key, defaultTimeoutSec);
+		return get(key, defaultTimeoutMiliSec);
 	}
 	public boolean delete(String key) throws TimeoutException {
-		return delete(key, defaultTimeoutSec);
+		return delete(key, defaultTimeoutMiliSec);
 	}	
 }

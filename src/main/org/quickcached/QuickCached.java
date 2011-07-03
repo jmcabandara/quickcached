@@ -8,7 +8,6 @@ import java.lang.management.ManagementFactory;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
-
     public static String version = "1.0.2";
     public static boolean DEBUG = false;
     private static final int KEY_MAX_LENGTH = 250;

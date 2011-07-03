@@ -69,23 +69,23 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		return c[i];
 	}
 
-	public void set(String key, int ttlSec, Object value, int timeoutSec) 
+	public void set(String key, int ttlSec, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
 		Future <Boolean> f = getCache().set(key, ttlSec, value);
 		Boolean flag = false;
 		try {
-			flag = (Boolean) f.get(timeoutSec, TimeUnit.SECONDS);
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
 		} catch(Exception e) {
 			f.cancel(false);
 			throw new TimeoutException("Timeout "+e);
 		}
 	}
 
-	public Object get(String key, int timeoutSec) throws TimeoutException {
+	public Object get(String key, long timeoutMiliSec) throws TimeoutException {
 		Object readObject = null;
 		Future <Object> f = getCache().asyncGet(key);
 		try {
-			readObject = (String) f.get(timeoutSec, TimeUnit.SECONDS);
+			readObject = (String) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
 		} catch(Exception e) {
 			f.cancel(false);
 			throw new TimeoutException("Timeout "+e);
@@ -93,11 +93,11 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		return readObject;
 	}
 
-	public boolean delete(String key, int timeoutSec) throws TimeoutException {
+	public boolean delete(String key, long timeoutMiliSec) throws TimeoutException {
 		Future <Boolean> f = getCache().delete(key);
 		Boolean flag = false;
 		try {
-			flag = (Boolean) f.get(timeoutSec, TimeUnit.SECONDS);
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
 		} catch(Exception e) {
 			f.cancel(false);
 			throw new TimeoutException("Timeout "+e);
