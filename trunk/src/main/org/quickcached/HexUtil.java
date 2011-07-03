@@ -60,7 +60,6 @@ public class HexUtil {
 
 			byte[] rawToByte = new byte[numBytes];
 			int offset = 0;
-			int bCounter = 0;
 			for (int i = 0; i < numBytes; i++) {
 				chunk = hexText.substring(offset, offset + 2);
 				offset += 2;
