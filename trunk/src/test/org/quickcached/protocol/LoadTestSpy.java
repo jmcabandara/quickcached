@@ -14,6 +14,7 @@ public class LoadTestSpy {
 	private String name;
 	private String hostList;
 	private int timeouts;
+	private static int objectSize = 400;
 
 	public static void main(String args[]) {
 		String mode = "s";
@@ -156,7 +157,7 @@ public class LoadTestSpy {
 			StringBuilder sb = new StringBuilder();
 			Random r = new Random();
 			char c = '0';
-			for(int k=0;k<400;k++) {
+			for(int k=0;k<objectSize;k++) {
 				c = (char)(r.nextInt(26) + 'a');
 				sb.append(c);
 			}
