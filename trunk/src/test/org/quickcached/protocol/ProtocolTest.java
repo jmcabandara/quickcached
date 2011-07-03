@@ -61,7 +61,7 @@ public class ProtocolTest extends TestCase  {
 		String readObject = (String) c.get("someKeyA");
 
 		assertNotNull(readObject);
-		assertEquals(readObject,  "ABCDEFGH");
+		assertEquals("ABCDEFGH", readObject);
 	}
 
 	public void testPrepend() {
@@ -74,7 +74,7 @@ public class ProtocolTest extends TestCase  {
 		String readObject = (String) c.get("someKeyP");
 
 		assertNotNull(readObject);
-		assertEquals(readObject,  "EFGHABCD");
+		assertEquals("EFGHABCD", readObject);
 	}
 
 	public void testAdd() {
@@ -135,12 +135,12 @@ public class ProtocolTest extends TestCase  {
 
 		String readObject = (String) c.get("someKeyI");
 		assertNotNull(readObject);
-		assertEquals(readObject, "20");
+		assertEquals("20", readObject);
 
 		c.incr("someKeyI", 1);
 		readObject = (String) c.get("someKeyI");
 		assertNotNull(readObject);
-		assertEquals(readObject, "21");
+		assertEquals("21", readObject);
 	}
 
 	public void testDecrement() {
@@ -153,14 +153,14 @@ public class ProtocolTest extends TestCase  {
 		readObject = readObject.trim();
 
 		assertNotNull(readObject);
-		assertEquals(readObject, "3");
+		assertEquals("3", readObject);
 
 		c.decr("someKeyD", 4);
 		readObject = (String) c.get("someKeyD");
 		readObject = readObject.trim();
 
 		assertNotNull(readObject);
-		assertEquals(readObject, "0");
+		assertEquals("0", readObject);
 	}
 
 	public void testDelete() {

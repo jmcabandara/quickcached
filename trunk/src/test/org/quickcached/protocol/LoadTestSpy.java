@@ -3,9 +3,7 @@ package org.quickcached.protocol;
 import java.io.IOException;
 import java.util.Random;
 import java.util.logging.*;
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.BinaryConnectionFactory;
+import org.quickcached.client.*;
 /**
  *
  * @author akshath
@@ -121,15 +119,22 @@ public class LoadTestSpy {
 
 	public void setUp(){
 		try {
-			c = new MemcachedClient(new BinaryConnectionFactory(),
-					AddrUtil.getAddresses(hostList));
-		} catch (IOException ex) {
+			c = MemcachedClient.getInstance(MemcachedClient.SpyMemcachedImpl);
+			c.setUseBinaryConnection(true);
+			c.setAddresses(hostList);
+			c.setDefaultTimeoutMiliSec(10000);//10 sec
+			c.init();
+		} catch (Exception ex) {
 			Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
 	public void tearDown(){
-		if(c!=null) c.shutdown();
+		if(c!=null) try {
+			c.stop();
+		} catch (IOException ex) {
+			Logger.getLogger(LoadTestSpy.class.getName()).log(Level.SEVERE, null, ex);
+		}
 	}
 
 	public void test1() {
@@ -158,7 +163,12 @@ public class LoadTestSpy {
 			largeData = sb.toString();
 		}
 		String value = name+"-"+(i*2)+"-"+largeData;
-		c.set(key, 3600, value);
+		try {
+			c.set(key, 3600, value);
+		} catch(TimeoutException e) {
+			timeouts++;
+			System.out.println("Timeout: "+e+" for "+key);
+		}
 	}
 
 	public void doGet(int i) {
@@ -168,7 +178,7 @@ public class LoadTestSpy {
 			if(readObject==null) {
 				System.out.println("get was null! for "+key);
 			}
-		} catch(net.spy.memcached.OperationTimeoutException e) {
+		} catch(TimeoutException e) {
 			timeouts++;
 			System.out.println("Timeout: "+e+" for "+key);
 		}
@@ -176,6 +186,11 @@ public class LoadTestSpy {
 
 	public void doDelete(int i) {
 		String key = name+"-"+i;
-		c.delete(key);
+		try {			
+			c.delete(key);
+		} catch(TimeoutException e) {
+			timeouts++;
+			System.out.println("Timeout: "+e+" for "+key);
+		}
 	}
 }

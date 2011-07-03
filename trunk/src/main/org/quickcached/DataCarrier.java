@@ -12,6 +12,11 @@ public class DataCarrier implements java.io.Serializable {
 	private byte data[];
 	private String flags;
 	private int cas;
+	
+	public int getSize() {
+		if(data==null) return 0;
+		return data.length;
+	}
 
 	
 	public void append(byte chunk[]) {

@@ -1,9 +1,10 @@
-package org.quickcached.cache;
+package org.quickcached.cache.impl.whirlycott;
 
 import com.whirlycott.cache.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.quickcached.cache.CacheInterface;
 
 /**
  * WhirlycottCache based implementation
@@ -69,13 +70,17 @@ public class WhirlycottCacheImpl implements CacheInterface {
 		return stats;
 	}
 
-	public void set(Object key, Object value, long expInSec) {
+	public void set(String key, Object value, int objectSize, long expInSec) {
 		cache.store(key, value, expInSec*1000);
 		totalItems++;
 		cmdSets++;
 	}
+	
+	public void update(String key, Object value, int objectSize) {
+		cache.store(key, value);
+	}
 
-	public Object get(Object key) {
+	public Object get(String key) {
 		cmdGets++;
 		Object obj = cache.retrieve(key);
 		if(obj!=null) {
@@ -86,7 +91,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 		return obj;
 	}
 
-	public Object delete(Object key) {
+	public boolean delete(String key) {
 		cmdDeletes++;
 		Object obj = cache.remove(key);
 		if(obj!=null) {
@@ -94,8 +99,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 		} else {
 			deleteMisses++;
 		}
-		return obj;
-
+		return obj!=null;
 	}
 
 	public void flush() {

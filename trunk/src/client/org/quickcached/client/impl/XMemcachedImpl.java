@@ -55,9 +55,9 @@ public class XMemcachedImpl extends MemcachedClient {
 		c.shutdown();
 	}
 
-	public void set(String key, int ttlSec, Object value, int timeoutSec) throws TimeoutException {
+	public void set(String key, int ttlSec, Object value, long timeoutMiliSec) throws TimeoutException {
 		try {
-			c.set(key, ttlSec, value, timeoutSec*1000);
+			c.set(key, ttlSec, value, timeoutMiliSec);
 		} catch (java.util.concurrent.TimeoutException ex) {
 			throw new TimeoutException("Timeout "+ex);
 		} catch (InterruptedException ex) {
@@ -70,10 +70,10 @@ public class XMemcachedImpl extends MemcachedClient {
 		
 	}
 
-	public Object get(String key, int timeoutSec) throws TimeoutException {
+	public Object get(String key, long timeoutMiliSec) throws TimeoutException {
 		Object readObject = null;
 		try {
-			readObject = (String) c.get(key, timeoutSec*1000);			
+			readObject = (String) c.get(key, timeoutMiliSec);			
 		} catch(java.util.concurrent.TimeoutException ex) {
 			throw new TimeoutException("Timeout "+ex);
 		} catch(InterruptedException ex) {
@@ -86,9 +86,9 @@ public class XMemcachedImpl extends MemcachedClient {
 		return readObject;
 	}
 
-	public boolean delete(String key, int timeoutSec) throws TimeoutException {
+	public boolean delete(String key, long timeoutMiliSec) throws TimeoutException {
 		try {
-			return c.delete(key, (long) timeoutSec*1000);
+			return c.delete(key, timeoutMiliSec);
 		} catch(java.util.concurrent.TimeoutException ex) {
 			throw new TimeoutException("Timeout "+ex);
 		} catch(InterruptedException ex) {

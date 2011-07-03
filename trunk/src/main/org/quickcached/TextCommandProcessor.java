@@ -150,12 +150,12 @@ public class TextCommandProcessor {
 				noreplay = true;
 			}
 		}
-		Object obj = cache.delete(key);
+		boolean flag = cache.delete(key);
 		if (noreplay) {
 			return;
 		}
 
-		if (obj != null) {
+		if (flag == true) {
 			sendResponse(handler, "DELETED\r\n");
 		} else {
 			sendResponse(handler, "NOT_FOUND\r\n");
@@ -259,6 +259,8 @@ public class TextCommandProcessor {
 				return;
 			}
 		}
+		
+		cache.update(key, dc, dc.getSize());
 
 		if (noreplay) {
 			return;
@@ -320,14 +322,14 @@ public class TextCommandProcessor {
 		dc.setFlags(data.getFlags());
 
 		if (data.getCmd().equals("set")) {
-			cache.set(data.getKey(), dc, data.getExptime());
+			cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
 			if (data.isNoreplay() == false) {
 				sendResponse(handler, "STORED\r\n");
 			}
 		} else if (data.getCmd().equals("add")) {
 			Object olddata = cache.get(data.getKey());
 			if (olddata == null) {
-				cache.set(data.getKey(), dc, data.getExptime());
+				cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
 				if (data.isNoreplay() == false) {
 					sendResponse(handler, "STORED\r\n");
 				}
@@ -339,7 +341,7 @@ public class TextCommandProcessor {
 		} else if (data.getCmd().equals("replace")) {
 			Object olddata = cache.get(data.getKey());
 			if (olddata != null) {
-				cache.set(data.getKey(), dc, data.getExptime());
+				cache.update(data.getKey(), dc, dc.getSize());
 				if (data.isNoreplay() == false) {
 					if (data.isNoreplay() == false) {
 						sendResponse(handler, "STORED\r\n");
@@ -354,6 +356,8 @@ public class TextCommandProcessor {
 			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
 			if (olddata != null) {
 				olddata.append(dc.getData());
+				cache.update(data.getKey(), olddata, olddata.getSize());
+				
 				dc.setData(null);
 				dc = null;
 
@@ -371,6 +375,7 @@ public class TextCommandProcessor {
 			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
 			if (olddata != null) {
 				olddata.prepend(dc.getData());
+				cache.update(data.getKey(), olddata, olddata.getSize());
 				dc.setData(null);
 				dc = null;
 
@@ -391,7 +396,7 @@ public class TextCommandProcessor {
 				int passedcas = Integer.parseInt(data.getCasUnique());
 
 				if (oldcas == passedcas) {
-					cache.set(data.getKey(), dc, data.getExptime());
+					cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
 					if (data.isNoreplay() == false) {
 						sendResponse(handler, "STORED\r\n");
 					}

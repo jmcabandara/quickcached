@@ -160,8 +160,8 @@ public class Data implements ClientData {
 		//todo check 1970 thing
 		//60*60*24*30 = 30 days in sec
 		if(exptime>2592000) {
-			Date time = new Date(exptime);
-			this.exptime = time.getTime() - System.currentTimeMillis();
+			Date time = new Date(exptime*1000);//in mili
+			this.exptime = (time.getTime() - System.currentTimeMillis())/1000;//in sec
 		}
 	}
 

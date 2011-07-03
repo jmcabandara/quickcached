@@ -2,15 +2,10 @@ package org.quickcached.protocol;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.concurrent.TimeoutException;
-import java.util.logging.*;
-import net.rubyeye.xmemcached.MemcachedClient;
 
-import net.rubyeye.xmemcached.MemcachedClientBuilder;
-import net.rubyeye.xmemcached.XMemcachedClientBuilder;
-import net.rubyeye.xmemcached.command.BinaryCommandFactory;
-import net.rubyeye.xmemcached.exception.MemcachedException;
-import net.rubyeye.xmemcached.utils.AddrUtil;
+import java.util.logging.*;
+import org.quickcached.client.*;
+
 /**
  *
  * @author akshath
@@ -126,18 +121,19 @@ public class LoadTestX {
 
 	public void setUp(){
 		try {
-			MemcachedClientBuilder builder = new XMemcachedClientBuilder(
-					AddrUtil.getAddresses(hostList));
-			builder.setCommandFactory(new BinaryCommandFactory());//use binary protocol 
-			c = builder.build();
-   	} catch (IOException ex) {
+			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
+			c.setUseBinaryConnection(true);
+			c.setAddresses(hostList);
+			c.setDefaultTimeoutMiliSec(10000);//10 sec
+			c.init();
+		} catch (Exception ex) {
 			Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-		}
+		}		
 	}
 
 	public void tearDown(){
 		if(c!=null) try {
-			c.shutdown();
+			c.stop();
 		} catch (IOException ex) {
 			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -173,11 +169,7 @@ public class LoadTestX {
 			c.set(key, 3600, value);
 		} catch (TimeoutException ex) {
 			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (InterruptedException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (MemcachedException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		}
+		} 
 	}
 
 	public void doGet(int i) {
@@ -190,13 +182,7 @@ public class LoadTestX {
 		} catch(TimeoutException e) {
 			timeouts++;
 			System.out.println("Timeout: "+e+" for "+key);
-		} catch(InterruptedException e) {
-			timeouts++;
-			System.out.println("Timeout: "+e+" for "+key);
-		} catch(MemcachedException e) {
-			timeouts++;
-			System.out.println("MemcachedException: "+e+" for "+key);
-		}
+		} 
 	}
 
 	public void doDelete(int i) {
@@ -205,10 +191,6 @@ public class LoadTestX {
 			c.delete(key);
 		} catch (TimeoutException ex) {
 			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (InterruptedException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (MemcachedException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
-		}
+		} 
 	}
 }

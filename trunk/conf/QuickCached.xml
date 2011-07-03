@@ -83,7 +83,10 @@
 		
 		<property>
 			<property-name>CACHE_IMPL_CLASS</property-name>
-			<property-value>org.quickcached.cache.WhirlycottCacheImpl</property-value>
+			<!-- org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl -->
+			<!-- org.quickcached.cache.impl.h2database.H2CacheImpl -->
+			
+			<property-value>org.quickcached.cache.impl.h2database.H2CacheImpl</property-value>
 		</property>
 
 		<property>
@@ -103,7 +106,7 @@
 	  </ip-filter> 
 	</access-constraint>
 
-	<application-jar-path>../dist/QuickCached.jar</application-jar-path>
+	<application-jar-path>../dist/QuickCached-Server.jar</application-jar-path>
 
 		
 	<server-hooks>
