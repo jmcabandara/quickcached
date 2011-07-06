@@ -3,7 +3,9 @@ package org.quickcached.cache.impl.whirlycott;
 import com.whirlycott.cache.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.quickcached.QuickCached;
 import org.quickcached.cache.CacheInterface;
 
 /**
@@ -71,21 +73,25 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	}
 
 	public void set(String key, Object value, int objectSize, long expInSec) {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "set key: {0}; objectsize: {1};", new Object[]{key, objectSize});
 		cache.store(key, value, expInSec*1000);
 		totalItems++;
 		cmdSets++;
 	}
 	
 	public void update(String key, Object value, int objectSize) {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", new Object[]{key, objectSize});
 		cache.store(key, value);
 	}
 
 	public Object get(String key) {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "get key: {0}", key);
 		cmdGets++;
 		Object obj = cache.retrieve(key);
 		if(obj!=null) {
 			getHits++;
 		} else {
+			if(QuickCached.DEBUG) logger.log(Level.FINE, "no value in db for key: {0}", key);
 			getMisses++;
 		}
 		return obj;
@@ -93,6 +99,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 
 	public boolean delete(String key) {
 		cmdDeletes++;
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "delete key: {0};", key);
 		Object obj = cache.remove(key);
 		if(obj!=null) {
 			deleteHits++;
@@ -103,6 +110,7 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	}
 
 	public void flush() {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "flush");
 		cache.clear();
 		cmdFlushs++;
 	}

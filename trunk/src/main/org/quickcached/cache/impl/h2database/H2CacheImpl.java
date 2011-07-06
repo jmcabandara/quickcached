@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.quickcached.QuickCached;
 import org.quickcached.cache.CacheInterface;
 
 /**
@@ -87,6 +88,8 @@ public class H2CacheImpl implements CacheInterface {
 		if (expInSec != 0) {
 			expTime = new java.sql.Timestamp(System.currentTimeMillis() + expInSec * 1000);
 		}		
+		
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "set key: {0}; objectsize: {1}; expInSec:{2}", new Object[]{key, objectSize, expInSec});
 
 		try {
 			con = getConnection();
@@ -146,6 +149,9 @@ public class H2CacheImpl implements CacheInterface {
 	public void update(String key, Object value, int objectSize) {
 		Connection con = null;
 		PreparedStatement pstmt = null;
+		
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", new Object[]{key, objectSize});
+		
 		try {
 			java.sql.Timestamp currentTime = new java.sql.Timestamp(System.currentTimeMillis());
 			
@@ -183,6 +189,9 @@ public class H2CacheImpl implements CacheInterface {
 		Object obj = null;
 		Connection con = null;
 		PreparedStatement pstmt = null;
+		
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "get key: {0}", key);
+		
 		try {
 			con = getConnection();
 
@@ -192,9 +201,11 @@ public class H2CacheImpl implements CacheInterface {
 			ResultSet rs = pstmt.executeQuery();
 
 			java.sql.Timestamp expTime = null;
-			if (rs.next()) {
+			if(rs.next()) {
 				obj = rs.getObject("DATA");
 				expTime = rs.getTimestamp("EXPIRY_TIME_STAMP");
+			} else {
+				if(QuickCached.DEBUG) logger.log(Level.FINE, "no value in db for key: {0}", key);
 			}
 			
 			if (expTime != null && expTime.before(new Date())) {
@@ -229,12 +240,17 @@ public class H2CacheImpl implements CacheInterface {
 		Connection con = null;
 		int rowsAffected = 0;
 		PreparedStatement pstmt = null;
+		
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "delete key: {0};", key);
+		
 		try {
 			con = getConnection();
 			pstmt = con.prepareStatement("DELETE FROM DATA_CACHE WHERE KEY = ?");
 			int k = 1;
 			pstmt.setString(k++, key);
 			rowsAffected = pstmt.executeUpdate();
+			
+			if(QuickCached.DEBUG) logger.log(Level.FINE, "rowsAffected: {0}", rowsAffected);
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: " + e, e);
 		} finally {
@@ -261,6 +277,9 @@ public class H2CacheImpl implements CacheInterface {
 		Connection con = null;
 		int rowsAffected = 0;
 		PreparedStatement pstmt = null;
+		
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "flush");
+		
 		try {
 			con = cp.getConnection();
 			pstmt = con.prepareStatement("DELETE FROM DATA_CACHE");

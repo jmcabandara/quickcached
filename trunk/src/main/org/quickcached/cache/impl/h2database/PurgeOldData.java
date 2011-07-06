@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.quickcached.QuickCached;
 
 /**
  * H2 based implementation
@@ -41,7 +42,7 @@ public class PurgeOldData {
 					pstmt.setTimestamp(1, spanOfTime);
 					int rowsDeleted = pstmt.executeUpdate();
 
-					logger.fine("Records expired: " + rowsDeleted);
+					if(QuickCached.DEBUG) logger.fine("Records expired: " + rowsDeleted);
 				} catch (Exception e) {
 					logger.log(Level.WARNING, "Error: " + e, e);
 				} finally {
