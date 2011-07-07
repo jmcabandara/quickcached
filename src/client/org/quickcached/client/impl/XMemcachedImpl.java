@@ -73,7 +73,7 @@ public class XMemcachedImpl extends MemcachedClient {
 	public Object get(String key, long timeoutMiliSec) throws TimeoutException {
 		Object readObject = null;
 		try {
-			readObject = (String) c.get(key, timeoutMiliSec);			
+			readObject = c.get(key, timeoutMiliSec);			
 		} catch(java.util.concurrent.TimeoutException ex) {
 			throw new TimeoutException("Timeout "+ex);
 		} catch(InterruptedException ex) {

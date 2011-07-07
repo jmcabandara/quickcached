@@ -85,7 +85,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		Object readObject = null;
 		Future <Object> f = getCache().asyncGet(key);
 		try {
-			readObject = (String) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+			readObject = f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
 		} catch(Exception e) {
 			f.cancel(false);
 			throw new TimeoutException("Timeout "+e);
