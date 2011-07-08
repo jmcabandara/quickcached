@@ -47,9 +47,10 @@ public class BinaryCommandProcessor {
 
 		try {
 			if("01".equals(opcode) || "11".equals(opcode)) {//Set,SetQ
-				if(command.getHeader().getCas()!=null) {
+				if(command.getHeader().getCas()!=null && 
+						"0000000000000000".equals(command.getHeader().getCas())==false) {
 					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if(olddc!=null) {
+					if(olddc==null) {
 						if("01".equals(opcode)) { //set
 							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
 							sendResponse(handler, binaryPacket);
