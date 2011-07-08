@@ -12,6 +12,7 @@ version 1.2.0 [03-Jul-2011]
 + Implemented client abstraction for using XMemcached and SpyMemcached  
 client API
 # Improved cache for better input stream handling.
+! Bug fix for CAS in set (Binary Mode only)
 
 
 version 1.0.2 [19-Feb-2011]

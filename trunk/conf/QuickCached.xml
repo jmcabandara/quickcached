@@ -86,7 +86,7 @@
 			<!-- org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl -->
 			<!-- org.quickcached.cache.impl.h2database.H2CacheImpl -->
 			
-			<property-value>org.quickcached.cache.impl.h2database.H2CacheImpl</property-value>
+			<property-value>org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl</property-value>
 		</property>
 
 		<property>
