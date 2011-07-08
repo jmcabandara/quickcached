@@ -2,6 +2,7 @@ package org.quickcached.protocol;
 
 import java.net.InetSocketAddress;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -26,11 +27,11 @@ public class ProtocolTest extends TestCase  {
 	}
 
 	public void testAsyncGet() {
-		c.set("Hello", 3600, "World");
+		c.set("HelloAG", 3600, "World");
 
 
 		String readObject = null;
-		Future <Object> f = c.asyncGet("Hello");
+		Future <Object> f = c.asyncGet("HelloAG");
 		try {
 			readObject = (String) f.get(15, TimeUnit.SECONDS);
 		} catch(Exception e) {
@@ -44,8 +45,8 @@ public class ProtocolTest extends TestCase  {
 	public void testGet() {
         Date value = new Date();
 
-		c.set("someKey", 3600, value);
-		Date readObject = (Date) c.get("someKey");
+		c.set("someKeyG", 3600, value);
+		Date readObject = (Date) c.get("someKeyG");
 
 		assertNotNull(readObject);
 		assertEquals(value.getTime(),  readObject.getTime());
@@ -104,11 +105,11 @@ public class ProtocolTest extends TestCase  {
 	public void testReplace() {
         String value = "ABCD";
 
-		c.set("someKey", 3600, "World");
+		c.set("someKeyR", 3600, "World");
 
 		boolean flag = false;
 
-		Future <Boolean> f = c.replace("someKey", 3600, value);
+		Future <Boolean> f = c.replace("someKeyR", 3600, value);
 		try {
 			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
 		} catch(Exception e) {
@@ -117,8 +118,8 @@ public class ProtocolTest extends TestCase  {
 
 		assertTrue(flag);
 
-		c.delete("someKey");
-		f = c.replace("someKey", 3600, value);
+		c.delete("someKeyR");
+		f = c.replace("someKeyR", 3600, value);
 		try {
 			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
 		} catch(Exception e) {
@@ -164,14 +165,14 @@ public class ProtocolTest extends TestCase  {
 	}
 
 	public void testDelete() {
-		c.set("Hello", 3600, "World");
-		String readObject = (String) c.get("Hello");
+		c.set("HelloD", 3600, "World");
+		String readObject = (String) c.get("HelloD");
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
 
-		c.delete("Hello");
-		readObject = (String) c.get("Hello");
+		c.delete("HelloD");
+		readObject = (String) c.get("HelloD");
 		assertNull(readObject);
 	}
 
@@ -203,8 +204,8 @@ public class ProtocolTest extends TestCase  {
 	}
 
 	public void testFlush() {
-		c.set("Hello", 3600, "World");
-		String readObject = (String) c.get("Hello");
+		c.set("HelloF", 3600, "World");
+		String readObject = (String) c.get("HelloF");
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
@@ -214,4 +215,39 @@ public class ProtocolTest extends TestCase  {
 		readObject = (String) c.get("Hello");
 		assertNull(readObject);
 	}
+	
+	public void testDoubleSet1() {
+        String value = "v1";
+		c.set("someKeyDS1", 3600, value);
+		String readObject = (String) c.get("someKeyDS1");
+
+		assertNotNull(readObject);
+		assertEquals("v1",  readObject);
+		
+		value = "v2";
+		c.set("someKeyDS1", 3600, value);
+		readObject = (String) c.get("someKeyDS1");
+
+		assertNotNull(readObject);
+		assertEquals("v2",  readObject);
+	}
+	
+	public void testDoubleSet2() {
+        Map value = new HashMap();
+		value.put("key1", "v1");
+		
+		c.set("someKey", 3600, value);
+		Map readObject = (Map) c.get("someKey");
+
+		assertNotNull(readObject);
+		assertEquals(value,  readObject);
+		
+		value.put("key2", "v2");
+		c.set("someKey", 3600, value);
+		readObject = (Map) c.get("someKey");
+
+		assertNotNull(readObject);
+		assertEquals(value,  readObject);
+	}
+
 }
