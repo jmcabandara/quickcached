@@ -46,7 +46,7 @@ public class SetupLoggingHook implements ServerHook {
 
 				if(isMakeLogFile()) {
 					txtLog = new FileHandler("log/QuickCached_"+quickserver.getPort()+"_%u%g.txt",
-						1024*1024, 20, true);
+						1024*1024, 100, true);
 					txtLog.setLevel(Level.FINEST);
 					txtLog.setFormatter(new SimpleTextFormatter());
 					logger.addHandler(txtLog);
