@@ -27,8 +27,8 @@ public class TextCommandProcessor {
 	public void handleTextCommand(ClientHandler handler, String command)
 			throws SocketTimeoutException, IOException {
 		if (QuickCached.DEBUG) {
-			logger.fine("command: " + command);
-		}
+			logger.log(Level.FINE, "command: {0}", command);
+		} 
 
 		if (command.startsWith("set ") || command.startsWith("add ")
 				|| command.startsWith("replace ") || command.startsWith("append ")
@@ -103,6 +103,10 @@ public class TextCommandProcessor {
 		String cmdData[] = command.split(" ");
 		String cmd = cmdData[0];
 		String exptime = null;
+		
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "cmd: {0}", new Object[]{cmd});
+		}
 
 		if (cmdData.length >= 2) {
 			exptime = cmdData[1];
@@ -143,6 +147,10 @@ public class TextCommandProcessor {
 
 		String cmd = cmdData[0];
 		String key = cmdData[1];
+		
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "cmd: {0}, key: {1}", new Object[]{cmd, key});
+		}
 
 		boolean noreplay = false;
 		if (cmdData.length == 3) {
@@ -175,6 +183,9 @@ public class TextCommandProcessor {
 
 		for (int i = 1; i < cmdData.length; i++) {
 			key = cmdData[i];
+			if(QuickCached.DEBUG==false) {
+				logger.log(Level.FINE, "cmd: {0}, key: {1}", new Object[]{cmd, key});
+			}
 			DataCarrier dc = (DataCarrier) cache.get(key);
 			if (dc != null) {
 				StringBuilder sb = new StringBuilder();
@@ -222,6 +233,10 @@ public class TextCommandProcessor {
 		} catch (Exception e) {
 			sendResponse(handler, "CLIENT_ERROR parse of client value failed\r\n");
 			return;
+		}
+		
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "cmd: {0}, key: {1}", new Object[]{cmd, key});
 		}
 
 		boolean noreplay = false;
@@ -315,6 +330,10 @@ public class TextCommandProcessor {
 	public void processStorageCommands(ClientHandler handler)
 			throws SocketTimeoutException, IOException {
 		Data data = (Data) handler.getClientData();
+		
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "cmd: {0}, key: {1}", new Object[]{data.getCmd(), data.getKey()});
+		}
 
 		byte dataToStore[] = data.getDataByte();
 
@@ -421,7 +440,9 @@ public class TextCommandProcessor {
 
 	public void sendResponse(ClientHandler handler, byte data[]) throws SocketTimeoutException, IOException {
 		if (QuickCached.DEBUG) {
-			logger.fine("S: " + new String(data));
+			logger.log(Level.FINE, "S: {0}", new String(data));
+		} else {
+			logger.log(Level.FINE, "S: {0} bytes", data.length);
 		}
 		handler.sendClientBinary(data);
 	}

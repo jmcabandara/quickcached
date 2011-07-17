@@ -5,6 +5,7 @@ import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.binary.Extras;
@@ -27,9 +28,12 @@ public class BinaryCommandProcessor {
 
 	public void handleBinaryCommand(ClientHandler handler, BinaryPacket command)
 			throws SocketTimeoutException, IOException {
-		if(QuickCached.DEBUG) logger.fine("command: "+command);
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "command: {0}", command);
 
 		String opcode = command.getHeader().getOpcode();
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "opcode: {0}, key: {1}", new Object[]{opcode, command.getKey()});
+		}
 
 		ResponseHeader rh = new ResponseHeader();
 		rh.setMagic("81");
@@ -386,9 +390,19 @@ public class BinaryCommandProcessor {
 
 	public void sendResponse(ClientHandler handler, BinaryPacket binaryPacket)
 			throws SocketTimeoutException, IOException {
-		if(QuickCached.DEBUG) logger.fine("Res BinaryPacket: "+binaryPacket);
+		if(QuickCached.DEBUG) {
+			logger.log(Level.FINE, "Res BinaryPacket: {0}", binaryPacket);
+		} else {
+			ResponseHeader rh = (ResponseHeader) binaryPacket.getHeader();
+			logger.log(Level.FINE, "S: Status {0}", rh.getStatus());
+		}
 		byte data[] = binaryPacket.toBinaryByte();
-		if(QuickCached.DEBUG) logger.fine("S: "+new String(data));
+		if(QuickCached.DEBUG) {
+			logger.log(Level.FINE, "S: {0}", new String(data));
+		} else {
+			logger.log(Level.FINE, "S: {0} bytes", data.length);
+		}
+	
 		handler.sendClientBinary(data);
 	}
 }
