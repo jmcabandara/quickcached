@@ -80,7 +80,9 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	
 
 	public CommandHandler() {
-		
+		logger.log(Level.FINE, "PID: {0}", QuickCached.getPID());
+		logger.log(Level.FINE, "App Version: {0}", QuickCached.app_version);
+		logger.log(Level.FINE, "Memcached Version: {0}", QuickCached.version);
 	}
 
 
@@ -88,16 +90,19 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	public void gotConnected(ClientHandler handler)
 			throws SocketTimeoutException, IOException {
 		totalConnections++;
-		if(QuickCached.DEBUG) logger.fine("Connection opened: "+handler.getHostAddress());
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection opened: {0}", 
+				handler.getHostAddress());
 	}
 
 	public void lostConnection(ClientHandler handler) 
 			throws IOException {
-		if(QuickCached.DEBUG) logger.fine("Connection Lost: "+handler.getSocket().getInetAddress());
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection Lost: {0}", 
+				handler.getSocket().getInetAddress());
 	}
 	public void closingConnection(ClientHandler handler) 
 			throws IOException {
-		if(QuickCached.DEBUG) logger.fine("Connection closed: "+handler.getSocket().getInetAddress());
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection closed: {0}", 
+				handler.getSocket().getInetAddress());
 	}
 	//--ClientEventHandler
 

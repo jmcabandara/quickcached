@@ -5,9 +5,12 @@ import org.quickserver.net.server.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.util.Map;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
+	public static final String app_version = "1.1.0";
+	
     public static String version = "1.1.0";
     public static boolean DEBUG = false;
     private static final int KEY_MAX_LENGTH = 250;
@@ -48,12 +51,20 @@ public class QuickCached {
 		} else {
 			DOMConfigurator.configure("conf/log4j.xml");
 		}
-
+		
+		
         String confFile = "conf" + File.separator + "QuickCached.xml";
         Object config[] = new Object[]{confFile};
 
         QuickServer quickcached = new QuickServer();
         quickcached.initService(config);
+		
+		Map configMap = quickcached.getConfig().getApplicationConfiguration();
+		version = (String) configMap.get("MEMCACHED_VERSION_TO_SHOW");
+		if(version==null) {
+			version = "1.4.6";
+		}
+		
 
         //CLI
         //-l <ip_addr>

@@ -93,7 +93,12 @@
 			<property-name>FLUSH_ON_LOW_MEMORY_PERCENT</property-name>
 			<!-- 0.9 = 90%; will call flush if reached; make if blank to skip this-->
 			<property-value>0.95</property-value>
-		</property>		
+		</property>	
+		
+		<property>
+			<property-name>MEMCACHED_VERSION_TO_SHOW</property-name>
+			<property-value>1.4.6</property-value>
+		</property>	
 	</application-configuration>
 
 	<access-constraint>
