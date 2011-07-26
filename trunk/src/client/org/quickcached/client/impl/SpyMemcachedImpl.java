@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.quickcached.client.MemcachedClient;
+import java.util.Map;
 
 /**
  *
  * @author Akshathkumar Shetty
  */
 public class SpyMemcachedImpl extends MemcachedClient {
-	private net.spy.memcached.MemcachedClient[] c = null;
+	private net.spy.memcached.MemcachedClient[] c = null;        
 	
 	private String hostList;
 	private boolean binaryConnection = true;
@@ -109,6 +110,10 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		for(int i=0;i<poolSize;i++) {
 			c[i].flush();
 		}
+	}
+        
+	public Map getStats() throws Exception {
+		return getCache().getStats();
 	}
 	
 }

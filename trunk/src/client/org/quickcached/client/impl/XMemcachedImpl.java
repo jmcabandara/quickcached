@@ -10,6 +10,7 @@ import net.rubyeye.xmemcached.exception.MemcachedException;
 import net.rubyeye.xmemcached.utils.AddrUtil;
 import org.quickcached.client.MemcachedClient;
 import org.quickcached.client.TimeoutException;
+import java.util.Map;
 
 /**
  *
@@ -112,5 +113,9 @@ public class XMemcachedImpl extends MemcachedClient {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
+        
+     public Map getStats() throws Exception {
+		return c.getStats();
+     }
 	
 }

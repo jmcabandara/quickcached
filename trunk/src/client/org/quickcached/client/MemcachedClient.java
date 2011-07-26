@@ -63,6 +63,8 @@ public abstract class MemcachedClient {
 	public abstract Object get(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract boolean delete(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract void flushAll() throws TimeoutException;
+        
+	public abstract Map getStats() throws Exception;
 	
 	public void set(String key, int ttlSec, Object value) 
 			throws TimeoutException {
