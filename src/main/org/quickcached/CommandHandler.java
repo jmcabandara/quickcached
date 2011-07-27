@@ -29,7 +29,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	//private static long bytesWritten;
 
 	public static Map getStats(QuickServer server) {
-		Map stats = new LinkedHashMap();
+		Map stats = new LinkedHashMap(25);
 
 		//pid
 		String pid = QuickCached.getPID();
@@ -73,6 +73,8 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		Map implStats = cache.getStats();
 		stats.putAll(implStats);
+		
+		stats.put("app_version", QuickCached.app_version);
 
 		return stats;
 	}
