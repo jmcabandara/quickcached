@@ -18,6 +18,12 @@ import java.util.Set;
 public class TextCommandProcessor {
 	private static final Logger logger = Logger.getLogger(TextCommandProcessor.class.getName());
 	
+	private static String versionOutput = null;
+	
+	static {
+		versionOutput = "VERSION " + QuickCached.version + "\r\n";
+	}
+	
 	private CacheInterface cache;
 
 	public void setCache(CacheInterface cache) {
@@ -30,7 +36,9 @@ public class TextCommandProcessor {
 			logger.log(Level.FINE, "command: {0}", command);
 		} 
 
-		if (command.startsWith("set ") || command.startsWith("add ")
+		if (command.equals("version")) {
+			sendResponse(handler, versionOutput);
+		} else if (command.startsWith("set ") || command.startsWith("add ")
 				|| command.startsWith("replace ") || command.startsWith("append ")
 				|| command.startsWith("prepend ") || command.startsWith("cas ")) {
 			try {
@@ -78,8 +86,6 @@ public class TextCommandProcessor {
 		} else if (command.startsWith("stats ")) {
 			//todo
 			sendResponse(handler, "ERROR\r\n");
-		} else if (command.equals("version")) {
-			sendResponse(handler, "VERSION " + QuickCached.version + "\r\n");
 		} else if (command.equals("quit")) {
 			handler.closeConnection();
 		} else if (command.startsWith("incr ") || command.startsWith("decr ")) {
