@@ -13,6 +13,9 @@ version 1.2.0 [03-Jul-2011]
 client API
 # Improved cache for better input stream handling.
 ! Bug fix for CAS in set (Binary Mode only)
+# Have cached the response to version and noop commands
++ Added application version in stats output
++ We have configurable Memcached version to output to client 
 
 
 version 1.0.2 [19-Feb-2011]
