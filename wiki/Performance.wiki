@@ -1,0 +1,14 @@
+#summary Performance Test results and recommendations
+#labels Phase-Deploy,Phase-QA
+
+= Introduction =
+
+Lets look at how QuickCached performance under different client and server settings.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
