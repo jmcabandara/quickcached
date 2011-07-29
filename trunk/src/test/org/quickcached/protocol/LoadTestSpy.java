@@ -178,6 +178,7 @@ public class LoadTestSpy {
 			Object readObject = (String) c.get(key);
 			if(readObject==null) {
 				System.out.println("get was null! for "+key);
+				timeouts++;
 			}
 		} catch(TimeoutException e) {
 			timeouts++;
