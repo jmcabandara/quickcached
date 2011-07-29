@@ -20,8 +20,8 @@ Server Configuration
 
 <br />
 
-*Whirlycott Impl with Server running in blocking mode*<br />
-Note: Each Transaction has 3 operation - set, get and delete commands.
+*Whirlycott Impl with Server running in blocking mode *<br />
+Note: Each Transaction has 3 operation - set, get and delete commands. Client is using binary mode of communication.
 || *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || XMemcached || 3.44 ||
 || 10 || 100 || 0 || XMemcached || 1.39 ||
@@ -36,4 +36,22 @@ Note: Each Transaction has 3 operation - set, get and delete commands.
 {{{
 Avg Time per Txn: 2.63 ms
 Avg Time per Operation: 0.87 ms
+}}}
+
+*Whirlycott Impl with Server running in blocking mode *<br />
+Note: Each Transaction has 3 operation - set, get and delete commands. Client is using binary mode of communication.
+|| *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| 10 || 100 || 0 || SpyMemcached || 2.66 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.55 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.72||
+|| 1 || 100 || 0 || SpyMemcached || 4.38 ||
+|| 1 || 100 || 0 || SpyMemcached || 16.4 ||
+|| 1 || 100 || 0 || SpyMemcached || 3.58 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+
+{{{
+Avg Time per Txn: 3.78 ms
+Avg Time per Operation: 1.26 ms
 }}}
