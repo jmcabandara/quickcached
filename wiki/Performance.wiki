@@ -21,7 +21,9 @@ Server Configuration
 <br />
 
 *Whirlycott Impl with Server running in blocking mode *<br />
-Note: Each Transaction has 3 operation - set, get and delete commands. Client is using binary mode of communication.
+Note: Each Transaction has 3 operation - set, get and delete commands. <br />
+Client is using binary mode of communication.
+
 || *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || XMemcached || 3.44 ||
 || 10 || 100 || 0 || XMemcached || 1.39 ||
@@ -38,8 +40,8 @@ Avg Time per Txn: 2.63 ms
 Avg Time per Operation: 0.87 ms
 }}}
 
-*Whirlycott Impl with Server running in blocking mode *<br />
-Note: Each Transaction has 3 operation - set, get and delete commands. Client is using binary mode of communication.
+Note: Each Transaction has 3 operation - set, get and delete commands. <br />
+Client is using binary mode of communication.
 || *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || SpyMemcached || 2.66 ||
 || 10 || 100 || 0 || SpyMemcached || 1.55 ||
@@ -54,4 +56,25 @@ Note: Each Transaction has 3 operation - set, get and delete commands. Client is
 {{{
 Avg Time per Txn: 3.78 ms
 Avg Time per Operation: 1.26 ms
+}}}
+
+
+*H2Cache Impl with Server running in blocking mode *<br />
+Note: Each Transaction has 3 operation - set, get and delete commands. <br />
+Client is using binary mode of communication.
+
+|| *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| 10 || 100 || 0 || XMemcached || 11.72 ||
+|| 10 || 100 || 0 || XMemcached || 7.8 ||
+|| 10 || 100 || 0 || XMemcached || 11.88 ||
+|| 1 || 100 || 0 || XMemcached || 10.15 ||
+|| 1 || 100 || 0 || XMemcached || 12.02 ||
+|| 1 || 100 || 0 || XMemcached || 10.47 ||
+|| 20 || 100 || 0 || XMemcached || 1.72 ||
+|| 20 || 100 || 0 || XMemcached || 4.69 ||
+|| 20 || 100 || 0 || XMemcached || 1.72 ||
+
+{{{
+Avg Time per Txn: 8.01 ms
+Avg Time per Operation: 2.67 ms
 }}}
