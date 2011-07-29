@@ -18,18 +18,22 @@ Server Configuration
     # RAM: 4 GB
     # CPU: Intel Core 2 Duo (each core - U7300  @ 1.30GHz)
 
-whirlycott Impl with Server running in blocking mode.
-Note: Each Transaction has 3 operation - set, get and delete commands.
-|| Threads || No. of transaction per Thread || Timeout || Client || Avg Time (ms) ||
-|| 10 || 100 || 0 || Xmem || 3.44 ||
-|| 10 || 100 || 0 || Xmem || 1.39 ||
-|| 10 || 100 || 0 || Xmem || 1.25 ||
-|| 1 || 100 || 0 || Xmem || 6.25 ||
-|| 1 || 100 || 0 || Xmem || 3.59 ||
-|| 1 || 100 || 0 || Xmem || 3.27 ||
-|| 20 || 100 || 0 || Xmem || 1.4 ||
-|| 20 || 100 || 0 || Xmem || 2.02 ||
-|| 20 || 100 || 0 || Xmem || 1.1 ||
+<br />
 
+*Whirlycott Impl with Server running in blocking mode*<br />
+Note: Each Transaction has 3 operation - set, get and delete commands.
+|| *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| 10 || 100 || 0 || XMemcached || 3.44 ||
+|| 10 || 100 || 0 || XMemcached || 1.39 ||
+|| 10 || 100 || 0 || XMemcached || 1.25 ||
+|| 1 || 100 || 0 || XMemcached || 6.25 ||
+|| 1 || 100 || 0 || XMemcached || 3.59 ||
+|| 1 || 100 || 0 || XMemcached || 3.27 ||
+|| 20 || 100 || 0 || XMemcached || 1.4 ||
+|| 20 || 100 || 0 || XMemcached || 2.02 ||
+|| 20 || 100 || 0 || XMemcached || 1.1 ||
+
+{{{
 Avg Time per Txn: 2.63 ms
 Avg Time per Operation: 0.87 ms
+}}}
