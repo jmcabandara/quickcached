@@ -28,7 +28,7 @@
 	<!-- main jar -->
 	<target name="main_compile"  depends="clean">
 		<mkdir dir="${main.build.dir}"/>
-		<javac srcdir="src/main/" destdir="${main.build.dir}" debug="on" 
+		<javac srcdir="src/main/" destdir="${main.build.dir}" debug="off" 
 				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath"/>
@@ -45,7 +45,7 @@
 	<!-- client jar -->
 	<target name="client_compile"  depends="clean">
 		<mkdir dir="${client.build.dir}"/>
-		<javac srcdir="src/client/" destdir="${client.build.dir}" debug="on" 
+		<javac srcdir="src/client/" destdir="${client.build.dir}" debug="off" 
 				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath.client"/>
