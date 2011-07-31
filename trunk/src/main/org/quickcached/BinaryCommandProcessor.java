@@ -21,37 +21,16 @@ import org.quickserver.net.server.ClientHandler;
 public class BinaryCommandProcessor {
 	private static final Logger logger = Logger.getLogger(BinaryCommandProcessor.class.getName());
 
-	private static BinaryPacket versionResBinaryPacket = null;
-	private static BinaryPacket noopResBinaryPacket = null;
+	private static byte[] version = null; 
 
 	static {
-		//cached response for noop and version commands
-
-		BinaryPacket binaryPacket = new BinaryPacket();
-		ResponseHeader rh = new ResponseHeader();
-		rh.setMagic("81");
-		rh.setOpcode("0B");//version
-		//rh.setOpaque(command.getHeader().getOpaque());
-		binaryPacket.setHeader(rh);
-		rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 		try {
-			binaryPacket.setValue(QuickCached.version.getBytes("utf-8"));
+			version = QuickCached.version.getBytes("utf-8");
 		} catch (UnsupportedEncodingException ex) {
-			Logger.getLogger(BinaryCommandProcessor.class.getName()).log(Level.SEVERE, "Error: " + ex, ex);
+			Logger.getLogger(BinaryCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		rh.setTotalBodyLength(rh.getKeyLength()
-			+ rh.getExtrasLength() + binaryPacket.getValue().length);
-		versionResBinaryPacket = binaryPacket;
-
-		binaryPacket = new BinaryPacket();
-		rh = new ResponseHeader();
-		rh.setMagic("81");
-		rh.setOpcode("0A");//noop
-		//rh.setOpaque(command.getHeader().getOpaque());
-		rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-		binaryPacket.setHeader(rh);
-		noopResBinaryPacket = binaryPacket;
 	}
+	
 	private CacheInterface cache;
 
 	public void setCache(CacheInterface cache) {
@@ -72,12 +51,31 @@ public class BinaryCommandProcessor {
 		opcode = opcode.toUpperCase();
 
 		try {
-			if ("0A".equals(opcode)) {//noop
-				noopResBinaryPacket.getHeader().setOpaque(command.getHeader().getOpaque());
-				sendResponse(handler, noopResBinaryPacket);
+			if ("0A".equals(opcode)) {//noop				
+				ResponseHeader rh = new ResponseHeader();
+				rh.setMagic("81");
+				rh.setOpcode("0A");//noop
+				rh.setOpaque(command.getHeader().getOpaque());
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				
+				BinaryPacket binaryPacket = new BinaryPacket();
+				binaryPacket.setHeader(rh);				
+				
+				sendResponse(handler, binaryPacket);
 			} else if ("0B".equals(opcode)) {//version
-				versionResBinaryPacket.getHeader().setOpaque(command.getHeader().getOpaque());
-				sendResponse(handler, versionResBinaryPacket);
+				BinaryPacket binaryPacket = new BinaryPacket();		
+				binaryPacket.setValue(version);
+				
+				ResponseHeader rh = new ResponseHeader();
+				rh.setMagic("81");
+				rh.setOpcode("0B");//version
+				rh.setOpaque(command.getHeader().getOpaque());
+				binaryPacket.setHeader(rh);
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setTotalBodyLength(rh.getKeyLength()
+					+ rh.getExtrasLength() + binaryPacket.getValue().length);		
+				
+				sendResponse(handler, binaryPacket);
 			} else {
 				ResponseHeader rh = new ResponseHeader();
 				rh.setMagic("81");

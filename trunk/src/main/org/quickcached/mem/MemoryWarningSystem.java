@@ -17,6 +17,16 @@ public class MemoryWarningSystem {
 	public interface Listener {
 		public void memoryUsageHigh(long usedMemory, long maxMemory);
 	}
+	
+	public static int getMemUsedPercentage() {
+		long usedMemory = Runtime.getRuntime().totalMemory() - 
+				Runtime.getRuntime().freeMemory();			        
+
+		long heapMaxSize = Runtime.getRuntime().maxMemory();
+		
+		int memPercentUsed = (int) (100.0*usedMemory/heapMaxSize);
+		return memPercentUsed;
+	}
 
 	public MemoryWarningSystem() {
 		MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
