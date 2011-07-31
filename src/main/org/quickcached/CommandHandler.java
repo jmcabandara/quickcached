@@ -192,8 +192,8 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		String flushPercent = (String) config.get("FLUSH_ON_LOW_MEMORY_PERCENT");
 		if(flushPercent!=null && flushPercent.trim().equals("")==false) {
-			double fpercent = Double.parseDouble(flushPercent);
-			MemoryWarningSystem.setPercentageUsageThreshold(fpercent);//9.5=95%
+			final double fpercent = Double.parseDouble(flushPercent);
+			MemoryWarningSystem.setPercentageUsageThreshold(fpercent);//.95=95%
 			logger.log(Level.INFO, "MemoryWarningSystem set to {0}; will flush if reached!", fpercent);
 
 			if(lowMemoryActionInit==false) {
@@ -203,14 +203,23 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						logger.log(Level.INFO,
 								"Memory usage high!: UsedMemory: {0};maxMemory:{1}",
 								new Object[]{usedMemory, maxMemory});
-						double percentageUsed = ((double) usedMemory) / maxMemory;
+						double percentageUsed = (((double) usedMemory) / maxMemory)*100;
 						logger.log(Level.SEVERE,
 								"Memory usage high! Percentage of memory used: {0}",
 								percentageUsed);
-						logger.warning("Flushing cache to save JVM.");
-						cache.flush();
+						
+						long memLimit = (long) (fpercent * 100);
+						logger.warning("Calling GC to clear memory");
 						System.gc();
-						logger.fine("Done");
+						long memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
+						logger.warning("After GC mem percent used: "+memPercentAfterGC);
+						if(memPercentAfterGC > memLimit) {						
+							logger.warning("Flushing cache to save JVM.");
+							cache.flush();
+							System.gc();
+						}
+						memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
+						logger.fine("Done. Mem percent used: "+memPercentAfterGC);
 					}
 				});
 			}
