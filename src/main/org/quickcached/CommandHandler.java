@@ -26,6 +26,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 	private static long totalConnections;
 	private static long bytesRead;
+	private static long gcCalls;
 	//private static long bytesWritten;
 
 	public static Map getStats(QuickServer server) {
@@ -75,6 +76,8 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		stats.putAll(implStats);
 		
 		stats.put("app_version", QuickCached.app_version);
+		
+		stats.put("gc_calls", ""+gcCalls);
 
 		return stats;
 	}
@@ -211,12 +214,14 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						long memLimit = (long) (fpercent * 100);
 						logger.warning("Calling GC to clear memory");
 						System.gc();
+						gcCalls++;
 						long memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
 						logger.warning("After GC mem percent used: "+memPercentAfterGC);
 						if(memPercentAfterGC > memLimit) {						
 							logger.warning("Flushing cache to save JVM.");
 							cache.flush();
 							System.gc();
+							gcCalls++;
 						}
 						memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
 						logger.fine("Done. Mem percent used: "+memPercentAfterGC);
