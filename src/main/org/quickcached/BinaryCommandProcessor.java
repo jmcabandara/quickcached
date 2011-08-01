@@ -94,6 +94,7 @@ public class BinaryCommandProcessor {
 							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
 						DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
 						if (olddc == null) {
+							CommandHandler.casMisses++;
 							if ("01".equals(opcode)) { //set
 								rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
 								sendResponse(handler, binaryPacket);
@@ -112,7 +113,10 @@ public class BinaryCommandProcessor {
 								rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
 								sendResponse(handler, binaryPacket);
 							}
+							CommandHandler.casBadval++;
 							return;
+						} else {
+							CommandHandler.casHits++;
 						}
 					}
 					DataCarrier dc = new DataCarrier(command.getValue());
@@ -156,19 +160,27 @@ public class BinaryCommandProcessor {
 						}
 						return;
 					}
-
-					if (olddc != null && command.getHeader().getCas() != null
-							&& olddc.checkCas(command.getHeader().getCas()) == false) {
-						if ("03".equals(opcode)) { //Replace
-							if (QuickCached.DEBUG) {
-								logger.fine(
-										"Cas did not match! OldCas:" + olddc.getCas()
-										+ "NewCAS:" + command.getHeader().getCas());
+					
+					if(command.getHeader().getCas() != null
+							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+						if (olddc != null) {
+							if(olddc.checkCas(command.getHeader().getCas()) == false) {
+								if ("03".equals(opcode)) { //Replace
+									if (QuickCached.DEBUG) {
+										logger.fine(
+												"Cas did not match! OldCas:" + olddc.getCas()
+												+ "NewCAS:" + command.getHeader().getCas());
+									}
+									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+									sendResponse(handler, binaryPacket);									
+								}
+								CommandHandler.casBadval++;
+							} else {
+								CommandHandler.casHits++;
 							}
-							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-							sendResponse(handler, binaryPacket);
+						} else {
+							CommandHandler.casMisses++;
 						}
-						return;
 					}
 
 					if (command.getExtras().getFlags() != null) {
@@ -191,19 +203,28 @@ public class BinaryCommandProcessor {
 						}
 						return;
 					}
-
-					if (olddc != null && command.getHeader().getCas() != null
-							&& olddc.checkCas(command.getHeader().getCas()) == false) {
-						if ("0E".equals(opcode)) { //Append
-							if (QuickCached.DEBUG) {
-								logger.fine(
-										"Cas did not match! OldCas:" + olddc.getCas()
-										+ "NewCAS:" + command.getHeader().getCas());
+					
+					if(command.getHeader().getCas() != null
+							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+						if (olddc != null) {
+							if(olddc.checkCas(command.getHeader().getCas()) == false) {
+								if ("0E".equals(opcode)) { //Append
+									if (QuickCached.DEBUG) {
+										logger.fine(
+												"Cas did not match! OldCas:" + olddc.getCas()
+												+ "NewCAS:" + command.getHeader().getCas());
+									}
+									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+									sendResponse(handler, binaryPacket);
+								}
+								CommandHandler.casBadval++;
+								return;
+							} else {
+								CommandHandler.casHits++;
 							}
-							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-							sendResponse(handler, binaryPacket);
+						} else {
+							CommandHandler.casMisses++;
 						}
-						return;
 					}
 
 					olddc.append(command.getValue());
@@ -225,19 +246,28 @@ public class BinaryCommandProcessor {
 						}
 						return;
 					}
-
-					if (olddc != null && command.getHeader().getCas() != null
-							&& olddc.checkCas(command.getHeader().getCas()) == false) {
-						if ("0F".equals(opcode)) { //Prepend
-							if (QuickCached.DEBUG) {
-								logger.fine(
-										"Cas did not match! OldCas:" + olddc.getCas()
-										+ "NewCAS:" + command.getHeader().getCas());
+					
+					if(command.getHeader().getCas() != null
+							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+						if (olddc != null) {
+							if(olddc.checkCas(command.getHeader().getCas()) == false) {
+								if ("0F".equals(opcode)) { //Prepend
+									if (QuickCached.DEBUG) {
+										logger.fine(
+												"Cas did not match! OldCas:" + olddc.getCas()
+												+ "NewCAS:" + command.getHeader().getCas());
+									}
+									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+									sendResponse(handler, binaryPacket);
+								}
+								CommandHandler.casBadval++;
+								return;
+							} else {
+								CommandHandler.casHits++;
 							}
-							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-							sendResponse(handler, binaryPacket);
+						} else {
+							CommandHandler.casMisses++;
 						}
-						return;
 					}
 
 					olddc.prepend(command.getValue());
@@ -268,6 +298,11 @@ public class BinaryCommandProcessor {
 					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
 					if (olddc == null) {
 						if (extras.getExpiration().equals("ffffffff") == false) {
+							if(opcode.endsWith("5")) {
+								CommandHandler.incrMisses++;
+							} else if(opcode.endsWith("6")) {
+								CommandHandler.decrMisses++;
+							}
 							if ("05".equals(opcode) || "06".equals(opcode)) { //Increment, Decrement
 								rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
 								sendResponse(handler, binaryPacket);
@@ -281,7 +316,13 @@ public class BinaryCommandProcessor {
 								olddc.setFlags(extras.getFlags());
 							}
 							cache.set(command.getKey(), olddc, olddc.getSize(), extras.getExpirationInSec());
-
+							
+							if(opcode.endsWith("5")) {
+								CommandHandler.incrHits++;
+							} else if(opcode.endsWith("6")) {
+								CommandHandler.decrHits++;
+							}
+							
 							if ("05".equals(opcode) || "06".equals(opcode)) {
 								binaryPacket.setValue(olddc.getData());
 								rh.setTotalBodyLength(rh.getKeyLength()
@@ -307,9 +348,9 @@ public class BinaryCommandProcessor {
 						sendResponse(handler, binaryPacket);
 						return;
 					}
-
-					synchronized (command.getKey()) {
-						try {
+					
+					try {
+						synchronized (command.getKey()) {
 							long oldvalue = Long.parseLong(new String(olddc.getData()));
 							if ("05".equals(opcode) || "15".equals(opcode)) {
 								value = oldvalue + value;
@@ -320,15 +361,27 @@ public class BinaryCommandProcessor {
 								}
 							}
 							olddc.setData(("" + value).getBytes("utf-8"));
-						} catch (Exception e) {
-							if ("05".equals(opcode) || "06".equals(opcode)) {
-								rh.setStatus(ResponseHeader.INTERNAL_ERROR);
-								sendResponse(handler, binaryPacket);
-								return;
-							}
+						}
+						
+						if(opcode.endsWith("5")) {
+							CommandHandler.incrHits++;
+						} else if(opcode.endsWith("6")) {
+							CommandHandler.decrHits++;
+						}
+					} catch (Exception e) {
+						if(opcode.endsWith("5")) {
+							CommandHandler.incrMisses++;
+						} else if(opcode.endsWith("6")) {
+							CommandHandler.decrMisses++;
+						}
+						
+						if ("05".equals(opcode) || "06".equals(opcode)) {
+							rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+							sendResponse(handler, binaryPacket);
 							return;
 						}
-					}
+						return;
+					}					
 
 					cache.update(command.getKey(), olddc, olddc.getSize());
 

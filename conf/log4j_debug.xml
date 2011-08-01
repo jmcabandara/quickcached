@@ -22,7 +22,7 @@
 
 
 	<category name="com.whirlycott.cache">
-		<priority value="WARN"/>
+		<priority value="DEBUG"/>
 	</category>
 
 	<category name="org.apache">

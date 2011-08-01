@@ -28,6 +28,13 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	private static long bytesRead;
 	private static long gcCalls;
 	//private static long bytesWritten;
+	protected static long incrMisses;
+	protected static long incrHits;
+	protected static long decrMisses;
+	protected static long decrHits;
+	protected static long casMisses;
+	protected static long casHits;
+	protected static long casBadval;
 
 	public static Map getStats(QuickServer server) {
 		Map stats = new LinkedHashMap(25);
@@ -40,7 +47,10 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		long uptimeSec = ManagementFactory.getRuntimeMXBean().getUptime() / 1000;
 		stats.put("uptime", "" + uptimeSec);
 
-		//time - TODO
+		//time - current UNIX time according to the server 
+		long timeMili = System.currentTimeMillis();
+		stats.put("time", ""+(timeMili/1000));		
+		//stats.put("current_time_millis", "" + timeMili);
 
 		//version
 		stats.put("version", QuickCached.version);
@@ -74,6 +84,14 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		Map implStats = cache.getStats();
 		stats.putAll(implStats);
+		
+		stats.put("incr_misses", "" + incrMisses);
+		stats.put("incr_hits", "" + incrHits);
+		stats.put("decr_misses", "" + decrMisses);
+		stats.put("decr_hits", "" + decrHits);
+		stats.put("cas_misses", "" + casMisses);
+		stats.put("cas_hits", "" + casHits);
+		stats.put("cas_badval", "" + casBadval);
 		
 		stats.put("app_version", QuickCached.app_version);
 		
@@ -217,7 +235,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						gcCalls++;
 						long memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
 						logger.warning("After GC mem percent used: "+memPercentAfterGC);
-						if(memPercentAfterGC > memLimit) {						
+						if(memPercentAfterGC<0 || memPercentAfterGC > memLimit) {						
 							logger.warning("Flushing cache to save JVM.");
 							cache.flush();
 							System.gc();
