@@ -227,6 +227,11 @@ public class TextCommandProcessor {
 
 		if (cmdData.length < 3) {
 			sendResponse(handler, "CLIENT_ERROR Bad number of args passed\r\n");
+			if (cmdData[0].equals("incr")) {
+				CommandHandler.incrMisses++;
+			} else if (cmdData[0].equals("decr")) {
+				CommandHandler.decrMisses++;
+			}
 			return;
 		}
 
@@ -238,6 +243,11 @@ public class TextCommandProcessor {
 			value = Long.parseLong(_value);
 		} catch (Exception e) {
 			sendResponse(handler, "CLIENT_ERROR parse of client value failed\r\n");
+			if (cmd.equals("incr")) {
+				CommandHandler.incrMisses++;
+			} else if (cmd.equals("decr")) {
+				CommandHandler.decrMisses++;
+			}
 			return;
 		}
 		
@@ -258,11 +268,16 @@ public class TextCommandProcessor {
 			if (noreplay == false) {
 				sendResponse(handler, "NOT_FOUND\r\n");
 			}
+			if (cmd.equals("incr")) {
+				CommandHandler.incrMisses++;
+			} else if (cmd.equals("decr")) {
+				CommandHandler.decrMisses++;
+			}
 			return;
 		}
-
-		synchronized (key) {
-			try {
+		
+		try {
+			synchronized (key) {
 				long oldvalue = Long.parseLong(new String(dc.getData()));
 				if (cmd.equals("incr")) {
 					value = oldvalue + value;
@@ -273,15 +288,20 @@ public class TextCommandProcessor {
 					}
 				}
 				dc.setData(("" + value).getBytes("utf-8"));
-			} catch (Exception e) {
-				if (noreplay == false) {
-					sendResponse(handler, "CLIENT_ERROR parse of server value failed\r\n");
-				}
-				return;
 			}
-		}
+		} catch (Exception e) {
+			if (noreplay == false) {
+				sendResponse(handler, "CLIENT_ERROR parse of server value failed\r\n");
+			}
+			return;
+		}		
 		
 		cache.update(key, dc, dc.getSize());
+		if (cmd.equals("incr")) {
+			CommandHandler.incrHits++;
+		} else if (cmd.equals("decr")) {
+			CommandHandler.decrHits++;
+		}
 
 		if (noreplay) {
 			return;
@@ -422,15 +442,18 @@ public class TextCommandProcessor {
 
 				if (oldcas == passedcas) {
 					cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
+					CommandHandler.casHits++;
 					if (data.isNoreplay() == false) {
 						sendResponse(handler, "STORED\r\n");
 					}
 				} else {
+					CommandHandler.casBadval++;
 					if (data.isNoreplay() == false) {
 						sendResponse(handler, "EXISTS\r\n");
 					}
 				}
 			} else {
+				CommandHandler.casMisses++;
 				if (data.isNoreplay() == false) {
 					sendResponse(handler, "NOT_FOUND\r\n");
 				}

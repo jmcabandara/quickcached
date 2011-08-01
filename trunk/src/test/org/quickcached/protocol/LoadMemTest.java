@@ -2,9 +2,7 @@ package org.quickcached.protocol;
 
 import java.io.IOException;
 import java.util.logging.*;
-import net.spy.memcached.AddrUtil;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.BinaryConnectionFactory;
+import org.quickcached.client.*;
 
 /**
  *
@@ -119,15 +117,22 @@ public class LoadMemTest {
 
 	public void setUp(){
 		try {
-			c = new MemcachedClient(new BinaryConnectionFactory(),
-					AddrUtil.getAddresses(hostList));
-		} catch (IOException ex) {
+			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
+			c.setUseBinaryConnection(true);
+			c.setAddresses(hostList);
+			c.setDefaultTimeoutMiliSec(10000);//10 sec
+			c.init();
+		} catch (Exception ex) {
 			Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
 	public void tearDown(){
-		if(c!=null) c.shutdown();
+		if(c!=null) try {
+			c.stop();
+		} catch (IOException ex) {
+			Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, null, ex);
+		}
 	}
 
 	public void test1() {
@@ -145,13 +150,22 @@ public class LoadMemTest {
     public void doSet(int i) {
 		String key = name+"-"+i;
 		String value = name+"-"+(i*2);
-		c.set(key, 3600, value);
+		try {
+			c.set(key, 3600, value);
+		} catch (TimeoutException ex) {
+			Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, "Timeout: "+ex, ex);
+		}
 	}
 
 	public void doGet(int i) {
 		String key = name+"-"+i;
 		try {
-			Object readObject = (String) c.get(key);
+			Object readObject = null;
+			try {
+				readObject = (String) c.get(key);
+			} catch (TimeoutException ex) {
+				Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, "Timeout: "+ex, ex);
+			}
 			if(readObject==null) {
 				System.out.println("get was null! for "+key);
 			}
@@ -163,6 +177,10 @@ public class LoadMemTest {
 
 	public void doDelete(int i) {
 		String key = name+"-"+i;
-		c.delete(key);
+		try {
+			c.delete(key);
+		} catch (TimeoutException ex) {
+			Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, "Timeout: "+ex, ex);
+		}
 	}
 }
