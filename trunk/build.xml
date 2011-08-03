@@ -37,6 +37,7 @@
 
 	<target name="main_jar" depends="main_compile">
 		<mkdir dir="${dist.dir}"/>
+		<copy file="lib/impl/whirlycache/whirlycache.xml" todir="${main.build.dir}" overwrite="yes" />
 		<jar jarfile="${dist.dir}/${app.name}-Server.jar"
 			basedir="${main.build.dir}" includes="**" manifest="src/QuickCached.MF"/>
 	</target>

@@ -1,8 +1,11 @@
 package org.quickcached.cache.impl.whirlycott;
 
 import com.whirlycott.cache.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.QuickCached;
@@ -29,8 +32,38 @@ public class WhirlycottCacheImpl implements CacheInterface {
 
 	
 	public WhirlycottCacheImpl() {
+		FileInputStream myInputStream = null;
+		Properties config = null;
+		String fileCfg = "./conf/whirlycache/default.ini";
 		try {
-			cache = CacheManager.getInstance().getCache();
+			config = new Properties();
+			myInputStream = new FileInputStream(fileCfg);
+			config.load(myInputStream);
+		} catch (Exception e) {
+			logger.severe("Could not load["+fileCfg+"] "+e);
+		} finally {
+			if(myInputStream!=null) {
+				try {
+					myInputStream.close();
+				} catch (IOException ex) {
+					Logger.getLogger(WhirlycottCacheImpl.class.getName()).log(Level.SEVERE, "Error", ex);
+				}
+			}
+		}
+		
+		try {
+			if(config!=null) {
+				Map map = CacheManager.getConfiguration();			
+				CacheConfiguration cc = (CacheConfiguration) map.get("default");
+			
+				cc.setTunerSleepTime(Integer.parseInt(config.getProperty("tuner-sleeptime").trim()));
+				cc.setPolicy(config.getProperty("policy").trim());
+				cc.setMaxSize(Integer.parseInt(config.getProperty("maxsize").trim()));
+				cc.setBackend(config.getProperty("backend").trim());
+				
+				CacheManager.getInstance().destroy("default");
+				cache = CacheManager.getInstance().createCache(cc);
+			}			
 		} catch(Exception e) {
 			logger.severe("Error: "+e);
 		}
