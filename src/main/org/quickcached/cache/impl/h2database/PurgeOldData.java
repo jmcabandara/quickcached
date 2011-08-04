@@ -14,8 +14,59 @@ import org.quickcached.QuickCached;
  */
 public class PurgeOldData {
 	private static final Logger logger = Logger.getLogger(PurgeOldData.class.getName());
+	
+	
+	private static void analyze() {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+
+		try {
+			con = H2CacheImpl.getConnection();
+
+			String sql = "analyze";
+			pstmt = con.prepareStatement(sql);
+			pstmt.executeUpdate();
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Error: " + e, e);
+		} finally {
+			try {
+				pstmt.close();
+			} catch (SQLException e1) {
+				logger.log(Level.WARNING, "Error: " + e1, e1);
+			}
+			try {
+				con.close();
+			} catch (SQLException e1) {
+				logger.log(Level.WARNING, "Error: " + e1, e1);
+			}
+		}
+	}
+	
 
 	public static void startCleanUp() throws Exception {
+		Thread analyze = new Thread("analyze") {
+			public void run() {
+				try {					
+					Thread.sleep(1000 * 60 * 3);//3min
+					analyze();
+				} catch (Exception e) {
+					logger.warning("Error :" + e);
+				}
+				
+				int sleepTime = 1000 * 60 * 30;//30min
+				while(true) {
+					try {
+						analyze();
+						Thread.sleep(sleepTime);
+					} catch (Exception e) {
+						logger.warning("Error :" + e);
+					}
+				}
+			}
+		};
+		analyze.setDaemon(true);
+		analyze.start();
+		
 		Thread t = new Thread("PurgeOldData") {
 			public void run() {
 				int sleepTime = 1000 * 60;

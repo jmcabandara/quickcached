@@ -317,17 +317,16 @@ public class H2CacheImpl implements CacheInterface {
 			 * 
 			 */
 
-			pstmt = con.prepareStatement("CREATE TABLE DATA_CACHE(KEY nvarchar (100) NOT NULL,"
+			pstmt = con.prepareStatement("CREATE MEMORY TABLE DATA_CACHE(KEY nvarchar (250) PRIMARY KEY HASH,"
 					+ "DATA OTHER  NULL,"
 					+ " SIZE  numeric (18) NULL  ,"
 					+ " CREATION_TIME_STAMP  datetime  NULL  ,"
 					+ " EXPIRY_TIME_STAMP  datetime  NULL  ,"
-					+ "	LAST_ACCESS_TIME  datetime  NULL  ,"
-					+ "	CONSTRAINT PK_DATA_CACHE PRIMARY KEY (KEY));");
+					+ "	LAST_ACCESS_TIME  datetime  NULL);");
 
 			pstmt.execute();
 
-			pstmt = con.prepareStatement("CREATE HASH INDEX INDEX_DATA_CACHE_KEY ON DATA_CACHE (KEY); "
+			pstmt = con.prepareStatement("CREATE UNIQUE HASH INDEX INDEX_DATA_CACHE_KEY ON DATA_CACHE (KEY); "
 					+ "CREATE INDEX INDEX_DATA_CACHE_EXP ON DATA_CACHE (EXPIRY_TIME_STAMP);"
 					+ "CREATE INDEX INDEX_DATA_CACHE_LST ON DATA_CACHE (LAST_ACCESS_TIME);");
 
