@@ -115,6 +115,10 @@
                         <label>LoadTest X</label>
                         <target>loadtestX</target>
                     </action>
+                    <action>
+                        <label>AgeTest</label>
+                        <target>agetest</target>
+                    </action>
                 </context-menu>
             </view>
             <subprojects/>

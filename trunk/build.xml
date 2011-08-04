@@ -143,6 +143,22 @@
 			</classpath>
 		</java>
 	</target>
+	
+	<target name="agetest" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.load.AgeTest"
+            taskname="AgeTest" failonerror="true">
+				<!-- 10800 -->
+			<arg line="8 192.168.1.182:11211,192.168.1.182:11212,192.168.1.182:11213,192.168.1.182:11214 16 10800" />
+			<!--arg line="thread list txn/sec runtimesec"/-->
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
 
 	<target name="loadmemtestMem" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadMemTest"
