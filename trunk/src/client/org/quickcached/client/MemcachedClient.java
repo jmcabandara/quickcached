@@ -12,20 +12,11 @@ public abstract class MemcachedClient {
 	public static final String SpyMemcachedImpl = "SpyMemcached";
 	public static final String XMemcachedImpl = "XMemcached";
 	
-	private static String defaultImpl = XMemcachedImpl;
-	
+	private static String defaultImpl = XMemcachedImpl;	
 	
 	private static Map implMap = new HashMap();
 	public static void registerImpl(String implName, String fullClassName) {
 		implMap.put(implName, fullClassName);
-	}
-	
-	public static MemcachedClient getInstance(String implName) 
-			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-		String fullClassName = (String) implMap.get(implName);
-		if(fullClassName==null) fullClassName = (String) implMap.get(defaultImpl);
-		
-		return (MemcachedClient) Class.forName(fullClassName).newInstance();
 	}
 	
 	static {
@@ -37,8 +28,21 @@ public abstract class MemcachedClient {
 			defaultImpl = impl;
 		}
 	}
+	
+	public static MemcachedClient getInstance() 
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+		return getInstance(null);
+	}
+	
+	public static MemcachedClient getInstance(String implName) 
+			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+		String fullClassName = (String) implMap.get(implName);
+		if(fullClassName==null) fullClassName = (String) implMap.get(defaultImpl);
+		
+		return (MemcachedClient) Class.forName(fullClassName).newInstance();
+	}
 
-	private long defaultTimeoutMiliSec = 10000;//10sec
+	private long defaultTimeoutMiliSec = 1000;//1sec
 	public long getDefaultTimeoutMiliSec() {
 		return defaultTimeoutMiliSec;
 	}

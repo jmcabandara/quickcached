@@ -108,16 +108,12 @@
                     <ide-action name="run"/>
                     <ide-action name="test"/>
                     <action>
-                        <label>LoadTest Spy</label>
-                        <target>loadtestSpy</target>
-                    </action>
-                    <action>
-                        <label>LoadTest X</label>
-                        <target>loadtestX</target>
-                    </action>
-                    <action>
                         <label>AgeTest</label>
                         <target>agetest</target>
+                    </action>
+                    <action>
+                        <label>LoadTest</label>
+                        <target>loadtest</target>
                     </action>
                 </context-menu>
             </view>

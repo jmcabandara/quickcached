@@ -113,12 +113,17 @@
 		</java>
 	</target>
 	<!-- junit task -->
-
-	<target name="loadtestSpy" depends="compileTests">
-		<java fork="yes" classname="org.quickcached.protocol.LoadTestSpy"
+	
+	<target name="loadtest" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.load.LoadTest"
             taskname="loadtestSpy" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211 100"/>
+			<arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/>
 			<!--arg line="s 1 127.0.0.1:11211 100"/-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="SpyMemcached" /-->
+			<sysproperty key="org.quickcached.client.defaultImpl"
+                   value="XMemcached" />
+				   
 			<classpath refid="project.classpath.test"/>
 			<classpath>
 				<pathelement location="${test.build.dir}" />
@@ -128,22 +133,8 @@
 			</classpath>
 		</java>
 	</target>
-	
-	<target name="loadtestX" depends="compileTests">
-		<java fork="yes" classname="org.quickcached.protocol.LoadTestX"
-            taskname="loadtestX" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211 100"/>
-			<!--arg line="s 1 127.0.0.1:11211 100"/-->
-			<classpath refid="project.classpath.test"/>
-			<classpath>
-				<pathelement location="${test.build.dir}" />
-				<fileset dir="libtest">
-					<include name="**/*.jar"/>
-				</fileset>
-			</classpath>
-		</java>
-	</target>
-	
+
+		
 	<target name="agetest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.AgeTest"
             taskname="AgeTest" failonerror="true">

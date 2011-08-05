@@ -1,4 +1,4 @@
-package org.quickcached.protocol;
+package org.quickcached.load;
 
 import java.io.IOException;
 import java.util.Random;
@@ -8,15 +8,15 @@ import org.quickcached.client.*;
 
 /**
  *
- * @author akshath
+ * @author Akshathkumar Shetty
  */
-public class LoadTestX {
+public class LoadTest {
 	private MemcachedClient c = null;
 	private int count;
 	private String name;
 	private String hostList;
 	private int timeouts;
-	private static int objectSize = 400;
+	private static int objectSize = 1024;//1kb
 
 	public static void main(String args[]) {
 		String mode = "s";
@@ -30,6 +30,9 @@ public class LoadTestX {
 			host = args[2];
 			txn = Integer.parseInt(args[3]);
 		}
+		
+		host = host.replaceAll(",", " ");
+		
 		if(mode.equals("s")) {
 			doSingleThreadTest(host, txn);
 		} else {
@@ -38,7 +41,7 @@ public class LoadTestX {
     }
 
 	public static void doSingleThreadTest(String host, int txn) {
-		LoadTestX ltu = new LoadTestX("Test1", host, txn);
+		LoadTest ltu = new LoadTest("Test1", host, txn);
 		ltu.setUp();
 		long stime = System.currentTimeMillis();
         ltu.test1();
@@ -54,9 +57,9 @@ public class LoadTestX {
 	public static void doMultiThreadTest(String host, int txn, int threads) {
 		int eachUnitCount = txn/threads;
 
-		final LoadTestX ltu[] = new LoadTestX[threads];
+		final LoadTest ltu[] = new LoadTest[threads];
 		for(int i=0;i<threads;i++) {
-			ltu[i] = new LoadTestX("Test-"+i, host, eachUnitCount);
+			ltu[i] = new LoadTest("Test-"+i, host, eachUnitCount);
 			ltu[i].setUp();
 		}
 
@@ -82,7 +85,7 @@ public class LoadTestX {
 			try {
 				threadPool[i].join();
 			} catch (InterruptedException ex) {
-				Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			timeoutCount = timeoutCount + ltu[i].timeouts;
 		}
@@ -104,9 +107,9 @@ public class LoadTestX {
 		System.out.println("=============");
 		
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(5000);
 		} catch (InterruptedException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		for(int i=0;i<threads;i++) {
@@ -114,7 +117,7 @@ public class LoadTestX {
 		}
 	}
 	
-	public LoadTestX(String name, String host, int count) {
+	public LoadTest(String name, String host, int count) {
         this.count = count;
 		this.name = name;
 		this.hostList = host;
@@ -122,13 +125,13 @@ public class LoadTestX {
 
 	public void setUp(){
 		try {
-			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
+			c = MemcachedClient.getInstance();
 			c.setUseBinaryConnection(true);
 			c.setAddresses(hostList);
-			c.setDefaultTimeoutMiliSec(10000);//10 sec
+			c.setDefaultTimeoutMiliSec(3000);//3 sec
 			c.init();
 		} catch (Exception ex) {
-			Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 		}		
 	}
 
@@ -136,25 +139,34 @@ public class LoadTestX {
 		if(c!=null) try {
 			c.stop();
 		} catch (IOException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 
 	public void test1() {
+		StringBuilder sb = new StringBuilder();
+		Random r = new Random();
+		char c = '0';
+		for(int k=0;k<20;k++) {
+			c = (char)(r.nextInt(26) + 'a');
+			sb.append(c);
+		}
+		String seed = sb.toString();		
+			
 		for(int i=0;i<count;i++) {
-			doSet(i);
+			doSet(seed, i);
 		}
 		for(int i=0;i<count;i++) {
-			doGet(i);
+			doGet(seed, i);
 		}
 		for(int i=0;i<count;i++) {
-			doDelete(i);
+			doDelete(seed, i);
 		}
 	}
 
 	private String largeData = null;
-    public void doSet(int i) {
-		String key = name+"-"+i;
+    public void doSet(String seed, int i) {
+		String key = name+"-"+i+"-"+seed;
 		if(largeData==null) {
 			StringBuilder sb = new StringBuilder();
 			Random r = new Random();
@@ -169,12 +181,12 @@ public class LoadTestX {
 		try {
 			c.set(key, 3600, value);
 		} catch (TimeoutException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 		} 
 	}
 
-	public void doGet(int i) {
-		String key = name+"-"+i;
+	public void doGet(String seed, int i) {
+		String key = name+"-"+i+"-"+seed;
 		try {
 			Object readObject = (String) c.get(key);
 			if(readObject==null) {
@@ -187,12 +199,12 @@ public class LoadTestX {
 		} 
 	}
 
-	public void doDelete(int i) {
-		String key = name+"-"+i;
+	public void doDelete(String seed, int i) {
+		String key = name+"-"+i+"-"+seed;
 		try {
 			c.delete(key);
 		} catch (TimeoutException ex) {
-			Logger.getLogger(LoadTestX.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
 		} 
 	}
 }

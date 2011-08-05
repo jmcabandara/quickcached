@@ -18,14 +18,11 @@ public class AgeTest {
 	private String name;
 	private String hostList;
 	private int timeouts;
-	private static int objectSize = 400;
+	private static int objectSize = 1024;//1kb
 
 	//thread list txn/sec runtimesec
 	//5 127.0.0.1:11211 10 60
-	public static void main(String args[]) {
-		
-		
-		
+	public static void main(String args[]) {		
 		int threads = 5;
 		String host = "127.0.0.1:11211";
 		int txnPerSec = 10;
@@ -153,7 +150,7 @@ public class AgeTest {
 			timeStartTest = System.currentTimeMillis();			
 			
 			char c = '0';
-			for(int k=0;k<10;k++) {
+			for(int k=0;k<20;k++) {
 				c = (char)(r.nextInt(26) + 'a');
 				sb.append(c);
 			}
