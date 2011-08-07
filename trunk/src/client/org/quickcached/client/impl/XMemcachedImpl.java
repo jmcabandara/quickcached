@@ -43,6 +43,8 @@ public class XMemcachedImpl extends MemcachedClient {
 	}
 
 	public void init() throws IOException {
+		if(c!=null) stop();
+		
 		MemcachedClientBuilder builder = new XMemcachedClientBuilder(
 				AddrUtil.getAddresses(hostList));
 		if(binaryConnection) {
@@ -54,6 +56,7 @@ public class XMemcachedImpl extends MemcachedClient {
 
 	public void stop() throws IOException {
 		c.shutdown();
+		c = null;
 	}
 
 	public void set(String key, int ttlSec, Object value, long timeoutMiliSec) throws TimeoutException {

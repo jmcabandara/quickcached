@@ -44,6 +44,8 @@ public class SpyMemcachedImpl extends MemcachedClient {
 	}
 
 	public void init() throws IOException {
+		if(c!=null) stop();
+		
 		c = new net.spy.memcached.MemcachedClient[poolSize];
 		if(binaryConnection==false) {
 			for(int i=0;i<poolSize;i++) {
@@ -63,6 +65,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		for(int i=0;i<poolSize;i++) {
 			c[i].shutdown();
 		}
+		c = null;
 	}
 	
 	public net.spy.memcached.MemcachedClient getCache() {
