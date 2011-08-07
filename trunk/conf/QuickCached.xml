@@ -99,6 +99,21 @@
 			<property-name>MEMCACHED_VERSION_TO_SHOW</property-name>
 			<property-value>1.4.6</property-value>
 		</property>	
+
+		<property>
+			<property-name>ENABLE_STATS_REPORT</property-name>
+			<property-value>false</property-value>
+		</property>
+		<property>
+			<property-name>STATS_REPORT_WRITE_INTERVAL</property-name>
+			<!-- 60000 = 1m, 900000=15m -->
+			<property-value>900000</property-value>
+		</property>
+		<property>
+			<property-name>ENTRIES_TO_LOG</property-name>
+			<property-value>datetime,curr_connections,total_connections,bytes_read,bytes,limit_maxbytes,mem_percent_used,curr_items,total_items,cmd_get,cmd_set,cmd_delete,cmd_flush,get_hits,get_misses,delete_misses,delete_hits,gc_calls</property-value>
+		</property>
+
 	</application-configuration>
 
 	<access-constraint>
