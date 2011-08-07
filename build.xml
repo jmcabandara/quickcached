@@ -138,8 +138,8 @@
 	<target name="agetest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.AgeTest"
             taskname="AgeTest" failonerror="true">
-				<!-- 10800 -->
-			<arg line="8 192.168.1.182:11211,192.168.1.182:11212,192.168.1.182:11213,192.168.1.182:11214 16 10800" />
+			<!-- 10800 ~ 3h -->
+			<arg line="8 127.0.0.1:11211,127.0.0.1:11212 16 10800" />
 			<!--arg line="thread list txn/sec runtimesec"/-->
 			<classpath refid="project.classpath.test"/>
 			<classpath>

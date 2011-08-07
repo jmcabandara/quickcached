@@ -6,6 +6,8 @@ import org.quickserver.net.server.ClientHandler;
 import org.quickserver.net.server.ClientEventHandler;
 
 import java.lang.management.ManagementFactory;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.*;
@@ -19,6 +21,7 @@ import org.quickserver.net.server.QuickServer;
 
 public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	private static final Logger logger = Logger.getLogger(CommandHandler.class.getName());
+	private static final SimpleDateFormat sdfDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private static CacheInterface cache = null;
 	private static TextCommandProcessor textCommandProcessor = null;
@@ -37,7 +40,12 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	protected static long casBadval;
 
 	public static Map getStats(QuickServer server) {
-		Map stats = new LinkedHashMap(25);
+		return getStats(server, null);
+	}
+	public static Map getStats(QuickServer server, Map stats) {
+		if(stats==null) {
+			stats = new LinkedHashMap(25);
+		}
 
 		//pid
 		String pid = QuickCached.getPID();
@@ -51,6 +59,8 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		long timeMili = System.currentTimeMillis();
 		stats.put("time", ""+(timeMili/1000));		
 		//stats.put("current_time_millis", "" + timeMili);
+		
+		stats.put("datetime", sdfDateTime.format(new Date(timeMili)));
 
 		//version
 		stats.put("version", QuickCached.version);
