@@ -77,7 +77,7 @@ public class LoadMemTest {
 			try {
 				threadPool[i].join();
 			} catch (InterruptedException ex) {
-				Logger.getLogger(LoadTestSpy.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			timeoutCount = timeoutCount + ltu[i].timeouts;
 		}
@@ -101,7 +101,7 @@ public class LoadMemTest {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException ex) {
-			Logger.getLogger(LoadTestSpy.class.getName()).log(Level.SEVERE, null, ex);
+			Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		for(int i=0;i<threads;i++) {
