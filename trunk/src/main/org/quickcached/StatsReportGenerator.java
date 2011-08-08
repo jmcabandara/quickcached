@@ -46,7 +46,8 @@ public class StatsReportGenerator {
 					try {
 						sleep(getWriteInterval());
 					} catch (InterruptedException ex) {
-						Logger.getLogger(StatsReportGenerator.class.getName()).log(Level.WARNING, "Error", ex);
+						Logger.getLogger(StatsReportGenerator.class.getName()).log(
+								Level.WARNING, "Error", ex);
 						break;
 					}
 					CommandHandler.getStats(quickserver, stats);
@@ -76,11 +77,16 @@ public class StatsReportGenerator {
 			//day files  - so max of 31 files only.. should be good for analysis.. saves disk space
 			File reportFile = new File("./stats/"+sdfFile.format(new Date())+".csv");
 			
+			boolean append = true;
+			if((reportFile.lastModified()+1000*60*60*24*5) < System.currentTimeMillis()) {
+				append = false;
+			}
+			
 			boolean writeheader = false;
 			if(reportFile.canRead()==false) {
 				writeheader = true;
 			}
-            out = new BufferedWriter(new FileWriter(reportFile, true));					
+            out = new BufferedWriter(new FileWriter(reportFile, append));					
 			
 			Iterator iterator = entriesToLog.iterator();
 			

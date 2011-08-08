@@ -29,7 +29,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 	private static long totalConnections;
 	private static long bytesRead;
-	private static long gcCalls;
+	protected static long gcCalls;
 	//private static long bytesWritten;
 	protected static long incrMisses;
 	protected static long incrHits;

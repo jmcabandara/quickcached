@@ -7,6 +7,7 @@ import org.quickserver.net.server.*;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.quickcached.mem.MemoryWarningSystem;
 
 import org.quickserver.net.ServerHook;
 
@@ -54,6 +55,44 @@ public class PrepareHook implements ServerHook {
 
 				if(enableStatsReport) {
 					StatsReportGenerator.start(quickserver);
+				}
+				
+				String gcCallOnLowMemoryPercentStr = (String) config.get("GC_CALL_ON_LOW_MEMORY_PERCENT");
+				if(gcCallOnLowMemoryPercentStr!=null && gcCallOnLowMemoryPercentStr.trim().length()!=0) {
+					try {
+						final int gcCallOnLowMemoryPercent = Integer.parseInt(gcCallOnLowMemoryPercentStr) * 100;
+						final int gcCallOnLowMemoryPoolIntervalMin = Integer.parseInt((String) config.get(
+								"GC_CALL_ON_LOW_MEMORY_POOL_INTERVAL_MIN"));
+						
+						Thread t = new Thread() {
+							public void run() {
+								logger.info("Started..");
+								int gcCallOnLowMemoryPoolInterval = gcCallOnLowMemoryPoolIntervalMin * 1000 * 60;
+								while(true) {
+									try {
+										sleep(gcCallOnLowMemoryPoolInterval);
+									} catch (InterruptedException ex) {
+										Logger.getLogger(StatsReportGenerator.class.getName()).log(
+												Level.WARNING, "Error", ex);
+										break;
+									}
+									int permemuse = MemoryWarningSystem.getMemUsedPercentage();
+									if(permemuse > gcCallOnLowMemoryPercent) {
+										logger.fine("MemUsedPercentage: "+permemuse+", calling flush..");
+										System.gc();
+										CommandHandler.gcCalls++;
+									}
+								}
+								logger.info("Done");
+							}
+						};
+						t.setName("GCCallOnLowMemoryPool-Thread");
+						t.setDaemon(true);
+						t.start();
+					} catch(Exception er) {
+						logger.log(Level.WARNING, "Error: "+er, er);
+						er.printStackTrace();
+					}
 				}
 			} catch(Exception e) {
 				logger.log(Level.WARNING, "Error: "+e, e);

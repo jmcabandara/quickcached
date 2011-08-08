@@ -114,6 +114,10 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			c[i].flush();
 		}
 	}
+	
+	public Object getBaseClient() {
+		return getCache();
+	}
         
 	public Map getStats() throws Exception {
 		return getCache().getStats();

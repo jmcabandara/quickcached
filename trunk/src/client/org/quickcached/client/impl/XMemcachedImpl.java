@@ -116,9 +116,13 @@ public class XMemcachedImpl extends MemcachedClient {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
+	
+	public Object getBaseClient() {
+		return c;
+	}
         
-     public Map getStats() throws Exception {
+	public Map getStats() throws Exception {
 		return c.getStats();
-     }
+	}
 	
 }
