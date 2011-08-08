@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Note: Timeout are always in seconds
+ * 
  * @author Akshathkumar Shetty
  */
 public abstract class MemcachedClient {
@@ -54,7 +54,6 @@ public abstract class MemcachedClient {
 	public abstract void setUseBinaryConnection(boolean flag);
 	public abstract void setConnectionPoolSize(int size);
 
-	
 	public abstract void setAddresses(String list);
 	public abstract void init() throws IOException;
 	public abstract void stop() throws IOException ;
@@ -69,6 +68,7 @@ public abstract class MemcachedClient {
 	public abstract void flushAll() throws TimeoutException;
         
 	public abstract Map getStats() throws Exception;
+	public abstract Object getBaseClient();
 	
 	public void set(String key, int ttlSec, Object value) 
 			throws TimeoutException {

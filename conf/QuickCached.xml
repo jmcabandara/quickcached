@@ -91,9 +91,19 @@
 
 		<property>
 			<property-name>FLUSH_ON_LOW_MEMORY_PERCENT</property-name>
-			<!-- 0.9 = 90%; will call flush if reached; make if blank to skip this-->
+			<!-- 0.95 = 95%; will call flush if reached; make it blank to skip this-->
 			<property-value>0.95</property-value>
 		</property>	
+
+		<property>
+			<property-name>GC_CALL_ON_LOW_MEMORY_PERCENT</property-name>
+			<!-- 0.70 = 70%; will call flush if reached; make it blank to skip this-->
+			<property-value></property-value>
+		</property>	
+		<property>
+			<property-name>GC_CALL_ON_LOW_MEMORY_POOL_INTERVAL_MIN</property-name>
+			<property-value>15</property-value>
+		</property>
 		
 		<property>
 			<property-name>MEMCACHED_VERSION_TO_SHOW</property-name>
