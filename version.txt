@@ -16,6 +16,7 @@ client API
 + Added application version in stats output
 + We have configurable Memcached version to output to client 
 + Added Stats Report support to log stats output to a csv file at a interval specified
++ Added support to check for low memory and call GC if required
 
 
 version 1.0.2 [19-Feb-2011]

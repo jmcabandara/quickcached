@@ -101,7 +101,7 @@
 			<property-value></property-value>
 		</property>	
 		<property>
-			<property-name>GC_CALL_ON_LOW_MEMORY_POOL_INTERVAL_MIN</property-name>
+			<property-name>GC_CALL_ON_LOW_MEMORY_POLLING_INTERVAL_MIN</property-name>
 			<property-value>15</property-value>
 		</property>
 		
