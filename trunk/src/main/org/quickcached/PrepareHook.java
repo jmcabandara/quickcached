@@ -62,13 +62,16 @@ public class PrepareHook implements ServerHook {
 					try {
 						final int gcCallOnLowMemoryPercent = (int) (
 								Double.parseDouble(gcCallOnLowMemoryPercentStr) * 100);
-						final int gcCallOnLowMemoryPoolIntervalMin = Integer.parseInt((String) config.get(
-								"GC_CALL_ON_LOW_MEMORY_POOL_INTERVAL_MIN"));
+						String poolingIntrvalMin = (String) config.get(
+								"GC_CALL_ON_LOW_MEMORY_POLLING_INTERVAL_MIN");
+						if(poolingIntrvalMin==null) poolingIntrvalMin = "1"; 
+						final int gcCallOnLowMemoryPollingIntervalMin = Integer.parseInt(poolingIntrvalMin);
 						
 						Thread t = new Thread() {
 							public void run() {
 								logger.info("Started..");
-								int gcCallOnLowMemoryPoolInterval = gcCallOnLowMemoryPoolIntervalMin * 1000 * 60;
+								int gcCallOnLowMemoryPoolInterval = 
+										gcCallOnLowMemoryPollingIntervalMin * 1000 * 60;
 								while(true) {
 									try {
 										sleep(gcCallOnLowMemoryPoolInterval);
