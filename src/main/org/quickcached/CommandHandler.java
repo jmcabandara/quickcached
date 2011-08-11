@@ -38,6 +38,8 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	protected static long casMisses;
 	protected static long casHits;
 	protected static long casBadval;
+	
+	private static boolean computeAvgForSetCmd = false;
 
 	public static Map getStats(QuickServer server) {
 		return getStats(server, null);
@@ -214,6 +216,11 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		} catch (Exception ex) {
 			Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
 		}
+		
+		String computeAvgForSetCmdStr = (String) config.get("COMPUTE_AVG_FOR_SET_CMD");
+		if("true".equals(computeAvgForSetCmdStr)) {
+			computeAvgForSetCmd = true;
+		}
 
 		textCommandProcessor = new TextCommandProcessor();
 		textCommandProcessor.setCache(cache);
@@ -260,5 +267,13 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 			mws.removeAllListener();
 			lowMemoryActionInit = false;
 		}
+	}
+
+	public static boolean isComputeAvgForSetCmd() {
+		return computeAvgForSetCmd;
+	}
+
+	public static void setComputeAvgForSetCmd(boolean aComputeAvgForSetCmd) {
+		computeAvgForSetCmd = aComputeAvgForSetCmd;
 	}
 }
