@@ -145,7 +145,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 	public void handleBinary(ClientHandler handler, byte command[])
 			throws SocketTimeoutException, IOException {
-		if(QuickCached.DEBUG) {
+		if(handler.getCommunicationLogging() || QuickCached.DEBUG) {
 			logger.log(Level.FINE, "C: {0}", new String(command));
 			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(command)));
 		} else {
