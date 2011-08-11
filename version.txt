@@ -9,14 +9,15 @@ version 1.1.0 [03-Jul-2011]
 ---------------------------
 + Upgraded to QuickServer 1.4.8
 + Implemented alternate cache impl using h2databased in-memory database
-+ Implemented client abstraction for using XMemcached and SpyMemcached  
-client API
++ Implemented client abstraction for using XMemcached and SpyMemcached client API
 # Improved cache for better input stream handling.
 ! Bug fix for CAS in set (Binary Mode only)
-+ Added application version in stats output
++ Added application version, memory percent used in stats output
 + We have configurable Memcached version to output to client 
 + Added Stats Report support to log stats output to a csv file at a interval specified
 + Added support to check for low memory and call GC if required
++ Added support for computing set averages - keysize, value size and ttl 
+  (needs to be turned on in xml)
 
 
 version 1.0.2 [19-Feb-2011]
