@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.quickcached.CommandHandler;
 import org.quickcached.QuickCached;
 import org.quickcached.cache.CacheInterface;
 
@@ -29,6 +30,10 @@ public class WhirlycottCacheImpl implements CacheInterface {
 	private long getMisses;
 	private long deleteMisses;
 	private long deleteHits;
+	
+	private double avgKeySize = -1;
+	private double avgValueSize = -1;
+	private double avgTtl = -1;
 
 	
 	public WhirlycottCacheImpl() {
@@ -101,6 +106,12 @@ public class WhirlycottCacheImpl implements CacheInterface {
 		
 		//delete_hits       Number of deletion reqs resulting in
 		stats.put("delete_hits", "" + deleteHits);
+		
+		if(CommandHandler.isComputeAvgForSetCmd()) {
+			stats.put("avg_key_size", "" + (long)(0.5+avgKeySize));
+			stats.put("avg_value_size", "" + (long)(0.5+avgValueSize));
+			stats.put("avg_ttl", "" + (long)(0.5+avgTtl));
+		}
 
 		return stats;
 	}
@@ -110,6 +121,28 @@ public class WhirlycottCacheImpl implements CacheInterface {
 		cache.store(key, value, expInSec*1000);
 		totalItems++;
 		cmdSets++;
+		
+		if(CommandHandler.isComputeAvgForSetCmd()) {
+			long cmdSetsCurrent = cmdSets;
+
+			if(avgKeySize==-1) {
+				avgKeySize = (avgKeySize*(cmdSetsCurrent-1) + key.length())/cmdSetsCurrent;
+			} else {
+				avgKeySize = key.length();
+			}
+
+			if(avgValueSize==-1) {
+				avgValueSize = (avgValueSize*(cmdSetsCurrent-1) + objectSize)/cmdSetsCurrent;
+			} else {
+				avgValueSize = objectSize;
+			}
+
+			if(avgTtl==-1) {
+				avgTtl = (avgTtl*(cmdSetsCurrent-1) + expInSec)/cmdSetsCurrent;
+			} else {
+				avgTtl = expInSec;
+			}
+		}
 	}
 	
 	public void update(String key, Object value, int objectSize) {
