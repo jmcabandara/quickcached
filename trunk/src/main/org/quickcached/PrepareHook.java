@@ -62,19 +62,19 @@ public class PrepareHook implements ServerHook {
 					try {
 						final int gcCallOnLowMemoryPercent = (int) (
 								Double.parseDouble(gcCallOnLowMemoryPercentStr) * 100);
-						String poolingIntrvalMin = (String) config.get(
+						String pollingIntervalMin = (String) config.get(
 								"GC_CALL_ON_LOW_MEMORY_POLLING_INTERVAL_MIN");
-						if(poolingIntrvalMin==null) poolingIntrvalMin = "1"; 
-						final int gcCallOnLowMemoryPollingIntervalMin = Integer.parseInt(poolingIntrvalMin);
+						if(pollingIntervalMin==null) pollingIntervalMin = "1"; 
+						final int gcCallOnLowMemoryPollingIntervalMin = Integer.parseInt(pollingIntervalMin);
 						
 						Thread t = new Thread() {
 							public void run() {
 								logger.info("Started..");
-								int gcCallOnLowMemoryPoolInterval = 
+								int gcCallOnLowMemoryPollingInterval = 
 										gcCallOnLowMemoryPollingIntervalMin * 1000 * 60;
 								while(true) {
 									try {
-										sleep(gcCallOnLowMemoryPoolInterval);
+										sleep(gcCallOnLowMemoryPollingInterval);
 									} catch (InterruptedException ex) {
 										Logger.getLogger(StatsReportGenerator.class.getName()).log(
 												Level.WARNING, "Error", ex);
@@ -90,7 +90,7 @@ public class PrepareHook implements ServerHook {
 								logger.info("Done");
 							}
 						};
-						t.setName("GCCallOnLowMemoryPool-Thread");
+						t.setName("GCCallOnLowMemoryPolling-Thread");
 						t.setDaemon(true);
 						t.start();
 					} catch(Exception er) {
