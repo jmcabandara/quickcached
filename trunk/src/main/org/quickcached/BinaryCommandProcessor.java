@@ -508,7 +508,7 @@ public class BinaryCommandProcessor {
 			logger.log(Level.FINE, "S: Status {0}", rh.getStatus());
 		}
 		byte data[] = binaryPacket.toBinaryByte();
-		if (QuickCached.DEBUG) {
+		if (handler.getCommunicationLogging() || QuickCached.DEBUG) {
 			logger.log(Level.FINE, "S: {0}", new String(data));
 		} else {
 			logger.log(Level.FINE, "S: {0} bytes", data.length);

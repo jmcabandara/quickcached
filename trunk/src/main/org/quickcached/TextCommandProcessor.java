@@ -468,7 +468,7 @@ public class TextCommandProcessor {
 	}
 
 	public void sendResponse(ClientHandler handler, byte data[]) throws SocketTimeoutException, IOException {
-		if (QuickCached.DEBUG) {
+		if(handler.getCommunicationLogging() || QuickCached.DEBUG) {
 			logger.log(Level.FINE, "S: {0}", new String(data));
 		} else {
 			logger.log(Level.FINE, "S: {0} bytes", data.length);
