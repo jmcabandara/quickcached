@@ -21,6 +21,8 @@ public class Data implements ClientData {
 	private long exptime = -1;
 	private String casunique;
 	private boolean noreplay;
+	
+	private int client_mode = -1;//0-text,1=binary
 
 	public String getCommand() {
 		byte input[] = baos.toByteArray();
@@ -48,11 +50,25 @@ public class Data implements ClientData {
 	}
 
 	public boolean isBinaryCommand() {
+		if(client_mode == 2) {
+			return true;
+		} else if(client_mode == 1) {
+			return false;
+		}
+		
 		byte data[] =  baos.toByteArray();
 		if(HexUtil.encode(data[0]).equals("80")) {
+			client_mode = 2;
 			return true;
+		} else {
+			byte input[] = baos.toByteArray();
+			String indata = new String(input);
+			int index = indata.indexOf("\r\n");
+			if(index!=-1) {
+				client_mode = 1;
+			}
+			return false;
 		}
-		return false;
 	}
 
 	public BinaryPacket getBinaryCommandHeader() throws Exception {
