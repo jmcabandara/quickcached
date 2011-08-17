@@ -24,9 +24,9 @@ public class Data implements ClientData {
 	
 	private int client_mode = -1;//0-text,1=binary
 
-	public String getCommand() {
+	public String getCommand() throws UnsupportedEncodingException {
 		byte input[] = baos.toByteArray();
-		String data = new String(input);
+		String data = new String(input, HexUtil.getCharset());
 		int index = data.indexOf("\r\n");
 		if(index!=-1) {
 			data = data.substring(0, index);
@@ -49,7 +49,7 @@ public class Data implements ClientData {
 		return out.toByteArray();
 	}
 
-	public boolean isBinaryCommand() {
+	public boolean isBinaryCommand() throws UnsupportedEncodingException {
 		if(client_mode == 2) {
 			return true;
 		} else if(client_mode == 1) {
@@ -62,7 +62,7 @@ public class Data implements ClientData {
 			return true;
 		} else {
 			byte input[] = baos.toByteArray();
-			String indata = new String(input);
+			String indata = new String(input, HexUtil.getCharset());
 			int index = indata.indexOf("\r\n");
 			if(index!=-1) {
 				client_mode = 1;

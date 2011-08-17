@@ -1,13 +1,25 @@
 package org.quickcached;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  *
  * @author akshath
  */
 public class HexUtil {
 	//converts binary data to hex sting
-	public static String encode(String sourceText) {
-		return encode(sourceText.getBytes());
+	private static String charset = "ISO-8859-1";//"utf-8";
+	
+	public static String getCharset() {
+		return charset;
+	}
+
+	public static void setCharset(String aCharset) {
+		charset = aCharset;
+	}
+	
+	public static String encode(String sourceText) throws UnsupportedEncodingException {
+		return encode(sourceText.getBytes(getCharset()));
 	}
 	public static String encode(byte[] rawData) {
 		StringBuilder hexText = new StringBuilder();
@@ -44,9 +56,9 @@ public class HexUtil {
 	}
 
 	//converts hex sting to binary data
-	public static String decodeToString(String hexText) {
+	public static String decodeToString(String hexText) throws UnsupportedEncodingException {
 		byte[] rawToByte = decodeToByte(hexText);
-		return new String(rawToByte);
+		return new String(rawToByte, getCharset());
 	}
 	public static byte[] decodeToByte(String hexText) {
 		String chunk = null;
@@ -64,4 +76,6 @@ public class HexUtil {
 		}
 		return null;
 	}
+
+	
 }

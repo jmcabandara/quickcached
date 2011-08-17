@@ -25,7 +25,7 @@ public class BinaryCommandProcessor {
 
 	static {
 		try {
-			version = QuickCached.version.getBytes("utf-8");
+			version = QuickCached.version.getBytes(HexUtil.getCharset());
 		} catch (UnsupportedEncodingException ex) {
 			Logger.getLogger(BinaryCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -310,7 +310,7 @@ public class BinaryCommandProcessor {
 							return;
 						} else {
 							String value = "" + extras.getInitalValueInDec();
-							olddc = new DataCarrier(value.getBytes("utf-8"));
+							olddc = new DataCarrier(value.getBytes(HexUtil.getCharset()));
 
 							if (extras.getFlags() != null) {
 								olddc.setFlags(extras.getFlags());
@@ -351,7 +351,7 @@ public class BinaryCommandProcessor {
 					
 					try {
 						synchronized (command.getKey()) {
-							long oldvalue = Long.parseLong(new String(olddc.getData()));
+							long oldvalue = Long.parseLong(new String(olddc.getData(), HexUtil.getCharset()));
 							if ("05".equals(opcode) || "15".equals(opcode)) {
 								value = oldvalue + value;
 							} else if ("06".equals(opcode) || "16".equals(opcode)) {
@@ -360,7 +360,7 @@ public class BinaryCommandProcessor {
 									value = 0;
 								}
 							}
-							olddc.setData(("" + value).getBytes("utf-8"));
+							olddc.setData(("" + value).getBytes(HexUtil.getCharset()));
 						}
 						
 						if(opcode.endsWith("5")) {
@@ -391,7 +391,7 @@ public class BinaryCommandProcessor {
 
 
 					binaryPacket.setValue(Util.prefixZerros(
-							new String(olddc.getData(), "utf-8"), 8).getBytes("utf-8"));
+							new String(olddc.getData(), HexUtil.getCharset()), 8).getBytes(HexUtil.getCharset()));
 
 					rh.setTotalBodyLength(rh.getKeyLength()
 							+ rh.getExtrasLength() + binaryPacket.getValue().length);
@@ -460,7 +460,7 @@ public class BinaryCommandProcessor {
 						binaryPacket.setKey(key);
 						rh.setKeyLength(binaryPacket.getKey().length());
 
-						binaryPacket.setValue(value.getBytes("utf-8"));
+						binaryPacket.setValue(value.getBytes(HexUtil.getCharset()));
 
 						rh.setTotalBodyLength(rh.getKeyLength()
 								+ rh.getExtrasLength() + binaryPacket.getValue().length);
@@ -509,8 +509,8 @@ public class BinaryCommandProcessor {
 		}
 		byte data[] = binaryPacket.toBinaryByte();
 		if (handler.getCommunicationLogging() || QuickCached.DEBUG) {
-			logger.log(Level.FINE, "S: {0}", new String(data));			
-			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(data)));			
+			logger.log(Level.FINE, "S: {0}", new String(data, HexUtil.getCharset()));			
+			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(data, HexUtil.getCharset())));			
 		} else {
 			logger.log(Level.FINE, "S: {0} bytes", data.length);
 		}

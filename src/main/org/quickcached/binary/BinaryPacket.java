@@ -1,6 +1,8 @@
 package org.quickcached.binary;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.HexUtil;
 import org.quickcached.QuickCached;
@@ -145,16 +147,16 @@ public class BinaryPacket {
 		return key;
 	}
 
-	public String getEncodedKey() {
+	public String getEncodedKey() throws UnsupportedEncodingException {
 		return HexUtil.encode(key);
 	}
 
-	public void setEncodedKey(String encodedKey) {
+	public void setEncodedKey(String encodedKey) throws UnsupportedEncodingException {
 		this.encodedKey = encodedKey;
 		if(encodedKey!=null) key = HexUtil.decodeToString(encodedKey);
 	}
 
-	public void setKey(String key) {
+	public void setKey(String key) throws UnsupportedEncodingException {
 		this.key = key;
 		if(key!=null) encodedKey = HexUtil.encode(key);
 	}
@@ -175,7 +177,13 @@ public class BinaryPacket {
 		sb.append(", Key:");
 		if(getKey()!=null) sb.append(getKey());
 		sb.append(", Value:");
-		if(getValue()!=null) sb.append(new String(getValue()));
+		if(getValue()!=null) {
+			try {
+				sb.append(new String(getValue(), HexUtil.getCharset()));
+			} catch (UnsupportedEncodingException ex) {
+				Logger.getLogger(BinaryPacket.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
 		sb.append("}]");
 		return sb.toString();
 	}
