@@ -80,6 +80,11 @@
 	<application-configuration>
 		<prompt-type>gui</prompt-type>
 		<!--<prompt-type>console</prompt-type>-->
+
+		<property>
+			<property-name>CHARSET_TO_USE</property-name>
+			<property-value>ISO-8859-1</property-value>
+		</property>
 		
 		<property>
 			<property-name>CACHE_IMPL_CLASS</property-name>

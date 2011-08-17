@@ -18,6 +18,7 @@ version 1.1.0 [03-Jul-2011]
 + Added support to check for low memory and call GC if required
 + Added support for computing set averages - keysize, value size and ttl 
   (needs to be turned on in xml)
+# parametrised charset - defaults to ISO-8859-1
 
 
 version 1.0.2 [19-Feb-2011]
