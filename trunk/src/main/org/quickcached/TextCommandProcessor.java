@@ -278,7 +278,7 @@ public class TextCommandProcessor {
 		
 		try {
 			synchronized (key) {
-				long oldvalue = Long.parseLong(new String(dc.getData()));
+				long oldvalue = Long.parseLong(new String(dc.getData(), HexUtil.getCharset()));
 				if (cmd.equals("incr")) {
 					value = oldvalue + value;
 				} else if (cmd.equals("decr")) {
@@ -287,7 +287,7 @@ public class TextCommandProcessor {
 						value = 0;
 					}
 				}
-				dc.setData(("" + value).getBytes("utf-8"));
+				dc.setData(("" + value).getBytes(HexUtil.getCharset()));
 			}
 		} catch (Exception e) {
 			if (noreplay == false) {
@@ -464,12 +464,12 @@ public class TextCommandProcessor {
 	}
 
 	public void sendResponse(ClientHandler handler, String data) throws SocketTimeoutException, IOException {
-		sendResponse(handler, data.getBytes());
+		sendResponse(handler, data.getBytes(HexUtil.getCharset()));
 	}
 
 	public void sendResponse(ClientHandler handler, byte data[]) throws SocketTimeoutException, IOException {
 		if(handler.getCommunicationLogging() || QuickCached.DEBUG) {
-			logger.log(Level.FINE, "S: {0}", new String(data));
+			logger.log(Level.FINE, "S: {0}", new String(data, HexUtil.getCharset()));
 		} else {
 			logger.log(Level.FINE, "S: {0} bytes", data.length);
 		}
