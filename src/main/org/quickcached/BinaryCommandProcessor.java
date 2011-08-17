@@ -501,7 +501,7 @@ public class BinaryCommandProcessor {
 
 	public void sendResponse(ClientHandler handler, BinaryPacket binaryPacket)
 			throws SocketTimeoutException, IOException {
-		if(handler.getCommunicationLogging() || QuickCached.DEBUG) {
+		if(QuickCached.DEBUG) {
 			logger.log(Level.FINE, "Res BinaryPacket: {0}", binaryPacket);
 		} else {
 			ResponseHeader rh = (ResponseHeader) binaryPacket.getHeader();

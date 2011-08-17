@@ -34,6 +34,11 @@ public class PrepareHook implements ServerHook {
 			}
 
 			try {
+				String charsetToUse = (String) config.get("CHARSET_TO_USE");
+				if(charsetToUse!=null && charsetToUse.trim().length()!=0) {
+					HexUtil.setCharset(charsetToUse);
+				}
+				
 				String enableStatsReportStr = (String) config.get("ENABLE_STATS_REPORT");
 				boolean enableStatsReport = false;
 
