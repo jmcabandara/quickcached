@@ -29,6 +29,10 @@ public class H2CacheImpl extends BaseCacheImpl {
 		return cp.getConnection();
 	}
 	
+	public String getName() {
+		return "H2CacheImpl";
+	}
+	
 	public long getSize() {
 		return -1;
 	}

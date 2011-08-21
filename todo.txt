@@ -14,15 +14,14 @@ incorporated but not mentioned here.
 ------------------------------------------------------------------------
  1  Need to add memory warning to impl to free memory	 - 	   -
     on periodic basic
- 2  Add csv stats output			 	 1.1.0	   -
- 3
+ 2  Add csv stats output			 	 1.1.0	   Done
 ------------------------------------------------------------------------
 
 If you have a suggestions on a feature or need to request a new feature do
 post it at http://www.quickcached.org/
 
 
-Last Dated: 28 July 2011
+Last Dated: 21 Aug 2011
 ------------------------
 
 Copyright (C) 2011 QuickCached.org

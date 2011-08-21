@@ -106,6 +106,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		stats.put("cas_badval", "" + casBadval);
 		
 		stats.put("app_version", QuickCached.app_version);
+		stats.put("app_impl_used", cache.getName());
 		
 		stats.put("gc_calls", ""+gcCalls);
 
@@ -128,6 +129,9 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		totalConnections++;
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection opened: {0}", 
 				handler.getHostAddress());
+		
+		//optimize for lan trafic
+		handler.getSocket().setTcpNoDelay(true);
 	}
 
 	public void lostConnection(ClientHandler handler) 

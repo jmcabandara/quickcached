@@ -116,11 +116,14 @@
 	
 	<target name="loadtest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.LoadTest"
-            taskname="loadtestSpy" failonerror="true">
+            taskname="loadtest" failonerror="true">
 			<arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/>
-			<!--arg line="s 1 127.0.0.1:11211 100"/-->
+			<!--arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/-->
+			
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="SpyMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="XMemcached" /-->
 			<sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" />
 				   
@@ -138,8 +141,10 @@
 	<target name="agetest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.AgeTest"
             taskname="AgeTest" failonerror="true">
+			<!-- 3600 ~ 1h -->
 			<!-- 10800 ~ 3h -->
-			<arg line="8 127.0.0.1:11211,127.0.0.1:11212 16 10800" />
+			<arg line="10 127.0.0.1:11211,127.0.0.1:11212 16 10800" />
+			<!--arg line="10 127.0.0.1:11211,127.0.0.1:11212 16 10800" /-->
 			<!--arg line="thread list txn/sec runtimesec"/-->
 			<classpath refid="project.classpath.test"/>
 			<classpath>

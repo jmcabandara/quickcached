@@ -16,7 +16,9 @@ public class LoadTest {
 	private String name;
 	private String hostList;
 	private int timeouts;
+	
 	private static int objectSize = 1024;//1kb
+	private static boolean useBinaryConnection = true;
 
 	public static void main(String args[]) {
 		String mode = "s";
@@ -126,7 +128,7 @@ public class LoadTest {
 	public void setUp(){
 		try {
 			c = MemcachedClient.getInstance();
-			c.setUseBinaryConnection(true);
+			c.setUseBinaryConnection(useBinaryConnection);
 			c.setAddresses(hostList);
 			c.setDefaultTimeoutMiliSec(3000);//3 sec
 			c.init();

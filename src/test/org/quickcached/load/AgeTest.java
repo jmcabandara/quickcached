@@ -1,6 +1,7 @@
 package org.quickcached.load;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Random;
 
 import java.util.logging.*;
@@ -62,6 +63,7 @@ public class AgeTest {
 		System.out.println("Txn/Sec/Thread: "+eachUnitCount);
 		System.out.println("Total Threads: "+threads);
 		System.out.println("Host List: "+host);
+		System.out.println("ETC: "+new Date(System.currentTimeMillis()+runTimeSec*1000));
 		System.out.println("Starting....");
 		System.out.println("=============");
 		long stime = System.currentTimeMillis();
