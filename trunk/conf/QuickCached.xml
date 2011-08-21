@@ -90,6 +90,8 @@
 			<property-name>CACHE_IMPL_CLASS</property-name>
 			<!-- org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl -->
 			<!-- org.quickcached.cache.impl.h2database.H2CacheImpl -->
+			<!-- org.quickcached.cache.impl.directbytebuffer.DirectByteBufferImpl -->
+			<!-- org.quickcached.cache.impl.concurrenthashmap.ConcurrentHashMapImpl -->
 			
 			<property-value>org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl</property-value>
 		</property>
@@ -103,7 +105,7 @@
 		<property>
 			<property-name>GC_CALL_ON_LOW_MEMORY_PERCENT</property-name>
 			<!-- 0.70 = 70%; will call flush if reached; make it blank to skip this-->
-			<property-value></property-value>
+			<property-value>0.70</property-value>
 		</property>	
 		<property>
 			<property-name>GC_CALL_ON_LOW_MEMORY_POLLING_INTERVAL_MIN</property-name>

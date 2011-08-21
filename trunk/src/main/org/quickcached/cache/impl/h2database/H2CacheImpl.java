@@ -5,91 +5,36 @@ import java.util.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
-import org.quickcached.CommandHandler;
 import org.quickcached.QuickCached;
-import org.quickcached.cache.CacheInterface;
+import org.quickcached.cache.impl.BaseCacheImpl;
 
 /**
  * H2 based implementation
  * @author Ifteqar Ahmed
  * @author Akshathkumar Shetty
  */
-public class H2CacheImpl implements CacheInterface {
+public class H2CacheImpl extends BaseCacheImpl {
 	private static final Logger logger = Logger.getLogger(H2CacheImpl.class.getName());
 	private static JdbcConnectionPool cp = JdbcConnectionPool.create("jdbc:h2:mem:test", "sa", "sa");
 
 	static {
 		createTable();
 	}
-	private long totalItems;
-	private long cmdGets;
-	private long cmdSets;
-	private long cmdDeletes;
-	private long cmdFlushs;
-	private long getHits;
-	private long getMisses;
-	private long deleteMisses;
-	private long deleteHits;
-	
-	private double avgKeySize = -1;
-	private double avgValueSize = -1;
-	private double avgTtl = -1;
 
-	public H2CacheImpl() {
-	}
 
 	public static Connection getConnection() throws SQLException {
 		return cp.getConnection();
 	}
-
-	public Map getStats() {
-		Map stats = new LinkedHashMap();
-
-		//curr_items - Current number of items stored by the server
-		////stats.put("curr_items", "" + cache.size());
-
-		//total_items - Total number of items stored by this server ever since it started
-		stats.put("total_items", "" + totalItems);
-
-		//cmd_get           Cumulative number of retrieval reqs
-		stats.put("cmd_get", "" + cmdGets);
-
-		//cmd_set           Cumulative number of storage reqs
-		stats.put("cmd_set", "" + cmdSets);
-
-		//cmd_delete
-		stats.put("cmd_delete", "" + cmdDeletes);
-
-		//cmd_flush
-		stats.put("cmd_flush", "" + cmdFlushs);
-
-		//get_hits          Number of keys that have been requested and found present
-		stats.put("get_hits", "" + getHits);
-
-		//get_misses        Number of items that have been requested and not found
-		stats.put("get_misses", "" + getMisses);
-
-		//delete_misses     Number of deletions reqs for missing keys
-		stats.put("delete_misses", "" + deleteMisses);
-
-		//delete_hits       Number of deletion reqs resulting in
-		stats.put("delete_hits", "" + deleteHits);
-		
-		if(CommandHandler.isComputeAvgForSetCmd()) {
-			stats.put("avg_key_size", "" + (long)(0.5+avgKeySize));
-			stats.put("avg_value_size", "" + (long)(0.5+avgValueSize));
-			stats.put("avg_ttl", "" + (long)(0.5+avgTtl));
-		}
-
-		return stats;
+	
+	public long getSize() {
+		return -1;
 	}
-
-	public void set(String key, Object value, int objectSize, long expInSec) {
+	
+	public void setToCache(String key, Object value, int objectSize, 
+			long expInSec) throws Exception {
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		
@@ -99,8 +44,6 @@ public class H2CacheImpl implements CacheInterface {
 		if (expInSec != 0) {
 			expTime = new java.sql.Timestamp(System.currentTimeMillis() + expInSec * 1000);
 		}		
-		
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "set key: {0}; objectsize: {1}; expInSec:{2}", new Object[]{key, objectSize, expInSec});
 
 		try {
 			con = getConnection();
@@ -118,7 +61,6 @@ public class H2CacheImpl implements CacheInterface {
 			pstmt.setTimestamp(k++, currentTime);
 
 			pstmt.executeUpdate();
-			totalItems++;
 		} catch (Exception e) {
 			if(e.getMessage().startsWith("Unique index or primary key violation:")) {
 				try {
@@ -138,9 +80,11 @@ public class H2CacheImpl implements CacheInterface {
 					pstmt.executeUpdate();
 				} catch (Exception er) {
 					logger.log(Level.WARNING, "Update Error: " + er, er);
+					throw er;
 				}
 			} else {
 				logger.log(Level.WARNING, "Error: " + e, e);
+				throw e;
 			}
 		} finally {
 			try {
@@ -154,38 +98,12 @@ public class H2CacheImpl implements CacheInterface {
 				logger.log(Level.WARNING, "Error: " + e1, e1);
 			}
 		}
-		cmdSets++;
-		
-		if(CommandHandler.isComputeAvgForSetCmd()) {
-			long cmdSetsCurrent = cmdSets;
-			//TODO: avg can be more accurately calculated using sql 
-		
-			if(avgKeySize==-1) {
-				avgKeySize = (avgKeySize*(cmdSetsCurrent-1) + key.length())/cmdSetsCurrent;
-			} else {
-				avgKeySize = key.length();
-			}
-
-			if(avgValueSize==-1) {
-				avgValueSize = (avgValueSize*(cmdSetsCurrent-1) + objectSize)/cmdSetsCurrent;
-			} else {
-				avgValueSize = objectSize;
-			}
-
-			if(avgTtl==-1) {
-				avgTtl = (avgTtl*(cmdSetsCurrent-1) + expInSec)/cmdSetsCurrent;
-			} else {
-				avgTtl = expInSec;
-			}
-		}
 	}
 	
-	public void update(String key, Object value, int objectSize) {
+	public void updateToCache(String key, Object value, int objectSize) throws Exception {
 		Connection con = null;
 		PreparedStatement pstmt = null;
-		
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", new Object[]{key, objectSize});
-		
+				
 		try {
 			java.sql.Timestamp currentTime = new java.sql.Timestamp(System.currentTimeMillis());
 			
@@ -204,6 +122,7 @@ public class H2CacheImpl implements CacheInterface {
 			pstmt.executeUpdate();
 		} catch (Exception er) {
 			logger.log(Level.WARNING, "Update Error: " + er, er);
+			throw er;
 		} finally {
 			try {
 				pstmt.close();
@@ -217,14 +136,11 @@ public class H2CacheImpl implements CacheInterface {
 			}
 		}
 	}
-
-	public Object get(String key) {
-		cmdGets++;
+	
+	public Object getFromCache(String key) throws Exception {
 		Object obj = null;
 		Connection con = null;
 		PreparedStatement pstmt = null;
-		
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "get key: {0}", key);
 		
 		try {
 			con = getConnection();
@@ -248,6 +164,7 @@ public class H2CacheImpl implements CacheInterface {
 			}
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: " + e, e);
+			throw e;
 		} finally {
 			try {
 				pstmt.close();
@@ -259,24 +176,15 @@ public class H2CacheImpl implements CacheInterface {
 			} catch (SQLException e1) {
 				logger.log(Level.WARNING, "Error: " + e1, e1);
 			}
-
-			if (obj != null) {
-				getHits++;
-			} else {
-				getMisses++;
-			}
 		}
 		return obj;
 	}
-
-	public boolean delete(String key) {
-		cmdDeletes++;
+	
+	public boolean deleteFromCache(String key) throws Exception {
 		Connection con = null;
 		int rowsAffected = 0;
 		PreparedStatement pstmt = null;
-		
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "delete key: {0};", key);
-		
+				
 		try {
 			con = getConnection();
 			pstmt = con.prepareStatement("DELETE FROM DATA_CACHE WHERE KEY = ?");
@@ -287,6 +195,7 @@ public class H2CacheImpl implements CacheInterface {
 			if(QuickCached.DEBUG) logger.log(Level.FINE, "rowsAffected: {0}", rowsAffected);
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: " + e, e);
+			throw e;
 		} finally {
 			try {
 				pstmt.close();
@@ -299,15 +208,11 @@ public class H2CacheImpl implements CacheInterface {
 				logger.log(Level.WARNING, "Error: " + e1, e1);
 			}
 		}
-		if (rowsAffected > 0) {
-			deleteHits++;
-		} else {
-			deleteMisses++;
-		}
+		
 		return rowsAffected > 0;
 	}
-
-	public void flush() {
+	
+	public void flushCache() throws Exception {
 		Connection con = null;
 		int rowsAffected = 0;
 		PreparedStatement pstmt = null;
@@ -320,6 +225,7 @@ public class H2CacheImpl implements CacheInterface {
 			rowsAffected = pstmt.executeUpdate();
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: " + e, e);
+			throw e;
 		} finally {
 			try {
 				pstmt.close();
@@ -333,8 +239,8 @@ public class H2CacheImpl implements CacheInterface {
 			}
 		}
 		logger.fine("rows cleared: " + rowsAffected);
-		cmdFlushs++;
 	}
+
 
 	public static void createTable() {
 		Connection con = null;
