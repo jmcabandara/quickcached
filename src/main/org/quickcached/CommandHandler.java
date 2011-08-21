@@ -118,6 +118,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		logger.log(Level.FINE, "PID: {0}", QuickCached.getPID());
 		logger.log(Level.FINE, "App Version: {0}", QuickCached.app_version);
 		logger.log(Level.FINE, "Memcached Version: {0}", QuickCached.version);
+		logger.log(Level.FINE, "Cache: {0}", cache);
 	}
 
 
@@ -210,6 +211,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	public static void init(Map config) {
 		logger.fine("in init");
 		String implClass = (String) config.get("CACHE_IMPL_CLASS");
+		logger.fine("implClass: "+implClass);
 		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
 		try {
 			cache = (CacheInterface) Class.forName(implClass).newInstance();

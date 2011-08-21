@@ -51,7 +51,7 @@ public class StatsReportGenerator {
 						break;
 					}
 					CommandHandler.getStats(quickserver, stats);
-					writeReport(stats);
+					writeReport(quickserver.getPort(), stats);
 					stats.clear();
 				}
 				logger.info("Done");
@@ -66,16 +66,16 @@ public class StatsReportGenerator {
 		entriesToLog = aEntriesToLog;
 	}
 	
-	public static void writeReport(Map stats) {
+	public static void writeReport(int port, Map stats) {
 		if(stats==null || stats.isEmpty()) return;
 		
 		BufferedWriter out = null;
 		try {
-			File reportDir = new File("./stats/");
+			File reportDir = new File("./stats/"+port+"/");
 			if(!reportDir.canRead())
-				reportDir.mkdir();
+				reportDir.mkdirs();
 			//day files  - so max of 31 files only.. should be good for analysis.. saves disk space
-			File reportFile = new File("./stats/"+sdfFile.format(new Date())+".csv");
+			File reportFile = new File("./stats/"+port+"/"+sdfFile.format(new Date())+".csv");
 			
 			boolean append = true;
 			if((reportFile.lastModified()+1000*60*60*24*5) < System.currentTimeMillis()) {
