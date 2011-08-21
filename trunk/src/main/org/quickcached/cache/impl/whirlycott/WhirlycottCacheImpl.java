@@ -57,6 +57,10 @@ public class WhirlycottCacheImpl extends BaseCacheImpl {
 		}
 	}
 	
+	public String getName() {
+		return "WhirlycottCacheImpl";
+	}
+	
 	public long getSize() {
 		return cache.size();
 	}

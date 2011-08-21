@@ -75,6 +75,10 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 		}
 	}
 	
+	public String getName() {
+		return "ConcurrentHashMapImpl";
+	}
+	
 	public long getSize() {
 		return map.size();
 	}

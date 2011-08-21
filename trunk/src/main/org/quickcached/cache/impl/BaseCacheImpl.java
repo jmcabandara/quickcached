@@ -15,6 +15,7 @@ import org.quickcached.cache.CacheInterface;
 public abstract class BaseCacheImpl implements CacheInterface {
 	private static final Logger logger = Logger.getLogger(BaseCacheImpl.class.getName());	
 	
+	public abstract String getName();
 	public abstract long getSize();
 	public abstract void setToCache(String key, Object value, int objectSize, 
 			long expInSec) throws Exception;

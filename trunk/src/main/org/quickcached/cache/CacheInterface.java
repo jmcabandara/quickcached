@@ -12,6 +12,9 @@ import java.util.Map;
  * @author akshath
  */
 public interface CacheInterface {
+	
+	public String getName();
+	
 	public void set(String key, Object value, int objectSize, long expInSec);
 	public void update(String key, Object value, int objectSize);
 

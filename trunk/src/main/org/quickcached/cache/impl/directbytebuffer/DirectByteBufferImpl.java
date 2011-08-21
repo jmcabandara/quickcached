@@ -81,6 +81,10 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 		}
 	}
 	
+	public String getName() {
+		return "DirectByteBufferImpl";
+	}
+	
 	public long getSize() {
 		return map.size();
 	}
