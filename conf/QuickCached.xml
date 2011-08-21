@@ -165,6 +165,14 @@
 		<backlog>1024</backlog>		
 		<socket-linger>-1</socket-linger>
 		<debug-non-blocking-mode>false</debug-non-blocking-mode> 
+
+		<performance-preferences-connection-time>0</performance-preferences-connection-time>
+		<performance-preferences-latency>4</performance-preferences-latency>
+		<performance-preferences-bandwidth>0</performance-preferences-bandwidth>
+
+		<client-socket-tcp-no-delay>true</client-socket-tcp-no-delay>
+		<!-- 10 low latency -->
+		<client-socket-traffic-class>10</client-socket-traffic-class>
 	</advanced-settings>
 
 	<!--
