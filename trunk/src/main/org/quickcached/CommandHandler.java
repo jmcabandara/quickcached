@@ -129,9 +129,6 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		totalConnections++;
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection opened: {0}", 
 				handler.getHostAddress());
-		
-		//optimize for lan trafic
-		handler.getSocket().setTcpNoDelay(true);
 	}
 
 	public void lostConnection(ClientHandler handler) 
