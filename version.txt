@@ -5,10 +5,12 @@
 
 Current Version: 1.1.0
 
-version 1.1.0 [03-Jul-2011]
+version 1.1.0 [21-Aug-2011]
 ---------------------------
 + Upgraded to QuickServer 1.4.8
 + Implemented alternate cache impl using h2databased in-memory database
++ Implemented alternate cache impl using Direct ByteBuffer
++ Implemented alternate cache impl using ConcurrentHashMap
 + Implemented client abstraction for using XMemcached and SpyMemcached client API
 # Improved cache for better input stream handling.
 ! Bug fix for CAS in set (Binary Mode only)
