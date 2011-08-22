@@ -107,6 +107,10 @@
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
                     <ide-action name="test"/>
+					<action>
+                        <label>WarmUp</label>
+                        <target>warmup</target>
+                    </action>
                     <action>
                         <label>AgeTest</label>
                         <target>agetest</target>
@@ -114,7 +118,7 @@
                     <action>
                         <label>LoadTest</label>
                         <target>loadtest</target>
-                    </action>
+                    </action>                    
                 </context-menu>
             </view>
             <subprojects/>
