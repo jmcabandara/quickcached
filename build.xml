@@ -136,8 +136,31 @@
 			</classpath>
 		</java>
 	</target>
+	
+	
+	<target name="warmup" depends="compileTests">
+		<java fork="yes" classname="org.quickcached.load.LoadTest"
+            taskname="warmup" failonerror="true">
+			<arg line="m 20 127.0.0.1:11211,127.0.0.1:11212 2000"/>
+			<!--arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/-->
+			
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="SpyMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="XMemcached" /-->
+			<sysproperty key="org.quickcached.client.defaultImpl"
+                   value="XMemcached" />
+				   
+			<classpath refid="project.classpath.test"/>
+			<classpath>
+				<pathelement location="${test.build.dir}" />
+				<fileset dir="libtest">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+	</target>
 
-		
 	<target name="agetest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.AgeTest"
             taskname="AgeTest" failonerror="true">
@@ -155,6 +178,7 @@
 			</classpath>
 		</java>
 	</target>
+
 
 	<target name="loadmemtestMem" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.protocol.LoadMemTest"
