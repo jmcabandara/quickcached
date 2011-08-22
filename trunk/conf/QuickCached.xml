@@ -173,6 +173,9 @@
 		<client-socket-tcp-no-delay>true</client-socket-tcp-no-delay>
 		<!-- 10 low latency -->
 		<client-socket-traffic-class>10</client-socket-traffic-class>
+
+		<client-socket-receive-buffer-size>26215</client-socket-receive-buffer-size>
+		<client-socket-send-buffer-size>26215</client-socket-send-buffer-size>
 	</advanced-settings>
 
 	<!--
