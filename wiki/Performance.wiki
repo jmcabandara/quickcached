@@ -59,4 +59,4 @@ Avg Time per Operation: 0.79 ms
 }}}
 
 
-[https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US Detailed XLS File]
+[https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US Detailed Benchmark Report may be viewed in XLS file attached here]
