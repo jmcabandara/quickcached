@@ -19,11 +19,11 @@ Server Configuration
     # CPU: Intel Core 2 Duo (each core - U7300  @ 1.30GHz)
 
 <br />
-
-Note: Each Transaction has 3 operation - set, get and delete commands. 
+Note: Load test was initiated with the following command "ant loadtest". Each Transaction has 3 operation - set, get and delete commands. 
 Client is using binary mode of communication. Value payload is 1024 bytes in size.
 
-<br />
+JVM was warmed by running 200 transaction by running the following command - "ant warmup".
+
 *Whirlycott Impl with Server running in blocking mode. Client in Binary Mode*<br />
 
 
