@@ -24,7 +24,7 @@ Server Configuration
 Note: Each Transaction has 3 operation - set, get and delete commands. 
 Client is using binary mode of communication. Value payload is 1024 bytes in size.
 
-|| *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || XMemcached || 1.4 ||
 || 10 || 100 || 0 || XMemcached || 1.72 ||
 || 10 || 100 || 0 || XMemcached || 5.15 ||
@@ -42,7 +42,7 @@ Avg Time per Operation: 0.88 ms
 
 Note: Each Transaction has 3 operation - set, get and delete commands. 
 Client is using binary mode of communication. Value payload is 1024 bytes in size.
-|| *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || SpyMemcached || 1.4 ||
 || 10 || 100 || 0 || SpyMemcached || 1.57 ||
 || 10 || 100 || 0 || SpyMemcached || 1.39 ||
@@ -58,5 +58,42 @@ Avg Time per Txn: 2.38 ms
 Avg Time per Operation: 0.79 ms
 }}}
 
+*Whirlycott Impl with Server running in blocking mode *<br />
+Note: Each Transaction has 3 operation - set, get and delete commands. 
+Client is using text mode of communication. Value payload is 1024 bytes in size.
+
+|| *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| 10 || 100 || 0 || XMemcached || 1.1 ||
+|| 10 || 100 || 0 || XMemcached || 1.09 ||
+|| 10 || 100 || 0 || XMemcached || 0.93 ||
+|| 1 || 100 || 0 || XMemcached || 2.5 ||
+|| 1 || 100 || 0 || XMemcached || 2.5 ||
+|| 1 || 100 || 0 || XMemcached || 2.66 ||
+|| 20 || 100 || 0 || XMemcached || 0.93 ||
+|| 20 || 100 || 0 || XMemcached || 0.93 ||
+|| 20 || 100 || 0 || XMemcached || 0.93 ||
+
+{{{
+Avg Time per Txn: 1.50 ms
+Avg Time per Operation: 0.50 ms
+}}}
+
+Note: Each Transaction has 3 operation - set, get and delete commands. 
+Client is using text mode of communication. Value payload is 1024 bytes in size.
+|| *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
+|| 10 || 100 || 0 || SpyMemcached || 1.57 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 1 || 100 || 0 || SpyMemcached || 2.97 ||
+|| 1 || 100 || 0 || SpyMemcached || 3.13 ||
+|| 1 || 100 || 0 || SpyMemcached || 2.97 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+
+{{{
+Avg Time per Txn: 1.87 ms
+Avg Time per Operation: 0.62 ms
+}}}
 
 [https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US Detailed Benchmark Report may be viewed in XLS file attached here]
