@@ -20,9 +20,12 @@ Server Configuration
 
 <br />
 
-*Whirlycott Impl with Server running in blocking mode *<br />
 Note: Each Transaction has 3 operation - set, get and delete commands. 
 Client is using binary mode of communication. Value payload is 1024 bytes in size.
+
+<br />
+*Whirlycott Impl with Server running in blocking mode. Client in Binary Mode*<br />
+
 
 || *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || XMemcached || 1.4 ||
@@ -40,8 +43,6 @@ Avg Time per Txn: 2.66 ms
 Avg Time per Operation: 0.88 ms
 }}}
 
-Note: Each Transaction has 3 operation - set, get and delete commands. 
-Client is using binary mode of communication. Value payload is 1024 bytes in size.
 || *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || SpyMemcached || 1.4 ||
 || 10 || 100 || 0 || SpyMemcached || 1.57 ||
@@ -58,9 +59,7 @@ Avg Time per Txn: 2.38 ms
 Avg Time per Operation: 0.79 ms
 }}}
 
-*Whirlycott Impl with Server running in blocking mode *<br />
-Note: Each Transaction has 3 operation - set, get and delete commands. 
-Client is using text mode of communication. Value payload is 1024 bytes in size.
+*Whirlycott Impl with Server running in blocking mode. Client in Text Mode*<br />
 
 || *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || XMemcached || 1.1 ||
@@ -78,8 +77,7 @@ Avg Time per Txn: 1.50 ms
 Avg Time per Operation: 0.50 ms
 }}}
 
-Note: Each Transaction has 3 operation - set, get and delete commands. 
-Client is using text mode of communication. Value payload is 1024 bytes in size.
+
 || *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
 || 10 || 100 || 0 || SpyMemcached || 1.57 ||
 || 10 || 100 || 0 || SpyMemcached || 1.25 ||
