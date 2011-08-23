@@ -18,7 +18,6 @@ Server Configuration
     # RAM: 4 GB
     # CPU: Intel Core 2 Duo (each core - U7300  @ 1.30GHz)
 
-<br />
 Note: Load test was initiated with the following command "ant loadtest". Each Transaction has 3 operation - set, get and delete commands. 
 Client is using binary mode of communication. Value payload is 1024 bytes in size.
 
@@ -97,5 +96,5 @@ Avg Time per Operation: 0.62 ms
 }}}
 
 <br />
-More Details : 
-[https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US Detailed Benchmark Report may be viewed in XLS file attached here]
+More Details : Detailed benchmark report may be viewed in 
+[https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US XLS file] attached here.
