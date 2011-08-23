@@ -1,5 +1,5 @@
 #summary Performance Test results and recommendations
-#labels Phase-Deploy,Phase-QA
+#labels Phase-Deploy,Phase-QA,Featured
 
 = Introduction =
 
@@ -22,40 +22,40 @@ Server Configuration
 
 *Whirlycott Impl with Server running in blocking mode *<br />
 Note: Each Transaction has 3 operation - set, get and delete commands. 
-Client is using binary mode of communication. Value payload is 400 bytes in size.
+Client is using binary mode of communication. Value payload is 1024 bytes in size.
 
 || *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
-|| 10 || 100 || 0 || XMemcached || 3.44 ||
-|| 10 || 100 || 0 || XMemcached || 1.39 ||
-|| 10 || 100 || 0 || XMemcached || 1.25 ||
-|| 1 || 100 || 0 || XMemcached || 6.25 ||
-|| 1 || 100 || 0 || XMemcached || 3.59 ||
-|| 1 || 100 || 0 || XMemcached || 3.27 ||
+|| 10 || 100 || 0 || XMemcached || 1.4 ||
+|| 10 || 100 || 0 || XMemcached || 1.72 ||
+|| 10 || 100 || 0 || XMemcached || 5.15 ||
+|| 1 || 100 || 0 || XMemcached || 3.75 ||
+|| 1 || 100 || 0 || XMemcached || 3.9 ||
+|| 1 || 100 || 0 || XMemcached || 3.75 ||
 || 20 || 100 || 0 || XMemcached || 1.4 ||
-|| 20 || 100 || 0 || XMemcached || 2.02 ||
-|| 20 || 100 || 0 || XMemcached || 1.1 ||
+|| 20 || 100 || 0 || XMemcached || 1.55 ||
+|| 20 || 100 || 0 || XMemcached || 1.4 ||
 
 {{{
-Avg Time per Txn: 2.63 ms
-Avg Time per Operation: 0.87 ms
+Avg Time per Txn: 2.66 ms
+Avg Time per Operation: 0.88 ms
 }}}
 
 Note: Each Transaction has 3 operation - set, get and delete commands. 
-Client is using binary mode of communication. Value payload is 400 bytes in size.
+Client is using binary mode of communication. Value payload is 1024 bytes in size.
 || *Threads* || *No. of txn per Thread* || *Timeout* || *Client* || *Avg Time (ms)* ||
-|| 10 || 100 || 0 || SpyMemcached || 2.66 ||
-|| 10 || 100 || 0 || SpyMemcached || 1.55 ||
-|| 10 || 100 || 0 || SpyMemcached || 1.72||
-|| 1 || 100 || 0 || SpyMemcached || 4.38 ||
-|| 1 || 100 || 0 || SpyMemcached || 16.4 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.4 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.57 ||
+|| 10 || 100 || 0 || SpyMemcached || 1.39 ||
+|| 1 || 100 || 0 || SpyMemcached || 3.91 ||
+|| 1 || 100 || 0 || SpyMemcached || 3.91 ||
 || 1 || 100 || 0 || SpyMemcached || 3.58 ||
-|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
-|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
-|| 20 || 100 || 0 || SpyMemcached || 1.25 ||
+|| 20 || 100 || 0 || SpyMemcached || 2.8 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.39 ||
+|| 20 || 100 || 0 || SpyMemcached || 1.55 ||
 
 {{{
-Avg Time per Txn: 3.78 ms
-Avg Time per Operation: 1.26 ms
+Avg Time per Txn: 2.38 ms
+Avg Time per Operation: 0.79 ms
 }}}
 
 
