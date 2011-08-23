@@ -24,6 +24,7 @@ Client is using binary mode of communication. Value payload is 1024 bytes in siz
 
 JVM was warmed by running 200 transaction by running the following command - "ant warmup".
 
+<br />
 *Whirlycott Impl with Server running in blocking mode. Client in Binary Mode*<br />
 
 
@@ -59,6 +60,7 @@ Avg Time per Txn: 2.38 ms
 Avg Time per Operation: 0.79 ms
 }}}
 
+<br />
 *Whirlycott Impl with Server running in blocking mode. Client in Text Mode*<br />
 
 || *Threads* || *No. of Txn* || *Timeout* || *Client* || *Avg Time (ms)* ||
@@ -94,4 +96,6 @@ Avg Time per Txn: 1.87 ms
 Avg Time per Operation: 0.62 ms
 }}}
 
+<br />
+More Details : 
 [https://spreadsheets.google.com/spreadsheet/ccc?key=0AmvkI5XacgMpdEJQQW9vSUszVEhKeDZPbW45MzF0X1E&hl=en_US Detailed Benchmark Report may be viewed in XLS file attached here]
