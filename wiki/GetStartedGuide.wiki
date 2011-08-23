@@ -18,7 +18,7 @@ First extract the archive to a directory. Say "d:\quickcached". Now open a comma
 c:\>d:
 d:\>cd d:\quickcached
 D:\QuickCached>QuickCached.bat -p 11211 -l 0.0.0.0
-Loading QuickServer v1.4.7 ... Done
+Loading QuickServer v1.4.8 [PID:0000]... Done
 
 -------------------------------
  Name : QuickCached
@@ -31,7 +31,7 @@ First extract the archive to a directory. Say "/home/user/quickcached". Now open
 {{{
 $ cd /home/user/quickcached
 $ sh QuickCached.sh -p 11211 -l 0.0.0.0
-Loading QuickServer v1.4.7 ... Done
+Loading QuickServer v1.4.8 [PID:0000]... Done
 
 -------------------------------
  Name : QuickCached
