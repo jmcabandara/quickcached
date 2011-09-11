@@ -5,7 +5,7 @@
 
 Current Version: 1.1.0
 
-version 1.1.0 [21-Aug-2011]
+version 1.1.0 [11-Sep-2011]
 ---------------------------
 + Upgraded to QuickServer 1.4.8
 + Implemented alternate cache impl using h2databased in-memory database
@@ -15,12 +15,13 @@ version 1.1.0 [21-Aug-2011]
 # Improved cache for better input stream handling.
 ! Bug fix for CAS in set (Binary Mode only)
 + Added application version, memory percent used in stats output
-+ We have configurable Memcached version to output to client 
++ We have configurable Memcached version to output to client
 + Added Stats Report support to log stats output to a csv file at a interval specified
 + Added support to check for low memory and call GC if required
-+ Added support for computing set averages - keysize, value size and ttl 
++ Added support for computing set averages - keysize, value size and ttl
   (needs to be turned on in xml)
-# parametrised charset - defaults to ISO-8859-1
+# parametrized charset - defaults to ISO-8859-1
+# Network performance is now tuned
 
 
 version 1.0.2 [19-Feb-2011]
