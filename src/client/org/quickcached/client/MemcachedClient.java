@@ -70,6 +70,22 @@ public abstract class MemcachedClient {
 	public abstract Map getStats() throws Exception;
 	public abstract Object getBaseClient();
 	
+	public abstract boolean add(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException;
+	public abstract boolean replace(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException;
+	public abstract boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException;
+	public abstract boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException;
+	
+	public abstract void increment(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException;
+	public abstract void decrement(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException;
+	
+	public abstract Map getVersions() throws TimeoutException;	
+	
 	public void set(String key, int ttlSec, Object value) 
 			throws TimeoutException {
 		set(key, ttlSec, value, defaultTimeoutMiliSec);
@@ -79,5 +95,28 @@ public abstract class MemcachedClient {
 	}
 	public boolean delete(String key) throws TimeoutException {
 		return delete(key, defaultTimeoutMiliSec);
-	}	
+	}
+	
+	public boolean add(String key, int ttlSec, Object value) throws TimeoutException {
+		return add(key, ttlSec, value, defaultTimeoutMiliSec);
+	}
+	public boolean replace(String key, int ttlSec, Object value) 
+			throws TimeoutException {
+		return replace(key, ttlSec, value, defaultTimeoutMiliSec);
+	}
+	public boolean append(long cas, String key, Object value) 
+			throws TimeoutException {
+		return append(cas, key, value, defaultTimeoutMiliSec);
+	}
+	public boolean prepend(long cas, String key, Object value) 
+			throws TimeoutException {
+		return prepend(cas, key, value, defaultTimeoutMiliSec);
+	}
+	
+	public void increment(String key, int value) throws TimeoutException {
+		increment(key, value, defaultTimeoutMiliSec);
+	}
+	public void decrement(String key, int value) throws TimeoutException {
+		decrement(key, value, defaultTimeoutMiliSec);
+	}
 }

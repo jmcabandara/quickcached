@@ -84,6 +84,58 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			throw new TimeoutException("Timeout "+e);
 		}
 	}
+	
+	public boolean add(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		Future <Boolean> f = getCache().add(key, ttlSec, value);
+		Boolean flag = false;
+		try {
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}
+		return flag.booleanValue();
+	}
+	
+	public boolean replace(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		Future <Boolean> f = getCache().replace(key, ttlSec, value);
+		Boolean flag = false;
+		try {
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}
+		return flag.booleanValue();
+	}
+	
+	public boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		Future <Boolean> f = getCache().append(cas, key, value);
+		Boolean flag = false;
+		try {
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}
+		return flag.booleanValue();
+	}
+	
+	public boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		Future <Boolean> f = getCache().prepend(cas, key, value);
+		Boolean flag = false;
+		try {
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}
+		return flag.booleanValue();
+	}
 
 	public Object get(String key, long timeoutMiliSec) throws TimeoutException {
 		Object readObject = null;
@@ -108,6 +160,22 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		}
 		return flag.booleanValue();
 	}
+	
+	public void increment(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException {
+		long newval = getCache().incr(key, value);
+		if(newval==-1) {
+			throw new TimeoutException("Timeout ");
+		}
+	}
+
+	public void decrement(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException {
+		long newval = getCache().decr(key, value);
+		if(newval==-1) {
+			throw new TimeoutException("Timeout ");
+		}
+	}
 
 	public void flushAll() throws TimeoutException {
 		for(int i=0;i<poolSize;i++) {
@@ -121,6 +189,10 @@ public class SpyMemcachedImpl extends MemcachedClient {
         
 	public Map getStats() throws Exception {
 		return getCache().getStats();
+	}
+	
+	public Map getVersions() throws TimeoutException {
+		return getCache().getVersions();
 	}
 	
 }

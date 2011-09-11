@@ -70,8 +70,75 @@ public class XMemcachedImpl extends MemcachedClient {
 		} catch (MemcachedException ex) {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
 					"MemcachedException", ex);
+		}		
+	}
+	
+	public boolean add(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		boolean flag = false;
+		try {
+			flag = c.add(key, ttlSec, value, timeoutMiliSec);
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
 		}
-		
+		return flag;
+	}
+	
+	public boolean replace(String key, int ttlSec, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		boolean flag = false;
+		try {
+			flag = c.replace(key, ttlSec, value, timeoutMiliSec);
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}
+		return flag;
+	}
+	
+	public boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		boolean flag = false;
+		try {
+			flag = c.append(key, value, timeoutMiliSec);
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}	
+		return flag;
+	}
+	
+	public boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+			throws TimeoutException {
+		boolean flag = false;
+		try {
+			flag = c.prepend(key, value, timeoutMiliSec);
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}	
+		return flag;
 	}
 
 	public Object get(String key, long timeoutMiliSec) throws TimeoutException {
@@ -125,4 +192,54 @@ public class XMemcachedImpl extends MemcachedClient {
 		return c.getStats();
 	}
 	
+	public void increment(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException {
+		try {
+			long newval = c.incr(key, value);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+			}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}	
+	}
+	
+	public void decrement(String key, int value, long timeoutMiliSec) 
+			throws TimeoutException {
+		try {
+			long newval = c.decr(key, value);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+			}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}
+	}
+	
+	public Map getVersions() throws TimeoutException {
+		try {
+			return c.getVersions();
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+		}
+		return null;
+	}
 }

@@ -9,7 +9,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
-import net.spy.memcached.MemcachedClient;
+import org.quickcached.client.*;
 
 /**
  *
@@ -22,27 +22,16 @@ public class ProtocolTest extends TestCase  {
         super(name);
     }
 
-	public void testAccess() {
-		c.checkAccess();
-	}
-
-	public void testAsyncGet() {
+	public void testGet2() throws TimeoutException {
 		c.set("HelloAG", 3600, "World");
 
-
-		String readObject = null;
-		Future <Object> f = c.asyncGet("HelloAG");
-		try {
-			readObject = (String) f.get(15, TimeUnit.SECONDS);
-		} catch(Exception e) {
-			f.cancel(false);
-		}
+		String readObject = (String) c.get("HelloAG");
+		
 		assertNotNull(readObject);
-		assertEquals("World",  readObject);
-
+		assertEquals("World",  readObject);		
     }
 
-	public void testGet() {
+	public void testGet() throws TimeoutException {		
         Date value = new Date();
 
 		c.set("someKeyG", 3600, value);
@@ -52,11 +41,10 @@ public class ProtocolTest extends TestCase  {
 		assertEquals(value.getTime(),  readObject.getTime());
 	}
 
-	public void testAppend() {
+	public void testAppend() throws TimeoutException {
         String value = "ABCD";
 
 		c.set("someKeyA", 3600, value);
-
 
 		c.append(1, "someKeyA", "EFGH");
 		String readObject = (String) c.get("someKeyA");
@@ -65,11 +53,10 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("ABCDEFGH", readObject);
 	}
 
-	public void testPrepend() {
+	public void testPrepend() throws TimeoutException {
         String value = "ABCD";
 
 		c.set("someKeyP", 3600, value);
-
 
 		c.prepend(1, "someKeyP", "EFGH");
 		String readObject = (String) c.get("someKeyP");
@@ -78,77 +65,52 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("EFGHABCD", readObject);
 	}
 
-	public void testAdd() {
+	public void testAdd() throws TimeoutException {
         String value = "ABCD";
 
 		c.delete("someKeyAd");
-		boolean flag = false;
-
-		Future <Boolean> f = c.add("someKeyAd", 3600, value);
-		try {
-			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
-		} catch(Exception e) {
-			f.cancel(false);
-		}
-
+		boolean flag = c.add("someKeyAd", 3600, value);
 		assertTrue(flag);
 
-		f = c.add("someKeyAd", 3600, value);
-		try {
-			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
-		} catch(Exception e) {
-			f.cancel(false);
-		}
+		flag = c.add("someKeyAd", 3600, value);
 		assertFalse(flag);
 	}
 
-	public void testReplace() {
+	public void testReplace() throws TimeoutException {
         String value = "ABCD";
 
 		c.set("someKeyR", 3600, "World");
 
-		boolean flag = false;
-
-		Future <Boolean> f = c.replace("someKeyR", 3600, value);
-		try {
-			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
-		} catch(Exception e) {
-			f.cancel(false);
-		}
-
+		boolean flag = c.replace("someKeyR", 3600, value);
 		assertTrue(flag);
 
 		c.delete("someKeyR");
-		f = c.replace("someKeyR", 3600, value);
-		try {
-			flag = ((Boolean) f.get(15, TimeUnit.SECONDS)).booleanValue();
-		} catch(Exception e) {
-			f.cancel(false);
-		}
+		
+		flag = c.replace("someKeyR", 3600, value);
 		assertFalse(flag);
 	}
 
-	public void testIncrement() {
+	public void testIncrement() throws TimeoutException {
         String value = "10";
 
 		c.set("someKeyI", 3600, value);
-		c.incr("someKeyI", 10);
+		c.increment("someKeyI", 10);
 
 		String readObject = (String) c.get("someKeyI");
 		assertNotNull(readObject);
 		assertEquals("20", readObject);
 
-		c.incr("someKeyI", 1);
+		c.increment("someKeyI", 1);
 		readObject = (String) c.get("someKeyI");
 		assertNotNull(readObject);
 		assertEquals("21", readObject);
 	}
 
-	public void testDecrement() {
+	public void testDecrement() throws TimeoutException {
         String value = "10";
 
 		c.set("someKeyD", 3600, value);
-		c.decr("someKeyD", 7);
+		c.decrement("someKeyD", 7);
 
 		String readObject = (String) c.get("someKeyD");
 		readObject = readObject.trim();
@@ -156,7 +118,7 @@ public class ProtocolTest extends TestCase  {
 		assertNotNull(readObject);
 		assertEquals("3", readObject);
 
-		c.decr("someKeyD", 4);
+		c.decrement("someKeyD", 4);
 		readObject = (String) c.get("someKeyD");
 		readObject = readObject.trim();
 
@@ -164,7 +126,7 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("0", readObject);
 	}
 
-	public void testDelete() {
+	public void testDelete() throws TimeoutException {
 		c.set("HelloD", 3600, "World");
 		String readObject = (String) c.get("HelloD");
 
@@ -176,7 +138,7 @@ public class ProtocolTest extends TestCase  {
 		assertNull(readObject);
 	}
 
-	public void testVersion() {
+	public void testVersion() throws TimeoutException {
 		Map ver = c.getVersions();
 		assertNotNull(ver);
 		System.out.println("ver: "+ver);
@@ -190,7 +152,7 @@ public class ProtocolTest extends TestCase  {
 	}
 
 
-	public void testStats() {
+	public void testStats() throws Exception {
 		Map stats = c.getStats();
 		assertNotNull(stats);
 
@@ -203,20 +165,20 @@ public class ProtocolTest extends TestCase  {
 		}
 	}
 
-	public void testFlush() {
+	public void testFlush() throws TimeoutException {
 		c.set("HelloF", 3600, "World");
 		String readObject = (String) c.get("HelloF");
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
 
-		c.flush();
+		c.flushAll();
 
 		readObject = (String) c.get("Hello");
 		assertNull(readObject);
 	}
 	
-	public void testDoubleSet1() {
+	public void testDoubleSet1() throws TimeoutException {
         String value = "v1";
 		c.set("someKeyDS1", 3600, value);
 		String readObject = (String) c.get("someKeyDS1");
@@ -232,7 +194,7 @@ public class ProtocolTest extends TestCase  {
 		assertEquals("v2",  readObject);
 	}
 	
-	public void testDoubleSet2() {
+	public void testDoubleSet2() throws TimeoutException {
         Map value = new HashMap();
 		value.put("key1", "v1");
 		
