@@ -110,6 +110,13 @@
 					<include name="**/*.jar"/>
 				</fileset>
 			</classpath>
+			
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="SpyMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="XMemcached" /-->
+			<sysproperty key="org.quickcached.client.defaultImpl"
+                   value="SpyMemcached" />
 		</java>
 	</target>
 	<!-- junit task -->
@@ -117,7 +124,7 @@
 	<target name="loadtest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.LoadTest"
             taskname="loadtest" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/>
+			<arg line="m 10 127.0.0.1:11211,127.0.0.1:11212  100"/>
 			<!--arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/-->
 			
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
