@@ -1,5 +1,5 @@
 
-QuickCached 1.2.0
+QuickCached 1.1.0
 
 Introduction
 ---------------------
@@ -67,7 +67,7 @@ JUnit :
  A framework to write repeatable tests. 
 
 
-Date: 03 Jul 2011
+Date: 11 Sep 2011
 ---------------------
 
 Copyright (C) 2011 QuickCached
