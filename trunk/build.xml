@@ -131,8 +131,12 @@
                    value="SpyMemcached" /-->
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" /-->
+				   
 			<sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" />
+				   
+			<sysproperty key="org.quickcached.client.binaryConnection"
+                   value="true" />			
 				   
 			<classpath refid="project.classpath.test"/>
 			<classpath>
@@ -149,7 +153,7 @@
 		<java fork="yes" classname="org.quickcached.load.LoadTest"
             taskname="warmup" failonerror="true">
 			<arg line="m 20 127.0.0.1:11211,127.0.0.1:11212 2000"/>
-			<!--arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/-->
+			<!--arg line="m 20 127.0.0.1:11211,127.0.0.1:11212 100"/-->
 			
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="SpyMemcached" /-->
@@ -157,6 +161,9 @@
                    value="XMemcached" /-->
 			<sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" />
+			
+			<sysproperty key="org.quickcached.client.binaryConnection"
+                   value="true" />
 				   
 			<classpath refid="project.classpath.test"/>
 			<classpath>
@@ -176,6 +183,9 @@
 			<arg line="10 127.0.0.1:11211,127.0.0.1:11212 16 10800" />
 			<!--arg line="10 127.0.0.1:11211,127.0.0.1:11212 16 10800" /-->
 			<!--arg line="thread list txn/sec runtimesec"/-->
+			
+			<sysproperty key="org.quickcached.client.binaryConnection"
+                   value="true" />
 			<classpath refid="project.classpath.test"/>
 			<classpath>
 				<pathelement location="${test.build.dir}" />

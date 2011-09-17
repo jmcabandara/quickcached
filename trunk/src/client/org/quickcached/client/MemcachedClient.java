@@ -39,7 +39,15 @@ public abstract class MemcachedClient {
 		String fullClassName = (String) implMap.get(implName);
 		if(fullClassName==null) fullClassName = (String) implMap.get(defaultImpl);
 		
-		return (MemcachedClient) Class.forName(fullClassName).newInstance();
+		MemcachedClient client = (MemcachedClient) Class.forName(fullClassName).newInstance();
+		
+		String binaryConnection = System.getProperty("org.quickcached.client.binaryConnection");
+		if(binaryConnection==null || binaryConnection.equalsIgnoreCase("true")) {
+			client.setUseBinaryConnection(true);
+		} else {
+			client.setUseBinaryConnection(false);
+		}
+		return client;
 	}
 
 	private long defaultTimeoutMiliSec = 1000;//1sec
