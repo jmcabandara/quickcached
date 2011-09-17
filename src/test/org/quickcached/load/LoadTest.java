@@ -11,12 +11,13 @@ import org.quickcached.client.*;
  * @author Akshathkumar Shetty
  */
 public class LoadTest {
-	private MemcachedClient c = null;
+	
 	private int count;
 	private String name;
 	private String hostList;
 	private int timeouts;
 	
+	private static MemcachedClient c = null;
 	private static int objectSize = 1024;//1kb
 	private static boolean useBinaryConnection = true;
 
@@ -126,22 +127,27 @@ public class LoadTest {
     }
 
 	public void setUp(){
-		try {
-			c = MemcachedClient.getInstance();
-			//c.setUseBinaryConnection(useBinaryConnection);
-			c.setAddresses(hostList);
-			c.setDefaultTimeoutMiliSec(3000);//3 sec
-			c.init();
-		} catch (Exception ex) {
-			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
-		}		
+		if(c==null) {
+			try {
+				c = MemcachedClient.getInstance();
+				//c.setUseBinaryConnection(useBinaryConnection);
+				c.setAddresses(hostList);
+				c.setDefaultTimeoutMiliSec(3000);//3 sec
+				c.init();
+			} catch (Exception ex) {
+				Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
 	}
 
 	public void tearDown(){
-		if(c!=null) try {
-			c.stop();
-		} catch (IOException ex) {
-			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
+		if(c!=null) {
+			try {
+				c.stop();
+			} catch (IOException ex) {
+				Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			c = null;
 		}
 	}
 

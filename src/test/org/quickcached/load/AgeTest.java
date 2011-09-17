@@ -11,14 +11,15 @@ import org.quickcached.client.*;
  *
  * @author akshath
  */
-public class AgeTest {
-	private MemcachedClient c = null;
+public class AgeTest {	
 	private int eachUnitCount;
 	private int runTimeSec;
 			
 	private String name;
 	private String hostList;
 	private int timeouts;
+	
+	private static MemcachedClient c = null;
 	private static int objectSize = 1024;//1kb
 
 	//thread list txn/sec runtimesec
@@ -117,22 +118,27 @@ public class AgeTest {
     }
 
 	public void setUp(){
-		try {
-			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
-			//c.setUseBinaryConnection(true);
-			c.setAddresses(hostList);
-			c.setDefaultTimeoutMiliSec(3000);//3 sec
-			c.init();
-		} catch (Exception ex) {
-			Logger.getLogger(AgeTest.class.getName()).log(Level.SEVERE, null, ex);
+		if(c==null) {
+			try {
+				c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
+				//c.setUseBinaryConnection(true);
+				c.setAddresses(hostList);
+				c.setDefaultTimeoutMiliSec(3000);//3 sec
+				c.init();
+			} catch (Exception ex) {
+				Logger.getLogger(AgeTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 	}
 
 	public void tearDown(){
-		if(c!=null) try {
-			c.stop();
-		} catch (IOException ex) {
-			Logger.getLogger(AgeTest.class.getName()).log(Level.SEVERE, null, ex);
+		if(c!=null) {
+			try {
+				c.stop();
+			} catch (IOException ex) {
+				Logger.getLogger(AgeTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			c = null;
 		}
 	}
 	
