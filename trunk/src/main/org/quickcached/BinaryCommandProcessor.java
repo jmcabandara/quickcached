@@ -2,6 +2,7 @@ package org.quickcached;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.Map;
@@ -479,6 +480,26 @@ public class BinaryCommandProcessor {
 					rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
 					sendResponse(handler, binaryPacket);
 				}
+			}
+		} catch (SocketException e) {
+			if(handler.isOpen()) {
+				logger.warning("SocketException: " + e);
+				if (QuickCached.DEBUG) {
+					e.printStackTrace();
+				}
+
+				ResponseHeader rh = new ResponseHeader();
+				rh.setMagic("81");
+				rh.setOpcode(opcode);
+				rh.setOpaque(command.getHeader().getOpaque());
+
+				BinaryPacket binaryPacket = new BinaryPacket();
+				binaryPacket.setHeader(rh);
+
+				rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+				sendResponse(handler, binaryPacket);
+			} else {
+				logger.fine("SocketException: " + e);
 			}
 		} catch (Exception e) {
 			logger.warning("Error: " + e);

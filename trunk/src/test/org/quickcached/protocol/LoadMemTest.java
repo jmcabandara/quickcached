@@ -9,7 +9,8 @@ import org.quickcached.client.*;
  * @author akshath
  */
 public class LoadMemTest {
-	private MemcachedClient c = null;
+	private static MemcachedClient c = null;
+	
 	private int count;
 	private String name;
 	private String hostList;
@@ -116,22 +117,27 @@ public class LoadMemTest {
     }
 
 	public void setUp(){
-		try {
-			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
-			c.setUseBinaryConnection(true);
-			c.setAddresses(hostList);
-			c.setDefaultTimeoutMiliSec(10000);//10 sec
-			c.init();
-		} catch (Exception ex) {
-			Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
+		if(c==null) {
+			try {
+				c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
+				c.setUseBinaryConnection(true);
+				c.setAddresses(hostList);
+				c.setDefaultTimeoutMiliSec(10000);//10 sec
+				c.init();
+			} catch (Exception ex) {
+				Logger.getLogger(TextProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
 		}
 	}
 
 	public void tearDown(){
-		if(c!=null) try {
-			c.stop();
-		} catch (IOException ex) {
-			Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, null, ex);
+		if(c!=null) {
+			try {
+				c.stop();
+			} catch (IOException ex) {
+				Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			c = null;
 		}
 	}
 
