@@ -1,4 +1,5 @@
 @echo off
+title QuickCached %*
 rem set JAVA_HOME=g:\jdk1.5.0_16
 rem set JAVA=%JAVA_HOME%\bin\java
 rem set cp1=%JAVA_HOME%\lib\tools.jar;.;
