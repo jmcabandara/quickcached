@@ -18,8 +18,8 @@ public class Util {
 		return sb.toString();
 	}
 
-	public static String decimal2hex(int d) {
-        String digits = "0123456789ABCDEF";
+	private static final String digits = "0123456789ABCDEF";
+	public static String decimal2hex(int d) {        
         if (d == 0) return "0";
         StringBuilder hex = new StringBuilder();
         while (d > 0) {
