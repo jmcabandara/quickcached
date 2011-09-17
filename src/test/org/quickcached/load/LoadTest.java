@@ -128,7 +128,7 @@ public class LoadTest {
 	public void setUp(){
 		try {
 			c = MemcachedClient.getInstance();
-			c.setUseBinaryConnection(useBinaryConnection);
+			//c.setUseBinaryConnection(useBinaryConnection);
 			c.setAddresses(hostList);
 			c.setDefaultTimeoutMiliSec(3000);//3 sec
 			c.init();
@@ -182,8 +182,9 @@ public class LoadTest {
 		String value = name+"-"+(i*2)+"-"+largeData;
 		try {
 			c.set(key, 3600, value);
-		} catch (TimeoutException ex) {
-			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (TimeoutException e) {
+			System.out.println("Timeout(set): "+e+" for "+key);
+			timeouts++;
 		} 
 	}
 
@@ -197,7 +198,7 @@ public class LoadTest {
 			}
 		} catch(TimeoutException e) {
 			timeouts++;
-			System.out.println("Timeout: "+e+" for "+key);
+			System.out.println("Timeout(get): "+e+" for "+key);
 		} 
 	}
 
@@ -205,8 +206,9 @@ public class LoadTest {
 		String key = name+"-"+i+"-"+seed;
 		try {
 			c.delete(key);
-		} catch (TimeoutException ex) {
-			Logger.getLogger(LoadTest.class.getName()).log(Level.SEVERE, null, ex);
+		} catch (TimeoutException e) {
+			timeouts++;
+			System.out.println("Timeout(del): "+e+" for "+key);
 		} 
 	}
 }

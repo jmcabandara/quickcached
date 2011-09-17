@@ -119,7 +119,7 @@ public class AgeTest {
 	public void setUp(){
 		try {
 			c = MemcachedClient.getInstance(MemcachedClient.XMemcachedImpl);
-			c.setUseBinaryConnection(true);
+			//c.setUseBinaryConnection(true);
 			c.setAddresses(hostList);
 			c.setDefaultTimeoutMiliSec(3000);//3 sec
 			c.init();
