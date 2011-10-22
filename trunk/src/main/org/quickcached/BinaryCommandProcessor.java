@@ -125,7 +125,7 @@ public class BinaryCommandProcessor {
 					dc.setFlags(command.getExtras().getFlags());
 					cache.set(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
 
-					if ("11".equals(opcode) == false) {
+					if ("11".equals(opcode) == false) {//!=SetQ
 						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 						rh.setCas(dc.getCas());
 
@@ -357,9 +357,9 @@ public class BinaryCommandProcessor {
 								value = oldvalue + value;
 							} else if ("06".equals(opcode) || "16".equals(opcode)) {
 								value = oldvalue - value;
-								if (value < 0) {
-									value = 0;
-								}
+							}
+							if (value < 0) {
+								value = 0;
 							}
 							olddc.setData(("" + value).getBytes(HexUtil.getCharset()));
 						}
