@@ -1,14 +1,15 @@
 @echo off
-rem set JAVA_HOME=g:\jdk1.5.0_16
+title QuickCached %*
+
+rem set JAVA_HOME=d:\jdk1.6.0_23
 rem set JAVA=%JAVA_HOME%\bin\java
-rem set cp1=%JAVA_HOME%\lib\tools.jar;.;
+rem set cp1=-cp %JAVA_HOME%\lib\tools.jar;.;
 
 set GC_OPTIONS=-verbose:gc -Xloggc:verbose_gc.log -XX:+PrintGCDetails -XX:+PrintHeapAtGC -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintClassHistogram   -XX:+PrintCommandLineFlags -XX:+PrintConcurrentLocks -XX:+PrintGCTimeStamps 
 rem -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution  
 
-set JVM_OPTIONS=-Xmaxjitcodesize150m -Xss160k -XX:PermSize=128m -Xconcurrentio -XX:+UseParallelGC -Xconcurrentio -XX:CompileThreshold=1500
+rem set EXTRA_OPTS=-XX:+UseParallelGC -XX:+UseStringCache -XX:+AggressiveOpts
+set JVM_OPTIONS=-Xmaxjitcodesize150m -Xss160k -XX:PermSize=128m -Xconcurrentio -XX:+UseParallelGC -XX:CompileThreshold=1500
 
-
-rem %JAVA% -server %JVM_OPTIONS% %GC_OPTIONS% -Xms512m -Xmx512m  -jar dist\QuickCached-Server.jar %*
-
-java -server %JVM_OPTIONS% %GC_OPTIONS% -Xms512m -Xmx512m  -jar dist\QuickCached-Server.jar %*
+rem %JAVA% %cp1% -server -Xms512m -Xmx512m %JVM_OPTIONS% %GC_OPTIONS% %EXTRA_OPTS% -jar dist\QuickCached-Server.jar %*
+java -server -Xms512m -Xmx512m %JVM_OPTIONS% %GC_OPTIONS% %EXTRA_OPTS% -jar dist\QuickCached-Server.jar %*
