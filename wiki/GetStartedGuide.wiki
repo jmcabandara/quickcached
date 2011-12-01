@@ -9,7 +9,7 @@ Also Non-members may check out a read-only working copy anonymously over SVN.
 {{{svn checkout http://quickcached.googlecode.com/svn/trunk/ quickcached-read-only}}}
 
 == Requirements ==
-QuickCached needs Java VM v 1.5 or higher installed.
+QuickCached is a memcached server implementation in Java, so will work on any OS that supports Java VM. QuickCached needs Java VM v 1.5 or higher installed.
 
 = Windows =
 First extract the archive to a directory. Say "d:\quickcached". Now open a command prompt and type the following.
@@ -26,7 +26,7 @@ Loading QuickServer v1.4.8 [PID:0000]... Done
 -------------------------------
 }}}
 
-= Linux/Solaris/HP-Unix =
+= Linux/Solaris/HP-Unix/AIX =
 First extract the archive to a directory. Say "/home/user/quickcached". Now open a command prompt and type the following.
 {{{
 $ cd /home/user/quickcached
