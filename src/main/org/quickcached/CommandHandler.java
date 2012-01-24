@@ -27,17 +27,17 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	private static TextCommandProcessor textCommandProcessor = null;
 	private static BinaryCommandProcessor binaryCommandProcessor = null;
 
-	private static long totalConnections;
-	private static long bytesRead;
-	protected static long gcCalls;
-	//private static long bytesWritten;
-	protected static long incrMisses;
-	protected static long incrHits;
-	protected static long decrMisses;
-	protected static long decrHits;
-	protected static long casMisses;
-	protected static long casHits;
-	protected static long casBadval;
+	private volatile static long totalConnections;
+	private volatile static long bytesRead;
+	private volatile static long bytesWritten;
+	protected volatile static long gcCalls;	
+	protected volatile static long incrMisses;
+	protected volatile static long incrHits;
+	protected volatile static long decrMisses;
+	protected volatile static long decrHits;
+	protected volatile static long casMisses;
+	protected volatile static long casHits;
+	protected volatile static long casBadval;
 	
 	private static boolean computeAvgForSetCmd = false;
 
@@ -77,7 +77,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		stats.put("bytes_read", "" + bytesRead);
 
 		//bytes_written     Total number of bytes sent by this server to network
-		//todo
+		stats.put("bytes_written", "" + bytesWritten);
 
 		//bytes - Current number of bytes used by this server to store items
 		long usedMemory = Runtime.getRuntime().totalMemory() - 
@@ -158,51 +158,58 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		Data data = (Data) handler.getClientData();
 		data.addBytes(command);
 
-		bytesRead = bytesRead + command.length;
+		bytesRead = bytesRead + handler.getTotalReadBytes();
+		handler.resetTotalReadBytes();
+		
+		try {
 
-		if(data.getDataRequiredLength()!=0) {//only used by text mode
-			try {
-				if(data.isAllDataIn()) {
-					textCommandProcessor.processStorageCommands(handler);
-					return;
-				} else {
-					return;
-				}
-			} catch(IllegalArgumentException e) {
-				logger.warning("Error: "+e);
-				textCommandProcessor.sendResponse(handler, "ERROR\r\n");
-			} catch(Exception e) {
-				logger.warning("Error: "+e);
-				textCommandProcessor.sendResponse(handler, "ERROR\r\n");
-			}
-		}
-
-		while(data.isMoreCommandToProcess()) {
-			if(data.isBinaryCommand()) {
-				if(QuickCached.DEBUG) logger.fine("BinaryCommand");
-				BinaryPacket bp = null;
+			if(data.getDataRequiredLength()!=0) {//only used by text mode
 				try {
-					bp = data.getBinaryCommandHeader();
-				} catch (Exception ex) {
-					Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
-					throw new IOException(""+ex);
-				}
-
-				if(bp!=null) {
-					if(QuickCached.DEBUG) logger.fine("BinaryCommand Start");
-					binaryCommandProcessor.handleBinaryCommand(handler, bp);
-					if(QuickCached.DEBUG) logger.fine("BinaryCommand End");
-				} else {
-					break;
-				}
-			} else {
-				String cmd = data.getCommand();
-				if(cmd!=null) {
-					textCommandProcessor.handleTextCommand(handler, cmd);
-				} else {
-					break;
+					if(data.isAllDataIn()) {
+						textCommandProcessor.processStorageCommands(handler);
+						return;
+					} else {
+						return;
+					}
+				} catch(IllegalArgumentException e) {
+					logger.warning("Error: "+e);
+					textCommandProcessor.sendResponse(handler, "ERROR\r\n");
+				} catch(Exception e) {
+					logger.warning("Error: "+e);
+					textCommandProcessor.sendResponse(handler, "ERROR\r\n");
 				}
 			}
+
+			while(data.isMoreCommandToProcess()) {
+				if(data.isBinaryCommand()) {
+					if(QuickCached.DEBUG) logger.fine("BinaryCommand");
+					BinaryPacket bp = null;
+					try {
+						bp = data.getBinaryCommandHeader();
+					} catch (Exception ex) {
+						Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+						throw new IOException(""+ex);
+					}
+
+					if(bp!=null) {
+						if(QuickCached.DEBUG) logger.fine("BinaryCommand Start");
+						binaryCommandProcessor.handleBinaryCommand(handler, bp);
+						if(QuickCached.DEBUG) logger.fine("BinaryCommand End");
+					} else {
+						break;
+					}
+				} else {
+					String cmd = data.getCommand();
+					if(cmd!=null) {
+						textCommandProcessor.handleTextCommand(handler, cmd);
+					} else {
+						break;
+					}
+				}
+			}
+		} finally {
+			bytesWritten = bytesWritten + handler.getTotalWrittenBytes();
+			handler.resetTotalWrittenBytes();
 		}
 	}
 
