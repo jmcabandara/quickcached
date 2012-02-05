@@ -1,8 +1,7 @@
 package org.quickcached.cache.impl.whirlycott;
 
 import com.whirlycott.cache.*;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -17,6 +16,7 @@ public class WhirlycottCacheImpl extends BaseCacheImpl {
 	private static final Logger logger = Logger.getLogger(WhirlycottCacheImpl.class.getName());
 
 	private Cache cache = null;	
+	
 	
 	public WhirlycottCacheImpl() {
 		FileInputStream myInputStream = null;
@@ -83,5 +83,13 @@ public class WhirlycottCacheImpl extends BaseCacheImpl {
 	
 	public void flushCache() throws Exception {
 		cache.clear();
+	}
+	
+	public boolean saveToDisk() {
+		return false;
+	}
+
+	public boolean readFromDisk() {		
+		return false;
 	}
 }

@@ -1,6 +1,7 @@
 package org.quickcached.protocol;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.logging.*;
 import org.quickcached.client.*;
 
@@ -15,6 +16,9 @@ public class LoadMemTest {
 	private String name;
 	private String hostList;
 	private int timeouts;
+	
+	private static int objectSize = 1024;//1kb
+	private String seed = null;
 
 	public static void main(String args[]) {
 		String mode = "m";
@@ -114,6 +118,15 @@ public class LoadMemTest {
         this.count = count;
 		this.name = name;
 		this.hostList = host;
+		
+		StringBuilder sb = new StringBuilder();
+		Random r = new Random();
+		char c = '0';
+		for(int k=0;k<objectSize;k++) {
+			c = (char)(r.nextInt(26) + 'a');
+			sb.append(c);
+		}
+		seed = sb.toString();	
     }
 
 	public void setUp(){
@@ -155,7 +168,7 @@ public class LoadMemTest {
 
     public void doSet(int i) {
 		String key = name+"-"+i;
-		String value = name+"-"+(i*2);
+		String value = name+"-"+(i*2)+"-"+seed;
 		try {
 			c.set(key, 3600, value);
 		} catch (TimeoutException ex) {

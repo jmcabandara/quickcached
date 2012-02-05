@@ -46,7 +46,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	}
 	public static Map getStats(QuickServer server, Map stats) {
 		if(stats==null) {
-			stats = new LinkedHashMap(25);
+			stats = new LinkedHashMap(30);
 		}
 
 		//pid
@@ -94,8 +94,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		//threads           Number of worker threads requested.
 		//stats.put("threads", );
 
-		Map implStats = cache.getStats();
-		stats.putAll(implStats);
+		cache.saveStats(stats);
 		
 		stats.put("incr_misses", "" + incrMisses);
 		stats.put("incr_hits", "" + incrHits);
@@ -119,7 +118,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		logger.log(Level.FINE, "PID: {0}", QuickCached.getPID());
 		logger.log(Level.FINE, "App Version: {0}", QuickCached.app_version);
 		logger.log(Level.FINE, "Memcached Version: {0}", QuickCached.version);
-		logger.log(Level.FINE, "Cache: {0}", cache);
+		logger.log(Level.FINE, "Cache: {0}", cache);		
 	}
 
 
@@ -276,6 +275,17 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		} else {
 			mws.removeAllListener();
 			lowMemoryActionInit = false;
+		}
+		
+		String saveCacheToDiskBwRestarts = (String) 
+			config.get("SAVE_CACHE_TO_DISK_IF_SUPPORTED_BW_RESTARTS");
+		if(saveCacheToDiskBwRestarts!=null && saveCacheToDiskBwRestarts.equals("true")) {
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {				
+					cache.saveToDisk();				
+				}
+			});
+			cache.readFromDisk();
 		}
 	}
 

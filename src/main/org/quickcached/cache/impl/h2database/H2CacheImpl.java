@@ -293,6 +293,13 @@ public class H2CacheImpl extends BaseCacheImpl {
 				logger.log(Level.WARNING, "Error: " + e1, e1);
 			}
 		}
+	}
+	
+	public boolean saveToDisk() {
+		return false;
+	}
 
+	public boolean readFromDisk() {
+		return false;
 	}
 }
