@@ -92,30 +92,36 @@
 			<!-- org.quickcached.cache.impl.h2database.H2CacheImpl -->
 			<!-- org.quickcached.cache.impl.directbytebuffer.DirectByteBufferImpl -->
 			<!-- org.quickcached.cache.impl.concurrenthashmap.ConcurrentHashMapImpl -->
+			<!-- org.quickcached.cache.impl.softreferencemap.SoftReferenceMapImpl -->
 			
-			<property-value>org.quickcached.cache.impl.whirlycott.WhirlycottCacheImpl</property-value>
+			<property-value>org.quickcached.cache.impl.softreferencemap.SoftReferenceMapImpl</property-value>
 		</property>
 
 		<property>
 			<property-name>FLUSH_ON_LOW_MEMORY_PERCENT</property-name>
 			<!-- 0.95 = 95%; will call flush if reached; make it blank to skip this-->
-			<property-value>0.95</property-value>
+			<property-value>0.96</property-value>
 		</property>	
 
 		<property>
 			<property-name>GC_CALL_ON_LOW_MEMORY_PERCENT</property-name>
 			<!-- 0.70 = 70%; will call flush if reached; make it blank to skip this-->
-			<property-value>0.70</property-value>
+			<property-value>0.85</property-value>
 		</property>	
 		<property>
 			<property-name>GC_CALL_ON_LOW_MEMORY_POLLING_INTERVAL_MIN</property-name>
-			<property-value>15</property-value>
+			<property-value>5</property-value>
 		</property>
 		
 		<property>
 			<property-name>MEMCACHED_VERSION_TO_SHOW</property-name>
 			<property-value>1.4.6</property-value>
 		</property>	
+		
+		<property>
+			<property-name>SAVE_CACHE_TO_DISK_IF_SUPPORTED_BW_RESTARTS</property-name>
+			<property-value>false</property-value>
+		</property>
 
 		<property>
 			<property-name>ENABLE_STATS_REPORT</property-name>
