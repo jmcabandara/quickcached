@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.quickcached.QuickCached;
 import org.quickcached.cache.impl.BaseCacheImpl;
 
+
 /**
  * A SoftReference based ConcurrentHashMap cache.
  * 
@@ -21,33 +22,40 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 	private static final Logger logger = Logger.getLogger(SoftReferenceMapImpl.class.getName());
 	
 	/**
-	 * The internal HashMap that will hold the SoftReference.
-	 */
-	private static Map map = new ConcurrentHashMap();
-	private static Map mapTtl = new ConcurrentHashMap();
-	/**
 	 * The number of "hard" references to hold internally.
 	 */
 	private static int hardSize = 1000;
+	
+	/**
+	 * The internal HashMap that will hold the SoftReference.
+	 */
+	private Map map = new ConcurrentHashMap();
+	private Map mapTtl = new ConcurrentHashMap();
+	
 	/**
 	 * The FIFO list of hard references, order of last access.
 	 */
-	private static List hardCache = Collections.synchronizedList(new LinkedList());
+	private List hardCache = Collections.synchronizedList(new LinkedList());
 	/**
 	 * Reference queue for cleared SoftReference objects.
 	 */
-	private static final ReferenceQueue queue = new ReferenceQueue();
+	private final ReferenceQueue queue = new ReferenceQueue();
 	
-	private static int tunerSleeptime = 120;//in sec
+	private int tunerSleeptime = 120;//in sec
 	
-	private static final Object lock = new Object();
+	private final Object lock = new Object();
 	
-	protected volatile static long evicted;
-	protected volatile static long expired;
+	protected volatile long evicted;
+	protected volatile long expired;
+	
+	private Thread purgeThread = null;
+	
+	public SoftReferenceMapImpl() {
+		startPurgeThread();
+	}
 
-	static {
-		Thread t = new Thread("SoftReferenceMapImpl-PurgThread") {
-
+	private void startPurgeThread()  {
+		purgeThread = new Thread("SoftReferenceMapImpl-PurgeThread") {
 			public void run() {
 				long timespent = 0;
 				long timeToSleep = 0;
@@ -60,7 +68,8 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 							Thread.sleep(timeToSleep);
 						} catch (InterruptedException ex) {
 							Logger.getLogger(SoftReferenceMapImpl.class.getName()).log(
-								Level.SEVERE, null, ex);
+								Level.FINE, "Interrupted "+ex);
+							break;
 						}
 					}
 
@@ -79,11 +88,11 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 				}
 			}
 		};
-		t.setDaemon(true);
-		t.start();
+		purgeThread.setDaemon(true);
+		purgeThread.start();
 	}
 
-	public static void purgeOperation() {
+	public void purgeOperation() {
 		try {
 			Iterator iterator = mapTtl.keySet().iterator();
 			String key = null;
@@ -194,65 +203,8 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 		mapTtl.clear();
 		map.clear();
 	}
-	
-	
-	private static String fileName = "./SoftReferenceMapImpl.dat";
 
-	public boolean saveToDisk() {
-		System.out.println("Saving state to disk..");
-		ObjectOutputStream oos = null;
-		try {
-			oos = new ObjectOutputStream(new FileOutputStream(fileName));
-			oos.writeObject(map);
-			oos.writeObject(mapTtl);
-			oos.writeObject(hardCache);
-			oos.flush();
-			return true;
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Error: {0}", e);
-		} finally {
-			if (oos != null) {
-				try {
-					oos.close();
-				} catch (IOException ex) {
-					Logger.getLogger(SoftReferenceMapImpl.class.getName()).log(
-						Level.WARNING, "Error: " + ex, ex);
-				}
-			}
-			System.out.println("Done");
-		}
-		return false;
-	}
-
-	public boolean readFromDisk() {
-		File file = new File(fileName);
-		if (file.canRead() == false) {
-			return false;
-		}
-		System.out.println("Reading state from disk..");
-		ObjectInputStream ois = null;
-		try {
-			ois = new ObjectInputStream(new FileInputStream(fileName));
-			map = (Map) ois.readObject();
-			mapTtl = (Map) ois.readObject();
-			hardCache = (List) ois.readObject();
-			return true;
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Error: {0}", e);
-		} finally {
-			if (ois != null) {
-				try {
-					ois.close();
-				} catch (IOException ex) {
-					Logger.getLogger(SoftReferenceMapImpl.class.getName()).log(
-						Level.WARNING, "Error: " + ex, ex);
-				}
-			}
-			file.delete();
-			System.out.println("Done");
-		}
-		return false;
-	}
+	
 
 	public static int getHardSize() {
 		return hardSize;
@@ -277,10 +229,10 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 		 * information. An outer class can also access private members of an
 		 * inner class inside its inner class.
 		 */
-		private SoftValue(Object k, Object key, ReferenceQueue q) {
-			super(k, q);
+		private SoftValue(Object v, Object key, ReferenceQueue q) {
+			super(v, q);
 			this.key = key;
-		}
+		}		
 	}
 
 	/**
@@ -288,7 +240,7 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 	 * SoftValue objects from the HashMap by looking them up using the
 	 * SoftValue.key data member.
 	 */
-	private static void processQueue() {
+	private void processQueue() {
 		SoftValue sv = null;
 		try {
 			while ((sv = (SoftValue) queue.poll()) != null) {
@@ -305,4 +257,99 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 			logger.log(Level.WARNING, "Error: "+e, e);
 		}
 	}
+	
+	private String fileName = "./SoftReferenceMapImpl.dat";
+	public boolean saveToDisk() {
+		System.out.print("Saving state to disk.. ");
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream(new FileOutputStream(fileName));
+			writeObject(oos);
+			oos.flush();
+			return true;
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Error: {0}", e);
+		} finally {
+			if(oos!=null) {
+				try {
+					oos.close();
+				} catch (IOException ex) {
+					logger.log(Level.WARNING, "Error: "+ex, ex);
+				}
+			}
+			System.out.println("Done");
+		}		
+		return false;
+	}
+
+	public boolean readFromDisk() {
+		File file = new File(fileName);
+		if(file.canRead()==false) return false;
+		System.out.print("Reading state from disk.. ");
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(fileName));
+			readObject(ois);
+			return true;
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Error: {0}", e);
+		} finally {
+			if(ois!=null) {
+				try {
+					ois.close();
+				} catch (IOException ex) {
+					logger.log(Level.WARNING, "Error: "+ex, ex);
+				}
+			}
+			file.delete();
+			System.out.println("Done");
+		}
+		return false;
+	}
+	
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		purgeThread.interrupt();
+		processQueue();
+		
+		HashMap<Object, Object> wcache = new HashMap<Object, Object>();
+
+		Iterator<String> it = map.keySet().iterator();
+		Object key = null;
+		Object value = null;
+		while(it.hasNext()) {
+				key = it.next();
+				SoftReference ref = (SoftReference) map.get(key);
+				if(ref == null) continue;
+				value = ref.get();
+				if(value!=null) {
+					wcache.put(key, value);
+				} else {
+					mapTtl.remove(key);
+					while(true) {
+						if(hardCache.remove(key)==false) {
+							break;
+						}
+					}
+				}
+		}
+		out.writeObject(wcache);
+		out.writeObject(mapTtl);
+		out.writeObject(hardCache);
+	}
+
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		HashMap<Object, Object> wcache = (HashMap<Object, Object>) in.readObject();
+		
+		Iterator it = wcache.keySet().iterator();
+		Object key = null;
+		Object value = null;
+		while(it.hasNext()) {
+			key = it.next();
+			value = wcache.get(key);
+			map.put(key, new SoftValue(value, key, queue));
+		}
+		
+		mapTtl = (Map) in.readObject();
+		hardCache = (List) in.readObject();
+	} 
 }

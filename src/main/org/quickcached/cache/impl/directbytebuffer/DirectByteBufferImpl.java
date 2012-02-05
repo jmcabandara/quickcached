@@ -1,14 +1,8 @@
 package org.quickcached.cache.impl.directbytebuffer;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,16 +15,21 @@ import org.quickcached.cache.impl.BaseCacheImpl;
  */
 public class DirectByteBufferImpl extends BaseCacheImpl {
 	private static final Logger logger = Logger.getLogger(DirectByteBufferImpl.class.getName());
-	
-	private static Map map = new ConcurrentHashMap();
-	private static Map mapTtl = new ConcurrentHashMap();
-	
 	private static int tunerSleeptime = 130;//in sec
 	
-	protected volatile static long expired;
+	private Map map = new ConcurrentHashMap();
+	private Map mapTtl = new ConcurrentHashMap();
 	
-	static {
-		Thread t = new Thread("DirectByteBuffer-PurgThread") {
+	protected volatile long expired;
+	
+	private Thread purgeThread = null;
+	
+	public DirectByteBufferImpl() {
+		startPurgeThread();
+	}
+	
+	private void startPurgeThread()  {
+		purgeThread = new Thread("DirectByteBuffer-PurgeThread") {
 			public void run() {
 				long timespent = 0;
 				long timeToSleep = 0;
@@ -43,8 +42,8 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 						try {
 							Thread.sleep(timeToSleep);
 						} catch (InterruptedException ex) {
-							Logger.getLogger(DirectByteBufferImpl.class.getName()).log(
-									Level.SEVERE, null, ex);
+							logger.log(Level.FINE, "Interrupted "+ex);
+							break;
 						}
 					}
 					
@@ -52,19 +51,18 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 					try {
 						purgeOperation();
 					} catch (Exception ex) {
-						Logger.getLogger(DirectByteBufferImpl.class.getName()).log(
-								Level.SEVERE, null, ex);
+						logger.log(Level.WARNING, "Error: "+ex, ex);
 					}
 					etime = System.currentTimeMillis();
 					timespent = etime - stime;
 				}
 			}
 		};
-		t.setDaemon(true);
-		t.start();
+		purgeThread.setDaemon(true);
+		purgeThread.start();
 	}
 	
-	public static void purgeOperation() {
+	public void purgeOperation() {
 		try {
 			Iterator iterator = mapTtl.keySet().iterator();
 			String key = null;
@@ -103,13 +101,7 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 	
 	public void setToCache(String key, Object value, int objectSize, 
 			long expInSec) throws Exception {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream stream = new ObjectOutputStream(baos);
-		stream.writeObject(value);
-		stream.close();
-		byte b[] = baos.toByteArray();
-		ByteBuffer buffer = ByteBuffer.allocateDirect(b.length);
-		buffer.put(b);
+		ByteBuffer buffer = getByteBuffer(value);
 		map.put(key, buffer);
 		if (expInSec != 0) {
 			mapTtl.put(key, new Date(System.currentTimeMillis()+expInSec*1000));
@@ -117,29 +109,16 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 	}
 	
 	public void updateToCache(String key, Object value, int objectSize) throws Exception {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream stream = new ObjectOutputStream(baos);
-		stream.writeObject(value);
-		stream.close();
-		byte b[] = baos.toByteArray();
-		ByteBuffer buffer = ByteBuffer.allocateDirect(b.length);
-		buffer.put(b);
+		ByteBuffer buffer = getByteBuffer(value);
 		map.put(key, buffer);
-	}
+	}		
 	
-	public Object getFromCache(String key) throws Exception {
-		ByteBuffer buffer2 = (ByteBuffer) map.get(key);
-		if (buffer2 != null) {
-			byte buf[] = new byte[buffer2.capacity()];
-			buffer2.rewind();
-			buffer2.get(buf);
-			ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-			ObjectInputStream oois = new ObjectInputStream(bais);
-			Object object = oois.readObject();
-			oois.close();
-			return object;
+	public Object getFromCache(String key) throws IOException, ClassNotFoundException {
+		ByteBuffer buffer = (ByteBuffer) map.get(key);
+		if (buffer != null) {
+			return getByteBuffer(buffer);
 		} else {
-			if(QuickCached.DEBUG) logger.log(Level.FINE, "no value in db for key: {0}", key);
+			if(QuickCached.DEBUG) logger.log(Level.FINE, "no value for key: {0}", key);
 			return null;
 		}
 	}
@@ -155,11 +134,118 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 		map.clear();
 	}
 	
+	private ByteBuffer getByteBuffer(Object value) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream stream = new ObjectOutputStream(baos);
+		stream.writeObject(value);
+		stream.close();
+		byte b[] = baos.toByteArray();
+		ByteBuffer buffer = ByteBuffer.allocateDirect(b.length);
+		buffer.put(b);
+		return buffer;
+	}
+	
+	private Object getByteBuffer(ByteBuffer buffer) throws IOException, ClassNotFoundException {
+		byte buf[] = new byte[buffer.capacity()];
+		buffer.rewind();
+		buffer.get(buf);
+		ByteArrayInputStream bais = new ByteArrayInputStream(buf);
+		ObjectInputStream oois = new ObjectInputStream(bais);
+		Object object = oois.readObject();
+		oois.close();
+		return object;
+	}
+	
+	private String fileName = "./DirectByteBufferImpl.dat";
 	public boolean saveToDisk() {
+		System.out.print("Saving state to disk.. ");
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream(new FileOutputStream(fileName));
+			writeObject(oos);
+			oos.flush();
+			return true;
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Error: {0}", e);
+		} finally {
+			if(oos!=null) {
+				try {
+					oos.close();
+				} catch (IOException ex) {
+					logger.log(Level.WARNING, "Error: "+ex, ex);
+				}
+			}
+			System.out.println("Done");
+		}		
 		return false;
 	}
 
 	public boolean readFromDisk() {
+		File file = new File(fileName);
+		if(file.canRead()==false) return false;
+		System.out.print("Reading state from disk.. ");
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream(new FileInputStream(fileName));
+			readObject(ois);
+			return true;
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Error: {0}", e);
+		} finally {
+			if(ois!=null) {
+				try {
+					ois.close();
+				} catch (IOException ex) {
+					logger.log(Level.WARNING, "Error: "+ex, ex);
+				}
+			}
+			file.delete();
+			System.out.println("Done");
+		}
 		return false;
 	}
+	
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		purgeThread.interrupt();
+		
+		HashMap<Object, Object> wcache = new HashMap<Object, Object>();
+
+		Iterator<String> it = map.keySet().iterator();
+		String key = null;
+		Object value = null;
+		while(it.hasNext()) {
+				key = (String) it.next();
+				try {
+					value = getFromCache(key);
+				} catch (ClassNotFoundException ex) {
+					logger.log(Level.FINE, "Error: "+ex, ex);
+					continue;
+				}
+				
+				if(value!=null) {
+					wcache.put(key, value);
+				} else {
+					mapTtl.remove(key);
+				}
+		}
+		out.writeObject(wcache);
+		out.writeObject(mapTtl);
+	}
+
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		HashMap<Object, Object> wcache = (HashMap<Object, Object>) in.readObject();
+		
+		Iterator it = wcache.keySet().iterator();
+		Object key = null;
+		Object value = null;
+		while(it.hasNext()) {
+			key = it.next();
+			value = wcache.get(key);
+			
+			ByteBuffer buffer = getByteBuffer(value);
+			map.put(key, buffer);
+		}
+		
+		mapTtl = (Map) in.readObject();
+	} 
 }

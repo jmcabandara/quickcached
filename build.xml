@@ -8,7 +8,7 @@
 	<property name="dist.dir"   value="dist" />
 
 	<target name="clean">
-		<delete dir="${build.dir}" />
+		<!--delete dir="${build.dir}" /-->
 		<delete dir="${main.build.dir}" />
 		<delete dir="${test.build.dir}" />
 		<delete dir="${client.build.dir}" />

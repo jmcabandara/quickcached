@@ -17,16 +17,20 @@ import org.quickcached.cache.impl.BaseCacheImpl;
  */
 public class ConcurrentHashMapImpl extends BaseCacheImpl {
 	private static final Logger logger = Logger.getLogger(ConcurrentHashMapImpl.class.getName());
-	
-	private static Map map = new ConcurrentHashMap();
-	private static Map mapTtl = new ConcurrentHashMap();
-	
 	private static int tunerSleeptime = 130;//in sec
 	
-	protected volatile static long expired;
+	private Map map = new ConcurrentHashMap();
+	private Map mapTtl = new ConcurrentHashMap();	
+	
+	protected volatile long expired;
+	private Thread purgeThread = null;
+	
+	public ConcurrentHashMapImpl() {
+		startPurgeThread();
+	}
 		
-	static {
-		Thread t = new Thread("ConcurrentHashMap-PurgThread") {
+	private void startPurgeThread()  {
+		purgeThread = new Thread("ConcurrentHashMap-PurgeThread") {
 			public void run() {
 				long timespent = 0;
 				long timeToSleep = 0;
@@ -38,8 +42,8 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 						try {
 							Thread.sleep(timeToSleep);
 						} catch (InterruptedException ex) {
-							Logger.getLogger(ConcurrentHashMapImpl.class.getName()).log(
-									Level.SEVERE, null, ex);
+							logger.log(Level.FINE, "Interrupted "+ ex);
+							break;
 						}
 					}
 					
@@ -55,11 +59,11 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 				}
 			}
 		};
-		t.setDaemon(true);
-		t.start();
+		purgeThread.setDaemon(true);
+		purgeThread.start();
 	}
 	
-	public static void purgeOperation() {
+	public void purgeOperation() {
 		try {
 			Iterator iterator = mapTtl.keySet().iterator();
 			String key = null;
@@ -129,13 +133,14 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 		map.clear();
 	}
 
-	private static String fileName = "./ConcurrentHashMapImpl.dat";
+	private String fileName = "./ConcurrentHashMapImpl.dat";
 	public boolean saveToDisk() {
 		System.out.println("Saving state to disk..");
 		ObjectOutputStream oos = null;
 		try {
 			oos = new ObjectOutputStream(new FileOutputStream(fileName));
 			oos.writeObject(map);
+			oos.writeObject(mapTtl);
 			oos.flush();
 			return true;
 		} catch (Exception e) {
@@ -157,11 +162,12 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 	public boolean readFromDisk() {
 		File file = new File(fileName);
 		if(file.canRead()==false) return false;
-		
+		System.out.println("Reading state from disk..");
 		ObjectInputStream ois = null;
 		try {
 			ois = new ObjectInputStream(new FileInputStream(fileName));
 			map = (Map) ois.readObject();
+			mapTtl = (Map) ois.readObject();
 			return true;
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: {0}", e);
@@ -175,6 +181,7 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 				}
 			}
 			file.delete();
+			System.out.println("Done");
 		}
 		return false;
 	}
