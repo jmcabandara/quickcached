@@ -37,9 +37,10 @@ public abstract class BaseCacheImpl implements CacheInterface {
 	private double avgKeySize = -1;
 	private double avgValueSize = -1;
 	private double avgTtl = -1;	
+
 	
-	public Map getStats() {
-		Map stats = new LinkedHashMap();
+	public void saveStats(Map stats) {
+		if(stats==null) stats = new LinkedHashMap();
 
 		//curr_items - Current number of items stored by the server
 		stats.put("curr_items", "" + getSize());
@@ -76,8 +77,6 @@ public abstract class BaseCacheImpl implements CacheInterface {
 			stats.put("avg_value_size", "" + (long)(0.5+avgValueSize));
 			stats.put("avg_ttl", "" + (long)(0.5+avgTtl));
 		}
-
-		return stats;
 	}
 
 	public void set(String key, Object value, int objectSize, long expInSec) {

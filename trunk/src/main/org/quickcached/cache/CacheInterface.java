@@ -27,7 +27,11 @@ public interface CacheInterface {
 	/**
 	 *
 	 * @return Map with key as curr_items, total_items, cmd_get, cmd_set,
-	 *  get_hits, get_misses, delete_misses, delete_hits
+	 *  get_hits, get_misses, delete_misses, delete_hits, evictions, expired
 	 */
-	public Map getStats();
+	public void saveStats(Map map);
+	
+	public boolean saveToDisk();
+	
+	public boolean readFromDisk();
 }

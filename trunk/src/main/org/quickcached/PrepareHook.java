@@ -2,14 +2,12 @@ package org.quickcached;
 
 import java.util.Arrays;
 import java.util.List;
-import org.quickserver.net.server.*;
-
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.mem.MemoryWarningSystem;
-
 import org.quickserver.net.ServerHook;
+import org.quickserver.net.server.QuickServer;
 
 public class PrepareHook implements ServerHook {
 	private static final Logger logger = Logger.getLogger(PrepareHook.class.getName());
