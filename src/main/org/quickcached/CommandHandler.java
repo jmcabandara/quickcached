@@ -260,7 +260,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						System.gc();
 						gcCalls++;
 						long memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
-						logger.warning("After GC mem percent used: "+memPercentAfterGC);
+						logger.log(Level.WARNING, "After GC mem percent used: {0}", memPercentAfterGC);
 						if(memPercentAfterGC<0 || memPercentAfterGC > memLimit) {						
 							logger.warning("Flushing cache to save JVM.");
 							cache.flush();
@@ -268,7 +268,7 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 							gcCalls++;
 						}
 						memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
-						logger.fine("Done. Mem percent used: "+memPercentAfterGC);
+						logger.log(Level.FINE, "Done. Mem percent used: {0}", memPercentAfterGC);
 					}
 				});
 			}
