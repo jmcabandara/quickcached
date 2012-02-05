@@ -112,6 +112,7 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 					}
 					expired++;
 				}
+				Thread.yield();
 			}
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "Error: " + e, e);
@@ -252,6 +253,7 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 					}
 				}
 				evicted++;
+				Thread.yield();
 			}
 		} catch (Throwable e) {
 			logger.log(Level.WARNING, "Error: "+e, e);
