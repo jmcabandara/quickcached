@@ -85,7 +85,7 @@ public class PrepareHook implements ServerHook {
 									}
 									int permemuse = MemoryWarningSystem.getMemUsedPercentage();
 									if(permemuse > gcCallOnLowMemoryPercent) {
-										logger.fine("MemUsedPercentage: "+permemuse+", calling gc..");
+										logger.log(Level.INFO, "MemUsedPercentage: {0}, calling gc..", permemuse);
 										System.gc();
 										CommandHandler.gcCalls++;
 									}
