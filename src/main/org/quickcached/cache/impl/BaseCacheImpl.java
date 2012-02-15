@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.CommandHandler;
+import org.quickcached.DataCarrier;
 import org.quickcached.QuickCached;
 import org.quickcached.cache.CacheInterface;
 
@@ -29,10 +30,13 @@ public abstract class BaseCacheImpl implements CacheInterface {
 	private long cmdSets;
 	private long cmdDeletes;
 	private long cmdFlushs;
+	private long cmdTouchs;
 	private long getHits;
 	private long getMisses;
 	private long deleteMisses;
-	private long deleteHits;
+	private long deleteHits;	
+	private long touchMisses;
+	private long touchHits;
 	
 	private double avgKeySize = -1;
 	private double avgValueSize = -1;
@@ -57,6 +61,9 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		//cmd_delete
 		stats.put("cmd_delete", "" + cmdDeletes);
 
+		//cmd_touch
+		stats.put("cmd_touch", "" + cmdTouchs);
+		
 		//cmd_flush
 		stats.put("cmd_flush", "" + cmdFlushs);
 
@@ -71,6 +78,12 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		
 		//delete_hits       Number of deletion reqs resulting in
 		stats.put("delete_hits", "" + deleteHits);
+		
+		//touch_hits	Numer of keys that have been touched with a new expiration time 
+		stats.put("touch_hits", "" + touchHits);
+		
+		//touch_misses	Numer of items that have been touched and not found 
+		stats.put("touch_misses", "" + touchMisses);
 		
 		if(CommandHandler.isComputeAvgForSetCmd()) {
 			stats.put("avg_key_size", "" + (long)(0.5+avgKeySize));
@@ -113,7 +126,22 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
 		}		
-	}	
+	}
+	
+	public boolean touch(String key, long expInSec) {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "touch key: {0}", key);
+		cmdTouchs++;
+		
+		DataCarrier dc = (DataCarrier) get_(key);
+		if (dc == null) {
+			touchMisses++;
+			return false;
+		} else {		
+			set(key, dc, dc.getSize(), expInSec);
+			touchHits++;
+			return true;
+		}
+	}
 	
 	public void update(String key, Object value, int objectSize) {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", 
@@ -127,20 +155,24 @@ public abstract class BaseCacheImpl implements CacheInterface {
 
 	public Object get(String key) {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "get key: {0}", key);
-		
 		cmdGets++;
+		Object obj = get_(key);
+		if(obj!=null) {
+			getHits++;
+		} else {
+			if(QuickCached.DEBUG) logger.log(Level.FINE, "no value for key: {0}", 
+					key);
+			getMisses++;
+		}
+		return obj;
+	}
+	
+	private Object get_(String key) {		
 		Object obj = null;
 		try {
 			obj = getFromCache(key);			
 		} catch (Exception ex) {
-			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, null, ex);
-		}
-		if(obj!=null) {
-			getHits++;
-		} else {
-			if(QuickCached.DEBUG) logger.log(Level.FINE, "no value in db for key: {0}", 
-					key);
-			getMisses++;
+			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
 		}
 		return obj;
 	}

@@ -74,6 +74,9 @@ public abstract class MemcachedClient {
 	public abstract Object get(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract boolean delete(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract void flushAll() throws TimeoutException;
+	
+	public abstract boolean touch(String key, int ttlSec, long timeoutMiliSec) throws TimeoutException;
+	public abstract Object gat(String key, int ttlSec, long timeoutMiliSec) throws TimeoutException;
         
 	public abstract Map getStats() throws Exception;
 	public abstract Object getBaseClient();
@@ -126,5 +129,13 @@ public abstract class MemcachedClient {
 	}
 	public void decrement(String key, int value) throws TimeoutException {
 		decrement(key, value, defaultTimeoutMiliSec);
+	}
+	
+	public boolean touch(String key, int ttlSec) throws TimeoutException {
+		return touch(key, ttlSec, defaultTimeoutMiliSec);
+	}
+	
+	public Object gat(String key, int ttlSec) throws TimeoutException {
+		return gat(key, ttlSec, defaultTimeoutMiliSec);
 	}
 }

@@ -1,11 +1,13 @@
 package org.quickcached.client.impl;
 
+import net.spy.memcached.internal.OperationFuture;
 import org.quickcached.client.TimeoutException;
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.quickcached.client.MemcachedClient;
 import java.util.Map;
+import net.spy.memcached.CASValue;
 
 /**
  *
@@ -72,6 +74,19 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		int i = (int) (Math.random()* poolSize);
 		return c[i];
 	}
+	
+	public boolean touch(String key, int ttlSec, long timeoutMiliSec) throws TimeoutException {
+		Future <Boolean> f = getCache().touch(key, ttlSec);
+		Boolean flag = false;
+		try {
+			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}
+		return flag.booleanValue();
+	}
+			
 
 	public void set(String key, int ttlSec, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
@@ -147,6 +162,18 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			throw new TimeoutException("Timeout "+e);
 		}
 		return readObject;
+	}
+	
+	public Object gat(String key, int ttlSec, long timeoutMiliSec) throws TimeoutException {
+		OperationFuture <CASValue<Object>> f = getCache().asyncGetAndTouch(key, ttlSec);
+		CASValue<Object> casv = null;
+		try {
+			casv = f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
+		} catch(Exception e) {
+			f.cancel(false);
+			throw new TimeoutException("Timeout "+e);
+		}		
+		return casv.getValue();
 	}
 
 	public boolean delete(String key, long timeoutMiliSec) throws TimeoutException {
