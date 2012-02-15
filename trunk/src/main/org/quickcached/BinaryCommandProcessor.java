@@ -168,9 +168,9 @@ public class BinaryCommandProcessor {
 							if(olddc.checkCas(command.getHeader().getCas()) == false) {
 								if ("03".equals(opcode)) { //Replace
 									if (QuickCached.DEBUG) {
-										logger.fine(
-												"Cas did not match! OldCas:" + olddc.getCas()
-												+ "NewCAS:" + command.getHeader().getCas());
+										logger.log(Level.FINE, 
+												"Cas did not match! OldCas:{0}NewCAS:{1}", 
+												new Object[]{olddc.getCas(), command.getHeader().getCas()});
 									}
 									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
 									sendResponse(handler, binaryPacket);									
@@ -211,9 +211,8 @@ public class BinaryCommandProcessor {
 							if(olddc.checkCas(command.getHeader().getCas()) == false) {
 								if ("0E".equals(opcode)) { //Append
 									if (QuickCached.DEBUG) {
-										logger.fine(
-												"Cas did not match! OldCas:" + olddc.getCas()
-												+ "NewCAS:" + command.getHeader().getCas());
+										logger.log(Level.FINE, "Cas did not match! OldCas:{0}NewCAS:{1}", 
+												new Object[]{olddc.getCas(), command.getHeader().getCas()});
 									}
 									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
 									sendResponse(handler, binaryPacket);
@@ -402,7 +401,8 @@ public class BinaryCommandProcessor {
 					sendResponse(handler, binaryPacket);
 
 				} else if ("00".equals(opcode) || "09".equals(opcode)
-						|| "0C".equals(opcode) || "0D".equals(opcode)) {//Get,GetQ, GetK, GetKQ
+						|| "0C".equals(opcode) || "0D".equals(opcode) //Get,GetQ, GetK, GetKQ
+						|| "1D".equals(opcode) || "1E".equals(opcode)) {//GAT, GATQ 
 
 					if ("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
 						binaryPacket.setKey(command.getKey());
@@ -417,6 +417,18 @@ public class BinaryCommandProcessor {
 						}
 					} else {
 						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+						
+						if("1D".equals(opcode) || "1E".equals(opcode)) {
+							if(command.getExtras()!=null) {
+								cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
+							} else {
+								logger.log(Level.WARNING, "Extras not passed!!");
+								//TODO - no exp passed in GAT, GATQ 
+								rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);	
+								sendResponse(handler, binaryPacket);
+								return;
+							}
+						}
 
 						Extras extras = new Extras();
 						extras.setFlags(dc.getFlags());
@@ -429,7 +441,6 @@ public class BinaryCommandProcessor {
 						rh.setTotalBodyLength(rh.getKeyLength()
 								+ rh.getExtrasLength() + binaryPacket.getValue().length);
 
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 						rh.setCas(dc.getCas());
 
 						sendResponse(handler, binaryPacket);
@@ -475,8 +486,49 @@ public class BinaryCommandProcessor {
 					binaryPacket.setValue(null);
 					rh.setTotalBodyLength(0);
 					sendResponse(handler, binaryPacket);
+				} else if ("1C".equals(opcode)) {
+					//Touch - TODO revist after protocol docs are updated..
+					/*
+					if ("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
+						binaryPacket.setKey(command.getKey());
+						rh.setKeyLength(binaryPacket.getKey().length());
+					}
+					 */
+					if(command.getExtras()==null) {
+						logger.log(Level.WARNING, "Extras not passed!!");
+						//Touch
+						rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);	
+						sendResponse(handler, binaryPacket);
+						return;
+					}
+					boolean flag =  cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
+					if (flag==false) {
+						//if ("09".equals(opcode) == false && "0D".equals(opcode) == false) { //GetQ, GetKQ
+							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+							sendResponse(handler, binaryPacket);
+						//}
+					} else {
+						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+						/*
+						Extras extras = new Extras();
+						extras.setFlags(dc.getFlags());
+						binaryPacket.setExtras(extras);
+						rh.setExtrasLength(4);
+
+						rh.setCas(dc.getCas());
+						binaryPacket.setValue(dc.getData());
+
+						rh.setTotalBodyLength(rh.getKeyLength()
+								+ rh.getExtrasLength() + binaryPacket.getValue().length);
+						 
+						rh.setCas(dc.getCas());
+						 * 
+						 */
+
+						sendResponse(handler, binaryPacket);
+					}
 				} else {
-					logger.warning("unknown binary command! " + opcode);
+					logger.log(Level.WARNING, "unknown binary command! {0}", opcode);
 					rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
 					sendResponse(handler, binaryPacket);
 				}

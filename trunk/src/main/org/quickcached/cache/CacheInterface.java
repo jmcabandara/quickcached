@@ -16,6 +16,7 @@ public interface CacheInterface {
 	public String getName();
 	
 	public void set(String key, Object value, int objectSize, long expInSec);
+	public boolean touch(String key, long expInSec);
 	public void update(String key, Object value, int objectSize);
 
 	public Object get(String key);

@@ -95,6 +95,13 @@ public class TextCommandProcessor {
 				logger.warning("Error: " + e);
 				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
 			}
+		} else if (command.startsWith("touch ")) {
+			try {
+				handleTouchCommands(handler, command);
+			} catch (Exception e) {
+				logger.warning("Error: " + e);
+				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
+			}
 		} else {
 			logger.warning("unknown command! "+command);
 			sendResponse(handler, "ERROR\r\n");
@@ -174,6 +181,44 @@ public class TextCommandProcessor {
 		} else {
 			sendResponse(handler, "NOT_FOUND\r\n");
 		}
+	}
+	
+	private void handleTouchCommands(ClientHandler handler, String command)
+			throws SocketTimeoutException, IOException {
+		/*
+		touch <key> <exptime> [noreply]\r\n
+		*/
+		String cmdData[] = command.split(" ");
+		
+		String cmd = cmdData[0];
+		String key = cmdData[1];
+		long exptime = Integer.parseInt(cmdData[2]);
+		
+		boolean noreplay = false;		
+		if (cmdData.length >= 4) {
+			if ("noreply".equals(cmdData[3])) {
+				noreplay = true;
+			}
+		}
+		
+		if(QuickCached.DEBUG==false) {
+			logger.log(Level.FINE, "cmd: {0}, key: {1}", new Object[]{cmd, key});
+		}
+		
+		boolean flag = cache.touch(key, exptime);
+		
+		DataCarrier dc = (DataCarrier) cache.get(key);
+		if (dc == null) {
+			if (noreplay == false) {
+				sendResponse(handler, "NOT_FOUND\r\n");				
+			}
+			return;
+		}
+		
+		cache.set(key, dc, dc.getSize(), exptime);
+		if (noreplay == false) {
+			sendResponse(handler, "TOUCHED\r\n");
+		}	
 	}
 
 	private void handleGetCommands(ClientHandler handler, String command)

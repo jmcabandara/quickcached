@@ -107,7 +107,7 @@
                     <ide-action name="clean"/>
                     <ide-action name="run"/>
                     <ide-action name="test"/>
-					<action>
+                    <action>
                         <label>WarmUp</label>
                         <target>warmup</target>
                     </action>
@@ -118,7 +118,7 @@
                     <action>
                         <label>LoadTest</label>
                         <target>loadtest</target>
-                    </action>                    
+                    </action>
                 </context-menu>
             </view>
             <subprojects/>
@@ -126,19 +126,19 @@
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/2">
             <compilation-unit>
                 <package-root>src/main</package-root>
-                <classpath mode="compile">lib/commons-beanutils.jar;lib/commons-collections.jar;lib/commons-digester.jar;lib/commons-logging.jar;lib/commons-pool.jar;lib/QuickServer.jar;lib/log4j.jar;lib/impl/h2/h2-1.3.155.jar;lib/impl/whirlycache/whirlycache-1.0.1.jar</classpath>
+                <classpath mode="compile">lib/commons-beanutils.jar;lib/commons-collections.jar;lib/commons-digester.jar;lib/commons-logging.jar;lib/commons-pool.jar;lib/QuickServer.jar;lib/log4j.jar;lib/impl/h2/h2-1.3.155.jar;lib/impl/whirlycache/whirlycache-1.0.1.jar;lib/QuickServerClient.jar</classpath>
                 <built-to>dist/QuickCached.jar</built-to>
                 <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>src/test</package-root>
                 <unit-tests/>
-                <classpath mode="compile">libtest/junit-4.9b2.jar;libtest/memcached-2.5.jar;libtest/slf4j-api-1.6.1.jar;libtest/slf4j-jdk14-1.6.1.jar;libtest/xmemcached-1.3.2.jar;dist/QuickCached-Client.jar</classpath>
+                <classpath mode="compile">dist/QuickCached-Client.jar;libtest/slf4j-api-1.6.1.jar;libtest/spymemcached-2.8.0.jar;libtest/xmemcached-1.3.5.jar;libtest/junit-4.9b2.jar</classpath>
                 <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>src/client</package-root>
-                <classpath mode="compile">libtest/memcached-2.5.jar;libtest/xmemcached-1.3.2.jar</classpath>
+                <classpath mode="compile">lib/QuickServerClient.jar;libtest/spymemcached-2.8.0.jar;libtest/xmemcached-1.3.5.jar;libtest/junit-4.9b2.jar</classpath>
                 <source-level>1.5</source-level>
             </compilation-unit>
         </java-data>
