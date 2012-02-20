@@ -85,9 +85,9 @@ public abstract class MemcachedClient {
 			throws TimeoutException;
 	public abstract boolean replace(String key, int ttlSec, Object value, long timeoutMiliSec) 
 			throws TimeoutException;
-	public abstract boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+	public abstract boolean append(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException;
-	public abstract boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+	public abstract boolean prepend(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException;
 	
 	public abstract void increment(String key, int value, long timeoutMiliSec) 
@@ -115,13 +115,13 @@ public abstract class MemcachedClient {
 			throws TimeoutException {
 		return replace(key, ttlSec, value, defaultTimeoutMiliSec);
 	}
-	public boolean append(long cas, String key, Object value) 
+	public boolean append(String key, Object value) 
 			throws TimeoutException {
-		return append(cas, key, value, defaultTimeoutMiliSec);
+		return append(key, value, defaultTimeoutMiliSec);
 	}
-	public boolean prepend(long cas, String key, Object value) 
+	public boolean prepend(String key, Object value) 
 			throws TimeoutException {
-		return prepend(cas, key, value, defaultTimeoutMiliSec);
+		return prepend(key, value, defaultTimeoutMiliSec);
 	}
 	
 	public void increment(String key, int value) throws TimeoutException {

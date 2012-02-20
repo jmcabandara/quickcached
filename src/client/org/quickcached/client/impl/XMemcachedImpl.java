@@ -123,7 +123,7 @@ public class XMemcachedImpl extends MemcachedClient {
 		return flag;
 	}
 	
-	public boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+	public boolean append(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
 		boolean flag = false;
 		try {
@@ -140,7 +140,7 @@ public class XMemcachedImpl extends MemcachedClient {
 		return flag;
 	}
 	
-	public boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+	public boolean prepend(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
 		boolean flag = false;
 		try {
