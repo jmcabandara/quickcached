@@ -11,7 +11,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.binary.Extras;
+import org.quickcached.binary.OpCode;
 import org.quickcached.binary.ResponseHeader;
+import org.quickcached.cache.CacheException;
 import org.quickcached.cache.CacheInterface;
 import org.quickserver.net.server.ClientHandler;
 
@@ -22,7 +24,7 @@ import org.quickserver.net.server.ClientHandler;
 public class BinaryCommandProcessor {
 	private static final Logger logger = Logger.getLogger(BinaryCommandProcessor.class.getName());
 
-	private static byte[] version = null; 
+	private static byte[] version = null;
 
 	static {
 		try {
@@ -31,7 +33,6 @@ public class BinaryCommandProcessor {
 			Logger.getLogger(BinaryCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
-	
 	private CacheInterface cache;
 
 	public void setCache(CacheInterface cache) {
@@ -39,7 +40,7 @@ public class BinaryCommandProcessor {
 	}
 
 	public void handleBinaryCommand(ClientHandler handler, BinaryPacket command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		if (QuickCached.DEBUG) {
 			logger.log(Level.FINE, "command: {0}", command);
 		}
@@ -51,530 +52,564 @@ public class BinaryCommandProcessor {
 
 		opcode = opcode.toUpperCase();
 
-		try {
-			if ("0A".equals(opcode)) {//noop				
-				ResponseHeader rh = new ResponseHeader();
-				rh.setMagic("81");
-				rh.setOpcode("0A");//noop
-				rh.setOpaque(command.getHeader().getOpaque());
-				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-				
-				BinaryPacket binaryPacket = new BinaryPacket();
-				binaryPacket.setHeader(rh);				
-				
-				sendResponse(handler, binaryPacket);
-			} else if ("0B".equals(opcode)) {//version
-				BinaryPacket binaryPacket = new BinaryPacket();		
-				binaryPacket.setValue(version);
-				
-				ResponseHeader rh = new ResponseHeader();
-				rh.setMagic("81");
-				rh.setOpcode("0B");//version
-				rh.setOpaque(command.getHeader().getOpaque());
-				binaryPacket.setHeader(rh);
-				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-				rh.setTotalBodyLength(rh.getKeyLength()
-					+ rh.getExtrasLength() + binaryPacket.getValue().length);		
-				
-				sendResponse(handler, binaryPacket);
+		ResponseHeader rh = new ResponseHeader();
+		rh.setMagic("81");
+		rh.setOpcode(opcode);
+		rh.setOpaque(command.getHeader().getOpaque());
+
+		BinaryPacket binaryPacket = new BinaryPacket();
+		binaryPacket.setHeader(rh);
+
+		if (OpCode.GET.equals(opcode) || OpCode.GET_Q.equals(opcode)//Get,GetQ,
+				|| OpCode.GET_K.equals(opcode) || OpCode.GET_K_Q.equals(opcode) //GetK, GetKQ
+				|| OpCode.GAT.equals(opcode) || OpCode.GAT_Q.equals(opcode)) {//GAT, GATQ 
+
+			if (OpCode.GET_K.equals(opcode) || OpCode.GET_K_Q.equals(opcode)) {//GetK, GetKQ
+				binaryPacket.setKey(command.getKey());
+				rh.setKeyLength(binaryPacket.getKey().length());
+			}
+
+			DataCarrier dc = (DataCarrier) cache.get(command.getKey());
+			if (dc == null) {
+				if (OpCode.GET_Q.equals(opcode) == false && OpCode.GET_K_Q.equals(opcode) == false //GetQ, GetKQ
+						&& OpCode.GAT_Q.equals(opcode) == false) { //GATQ
+					rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+					sendResponse(handler, binaryPacket);
+				}
 			} else {
-				ResponseHeader rh = new ResponseHeader();
-				rh.setMagic("81");
-				rh.setOpcode(opcode);
-				//rh.setKeyLength(0);
-				//rh.setExtrasLength(0);
-				//rh.setDataType("00");
-				//rh.setTotalBodyLength(0);
-				rh.setOpaque(command.getHeader().getOpaque());
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 
-				BinaryPacket binaryPacket = new BinaryPacket();
-				binaryPacket.setHeader(rh);
-
-				if ("01".equals(opcode) || "11".equals(opcode)) {//Set,SetQ
-					if (command.getHeader().getCas() != null
-							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
-						DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-						if (olddc == null) {
-							CommandHandler.casMisses++;
-							if ("01".equals(opcode)) { //set
-								rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-								sendResponse(handler, binaryPacket);
-							}
-							return;
-						}
-
-						if (olddc != null && command.getHeader().getCas() != null
-								&& olddc.checkCas(command.getHeader().getCas()) == false) {
-							if ("01".equals(opcode)) { //set
-								if (QuickCached.DEBUG) {
-									logger.fine(
-											"Cas did not match! OldCas:" + olddc.getCas()
-											+ "NewCAS:" + command.getHeader().getCas());
-								}
-								rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-								sendResponse(handler, binaryPacket);
-							}
-							CommandHandler.casBadval++;
-							return;
-						} else {
-							CommandHandler.casHits++;
-						}
-					}
-					DataCarrier dc = new DataCarrier(command.getValue());
-
-					dc.setFlags(command.getExtras().getFlags());
-					cache.set(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
-
-					if ("11".equals(opcode) == false) {//!=SetQ
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						rh.setCas(dc.getCas());
-
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("02".equals(opcode) || "12".equals(opcode)) {//Add, AddQ
-					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if (olddc != null) {
-						if ("02".equals(opcode)) { //Add
-							rh.setStatus(ResponseHeader.KEY_EXISTS);
-							sendResponse(handler, binaryPacket);
-						}
-						return;
-					}
-
-					DataCarrier dc = new DataCarrier(command.getValue());
-
-					if (command.getExtras().getFlags() != null) {
-						dc.setFlags(command.getExtras().getFlags());
-					}
-					cache.set(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
-
-					if ("12".equals(opcode) == false) {//AddQ
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("03".equals(opcode) || "13".equals(opcode)) {//Replace, ReplaceQ
-					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if (olddc == null) {
-						if ("03".equals(opcode)) { //Replace
-							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-							sendResponse(handler, binaryPacket);
-						}
-						return;
-					}
-					
-					if(command.getHeader().getCas() != null
-							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
-						if (olddc != null) {
-							if(olddc.checkCas(command.getHeader().getCas()) == false) {
-								if ("03".equals(opcode)) { //Replace
-									if (QuickCached.DEBUG) {
-										logger.log(Level.FINE, 
-												"Cas did not match! OldCas:{0}NewCAS:{1}", 
-												new Object[]{olddc.getCas(), command.getHeader().getCas()});
-									}
-									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-									sendResponse(handler, binaryPacket);									
-								}
-								CommandHandler.casBadval++;
-							} else {
-								CommandHandler.casHits++;
-							}
-						} else {
-							CommandHandler.casMisses++;
-						}
-					}
-
-					if (command.getExtras().getFlags() != null) {
-						olddc.setFlags(command.getExtras().getFlags());
-					}
-					olddc.setData(command.getValue());
-
-					if ("13".equals(opcode) == false) {//AddQ
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						rh.setCas(olddc.getCas());
-
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("0E".equals(opcode) || "19".equals(opcode)) {//Append, AppendQ
-					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if (olddc == null) {
-						if ("0E".equals(opcode)) { //Append
-							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-							sendResponse(handler, binaryPacket);
-						}
-						return;
-					}
-					
-					if(command.getHeader().getCas() != null
-							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
-						if (olddc != null) {
-							if(olddc.checkCas(command.getHeader().getCas()) == false) {
-								if ("0E".equals(opcode)) { //Append
-									if (QuickCached.DEBUG) {
-										logger.log(Level.FINE, "Cas did not match! OldCas:{0}NewCAS:{1}", 
-												new Object[]{olddc.getCas(), command.getHeader().getCas()});
-									}
-									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-									sendResponse(handler, binaryPacket);
-								}
-								CommandHandler.casBadval++;
-								return;
-							} else {
-								CommandHandler.casHits++;
-							}
-						} else {
-							CommandHandler.casMisses++;
-						}
-					}
-
-					olddc.append(command.getValue());
-
-					cache.update(command.getKey(), olddc, olddc.getSize());
-
-					if ("19".equals(opcode) == false) {//AppendQ
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						rh.setCas(olddc.getCas());
-
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("0F".equals(opcode) || "1A".equals(opcode)) {//Prepend, PrependQ
-					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if (olddc == null) {
-						if ("0F".equals(opcode)) { //Prepend
-							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-							sendResponse(handler, binaryPacket);
-						}
-						return;
-					}
-					
-					if(command.getHeader().getCas() != null
-							&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
-						if (olddc != null) {
-							if(olddc.checkCas(command.getHeader().getCas()) == false) {
-								if ("0F".equals(opcode)) { //Prepend
-									if (QuickCached.DEBUG) {
-										logger.fine(
-												"Cas did not match! OldCas:" + olddc.getCas()
-												+ "NewCAS:" + command.getHeader().getCas());
-									}
-									rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
-									sendResponse(handler, binaryPacket);
-								}
-								CommandHandler.casBadval++;
-								return;
-							} else {
-								CommandHandler.casHits++;
-							}
-						} else {
-							CommandHandler.casMisses++;
-						}
-					}
-
-					olddc.prepend(command.getValue());
-
-					cache.update(command.getKey(), olddc, olddc.getSize());
-
-					if ("1A".equals(opcode) == false) {//PrependQ
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						rh.setCas(olddc.getCas());
-
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("04".equals(opcode) || "14".equals(opcode)) {//Delete, DeleteQ
-					boolean falg = cache.delete(command.getKey());
-					if (falg == false) {
-						rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-						sendResponse(handler, binaryPacket);
+				if (OpCode.GAT.equals(opcode) || OpCode.GAT_Q.equals(opcode)) {//Gat, GatQ
+					if (command.getExtras() != null) {
+						cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
 					} else {
-						if ("14".equals(opcode) == false) {
-							rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-							sendResponse(handler, binaryPacket);
-						}
-					}
-				} else if ("05".equals(opcode) || "06".equals(opcode) ||//Increment, Decrement
-						"15".equals(opcode) || "16".equals(opcode)) {//IncrementQ, DecrementQ
-					Extras extras = command.getExtras();
-
-					DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
-					if (olddc == null) {
-						if (extras.getExpiration().equals("ffffffff") == false) {
-							if(opcode.endsWith("5")) {
-								CommandHandler.incrMisses++;
-							} else if(opcode.endsWith("6")) {
-								CommandHandler.decrMisses++;
-							}
-							if ("05".equals(opcode) || "06".equals(opcode)) { //Increment, Decrement
-								rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-								sendResponse(handler, binaryPacket);
-							}
-							return;
-						} else {
-							String value = "" + extras.getInitalValueInDec();
-							olddc = new DataCarrier(value.getBytes(HexUtil.getCharset()));
-
-							if (extras.getFlags() != null) {
-								olddc.setFlags(extras.getFlags());
-							}
-							cache.set(command.getKey(), olddc, olddc.getSize(), extras.getExpirationInSec());
-							
-							if(opcode.endsWith("5")) {
-								CommandHandler.incrHits++;
-							} else if(opcode.endsWith("6")) {
-								CommandHandler.decrHits++;
-							}
-							
-							if ("05".equals(opcode) || "06".equals(opcode)) {
-								binaryPacket.setValue(olddc.getData());
-								rh.setTotalBodyLength(rh.getKeyLength()
-										+ rh.getExtrasLength() + binaryPacket.getValue().length);
-								rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-								rh.setCas(olddc.getCas());
-
-								sendResponse(handler, binaryPacket);
-							}
-							return;
-						}
-					}
-
-
-					long value = 0;
-					try {
-						value = extras.getDeltaInDec();
-					} catch (Exception e) {
-						if (QuickCached.DEBUG) {
-							logger.warning("Error: " + e);
-						}
+						logger.log(Level.WARNING, "Extras not passed!!");
 						rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
 						sendResponse(handler, binaryPacket);
 						return;
 					}
-					
-					try {
-						synchronized (command.getKey()) {
-							long oldvalue = Long.parseLong(new String(olddc.getData(), HexUtil.getCharset()));
-							if ("05".equals(opcode) || "15".equals(opcode)) {
-								value = oldvalue + value;
-							} else if ("06".equals(opcode) || "16".equals(opcode)) {
-								value = oldvalue - value;
-							}
-							if (value < 0) {
-								value = 0;
-							}
-							olddc.setData(("" + value).getBytes(HexUtil.getCharset()));
+				}
+
+				Extras extras = new Extras();
+				extras.setFlags(dc.getFlags());
+				binaryPacket.setExtras(extras);
+				rh.setExtrasLength(4);
+
+				rh.setCas(dc.getCas());
+				binaryPacket.setValue(dc.getData());
+
+				rh.setTotalBodyLength(rh.getKeyLength()
+						+ rh.getExtrasLength() + binaryPacket.getValue().length);
+
+				rh.setCas(dc.getCas());
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.NOOP.equals(opcode)) {
+			rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+
+			sendResponse(handler, binaryPacket);
+		} else if (OpCode.VERSION.equals(opcode)) {
+			binaryPacket.setValue(version);
+
+			rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+			rh.setTotalBodyLength(rh.getKeyLength()
+					+ rh.getExtrasLength() + binaryPacket.getValue().length);
+
+			sendResponse(handler, binaryPacket);
+		} else if (OpCode.SET.equals(opcode) || OpCode.SET_Q.equals(opcode)) {//Set,SetQ
+			DataCarrier dc = (DataCarrier) cache.get(command.getKey());
+
+			if (command.getHeader().getCas() != null
+					&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+				if (dc == null) {
+					CommandHandler.casMisses++;
+					if (OpCode.SET.equals(opcode)) { //set
+						rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+
+				dc.readLock.lock();
+				try {
+					if (dc.checkCas(command.getHeader().getCas()) == false) {
+						CommandHandler.casBadval++;
+						if(QuickCached.DEBUG) {
+							logger.log(Level.FINE,
+								"Cas did not match! OldCas:{0}NewCAS:{1}",
+								new Object[]{dc.getCas(), command.getHeader().getCas()});
 						}
-						
-						if(opcode.endsWith("5")) {
-							CommandHandler.incrHits++;
-						} else if(opcode.endsWith("6")) {
-							CommandHandler.decrHits++;
-						}
-					} catch (Exception e) {
-						if(opcode.endsWith("5")) {
-							CommandHandler.incrMisses++;
-						} else if(opcode.endsWith("6")) {
-							CommandHandler.decrMisses++;
-						}
-						
-						if ("05".equals(opcode) || "06".equals(opcode)) {
-							rh.setStatus(ResponseHeader.INTERNAL_ERROR);
-							sendResponse(handler, binaryPacket);
+						if (OpCode.SET.equals(opcode)) { //set							
+							rh.setStatus(ResponseHeader.ITEM_NOT_STORED);							
+							//return; //no return as we need to reply
+						} else {
 							return;
 						}
-						return;
-					}					
-
-					cache.update(command.getKey(), olddc, olddc.getSize());
-
-					if ("15".equals(opcode) || "16".equals(opcode)) {
-						return;
-					}
-
-
-					binaryPacket.setValue(Util.prefixZerros(
-							new String(olddc.getData(), HexUtil.getCharset()), 8).getBytes(HexUtil.getCharset()));
-
-					rh.setTotalBodyLength(rh.getKeyLength()
-							+ rh.getExtrasLength() + binaryPacket.getValue().length);
-					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-					rh.setCas(olddc.getCas());
-
-					sendResponse(handler, binaryPacket);
-
-				} else if ("00".equals(opcode) || "09".equals(opcode)
-						|| "0C".equals(opcode) || "0D".equals(opcode) //Get,GetQ, GetK, GetKQ
-						|| "1D".equals(opcode) || "1E".equals(opcode)) {//GAT, GATQ 
-
-					if ("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
-						binaryPacket.setKey(command.getKey());
-						rh.setKeyLength(binaryPacket.getKey().length());
-					}
-
-					DataCarrier dc = (DataCarrier) cache.get(command.getKey());
-					if (dc == null) {
-						if ("09".equals(opcode) == false && "0D".equals(opcode) == false) { //GetQ, GetKQ
-							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-							sendResponse(handler, binaryPacket);
-						}
 					} else {
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						
-						if("1D".equals(opcode) || "1E".equals(opcode)) {
-							if(command.getExtras()!=null) {
-								cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
-							} else {
-								logger.log(Level.WARNING, "Extras not passed!!");
-								//TODO - no exp passed in GAT, GATQ 
-								rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);	
-								sendResponse(handler, binaryPacket);
-								return;
+						CommandHandler.casHits++;
+					}
+				} finally {
+					dc.readLock.unlock();
+				}
+			
+				if(rh.getStatus()!=null) {
+					sendResponse(handler, binaryPacket);
+					return;
+				}
+			}
+
+			
+			if (dc == null) {
+				dc = new DataCarrier(command.getValue());
+				dc.setFlags(command.getExtras().getFlags());
+				cache.set(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
+			} else {
+				dc.writeLock.lock();
+				try {
+					dc.setData(command.getValue());
+					dc.setFlags(command.getExtras().getFlags());
+
+					cache.update(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
+				} finally {
+					dc.writeLock.unlock();
+				}
+			}
+
+			if (OpCode.SET.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setCas(dc.getCas());
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.ADD.equals(opcode) || OpCode.ADD_Q.equals(opcode)) {
+			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+			if (olddc != null) {
+				if (OpCode.ADD.equals(opcode)) {
+					rh.setStatus(ResponseHeader.KEY_EXISTS);
+					sendResponse(handler, binaryPacket);
+				}
+				return;
+			}
+
+			DataCarrier dc = new DataCarrier(command.getValue());
+			
+			dc.writeLock.lock();
+			try {
+				if (command.getExtras().getFlags() != null) {
+					dc.setFlags(command.getExtras().getFlags());
+				}
+				cache.set(command.getKey(), dc, dc.getSize(), command.getExtras().getExpirationInSec());
+			} finally {
+				dc.writeLock.unlock();
+			}
+
+			if (OpCode.ADD.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.REPLACE.equals(opcode) || OpCode.REPLACE_Q.equals(opcode)) {
+			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+			if (olddc == null) {
+				if (OpCode.REPLACE.equals(opcode)) {
+					rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+					sendResponse(handler, binaryPacket);
+				}
+				return;
+			}
+
+			if (command.getHeader().getCas() != null
+					&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+				if (olddc != null) {
+					olddc.readLock.lock();
+					try {
+						if (olddc.checkCas(command.getHeader().getCas()) == false) {
+							CommandHandler.casBadval++;
+							if(QuickCached.DEBUG) {
+								logger.log(Level.FINE,
+										"Cas did not match! OldCas:{0}NewCAS:{1}",
+										new Object[]{olddc.getCas(), command.getHeader().getCas()});
 							}
+							if(OpCode.REPLACE.equals(opcode)) {								
+								rh.setStatus(ResponseHeader.ITEM_NOT_STORED);								
+								//no return since we have to reply
+							} else {
+								return;
+							}							
+						} else {
+							CommandHandler.casHits++;
 						}
-
-						Extras extras = new Extras();
-						extras.setFlags(dc.getFlags());
-						binaryPacket.setExtras(extras);
-						rh.setExtrasLength(4);
-
-						rh.setCas(dc.getCas());
-						binaryPacket.setValue(dc.getData());
-
-						rh.setTotalBodyLength(rh.getKeyLength()
-								+ rh.getExtrasLength() + binaryPacket.getValue().length);
-
-						rh.setCas(dc.getCas());
-
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("07".equals(opcode) || "17".equals(opcode)) {//Quit,QuitQ
-					if ("17".equals(opcode) == false) {
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						sendResponse(handler, binaryPacket);
-					}
-					handler.closeConnection();
-				} else if ("08".equals(opcode) || "18".equals(opcode)) {//Flush, FlushQ
-					cache.flush();
-					if ("18".equals(opcode) == false) {
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						sendResponse(handler, binaryPacket);
-					}
-				} else if ("10".equals(opcode)) {//Stat
-					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-
-					Map stats = CommandHandler.getStats(handler.getServer());
-					Set keySet = stats.keySet();
-					Iterator iterator = keySet.iterator();
-					String key = null;
-					String value = null;
-					while (iterator.hasNext()) {
-						key = (String) iterator.next();
-						value = (String) stats.get(key);
-
-						binaryPacket.setKey(key);
-						rh.setKeyLength(binaryPacket.getKey().length());
-
-						binaryPacket.setValue(value.getBytes(HexUtil.getCharset()));
-
-						rh.setTotalBodyLength(rh.getKeyLength()
-								+ rh.getExtrasLength() + binaryPacket.getValue().length);
-
-						sendResponse(handler, binaryPacket);
+					} finally {
+						olddc.readLock.unlock();
 					}
 
-					binaryPacket.setKey(null);
-					rh.setKeyLength(0);
-
-					binaryPacket.setValue(null);
-					rh.setTotalBodyLength(0);
-					sendResponse(handler, binaryPacket);
-				} else if ("1C".equals(opcode)) {
-					//Touch - TODO revist after protocol docs are updated..
-					/*
-					if ("0C".equals(opcode) || "0D".equals(opcode)) {//GetK, GetKQ
-						binaryPacket.setKey(command.getKey());
-						rh.setKeyLength(binaryPacket.getKey().length());
-					}
-					 */
-					if(command.getExtras()==null) {
-						logger.log(Level.WARNING, "Extras not passed!!");
-						//Touch
-						rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);	
+					if(rh.getStatus()!=null) {
 						sendResponse(handler, binaryPacket);
 						return;
-					}
-					boolean flag =  cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
-					if (flag==false) {
-						//if ("09".equals(opcode) == false && "0D".equals(opcode) == false) { //GetQ, GetKQ
-							rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
-							sendResponse(handler, binaryPacket);
-						//}
-					} else {
-						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
-						/*
-						Extras extras = new Extras();
-						extras.setFlags(dc.getFlags());
-						binaryPacket.setExtras(extras);
-						rh.setExtrasLength(4);
-
-						rh.setCas(dc.getCas());
-						binaryPacket.setValue(dc.getData());
-
-						rh.setTotalBodyLength(rh.getKeyLength()
-								+ rh.getExtrasLength() + binaryPacket.getValue().length);
-						 
-						rh.setCas(dc.getCas());
-						 * 
-						 */
-
-						sendResponse(handler, binaryPacket);
 					}
 				} else {
-					logger.log(Level.WARNING, "unknown binary command! {0}", opcode);
-					rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
+					CommandHandler.casMisses++;
+				}
+			}
+
+			olddc.writeLock.lock();
+			try {
+				if (command.getExtras().getFlags() != null) {
+					olddc.setFlags(command.getExtras().getFlags());
+				}
+				olddc.setData(command.getValue());
+				cache.update(command.getKey(), olddc, olddc.getSize());
+			} finally {
+				olddc.writeLock.unlock();
+			}
+
+			if (OpCode.REPLACE.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setCas(olddc.getCas());
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.APPEND.equals(opcode) || OpCode.APPEND_Q.equals(opcode)) {
+			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+			if (olddc == null) {
+				if (OpCode.APPEND.equals(opcode)) {
+					rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+					sendResponse(handler, binaryPacket);
+				}
+				return;
+			}
+
+			if (command.getHeader().getCas() != null
+					&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+				if (olddc != null) {
+					olddc.readLock.lock();
+					try {
+						if (olddc.checkCas(command.getHeader().getCas()) == false) {
+							CommandHandler.casBadval++;
+							if (QuickCached.DEBUG) {
+								logger.log(Level.FINE, "Cas did not match! OldCas:{0}NewCAS:{1}",
+										new Object[]{olddc.getCas(), command.getHeader().getCas()});
+							}
+							if (OpCode.APPEND.equals(opcode)) {								
+								rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+								//no return since we need to reply
+							} else {
+								return;
+							}
+						} else {
+							CommandHandler.casHits++;
+						}
+					} finally {
+						olddc.readLock.unlock();
+					}
+
+					if(rh.getStatus()!=null) {
+						sendResponse(handler, binaryPacket);
+						return;
+					}
+				} else {
+					CommandHandler.casMisses++;
+				}
+			}
+			
+			olddc.writeLock.lock();
+			try {
+				olddc.append(command.getValue());	
+				cache.update(command.getKey(), olddc, olddc.getSize());
+			} finally {
+				olddc.writeLock.unlock();
+			}
+
+			if (OpCode.APPEND.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setCas(olddc.getCas());
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.PREPEND.equals(opcode) || OpCode.PREPEND_Q.equals(opcode)) {
+			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+			if (olddc == null) {
+				if (OpCode.PREPEND.equals(opcode)) {
+					rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+					sendResponse(handler, binaryPacket);
+				}
+				return;
+			}
+
+			if (command.getHeader().getCas() != null
+					&& "0000000000000000".equals(command.getHeader().getCas()) == false) {
+				if (olddc != null) {
+					olddc.readLock.lock();
+					try {
+						if (olddc.checkCas(command.getHeader().getCas()) == false) {
+							CommandHandler.casBadval++;
+							if(QuickCached.DEBUG) {
+								logger.log(Level.FINE,
+									"Cas did not match! OldCas:{0}NewCAS:{1}",
+									new Object[]{olddc.getCas(), command.getHeader().getCas()});
+							}
+							if(OpCode.PREPEND.equals(opcode)) {								
+								rh.setStatus(ResponseHeader.ITEM_NOT_STORED);
+								//no return since we need to reply
+							} else {
+								return;
+							}
+						} else {
+							CommandHandler.casHits++;
+						}
+					} finally {
+						olddc.readLock.unlock();
+					}
+					if(rh.getStatus()!=null) {
+						sendResponse(handler, binaryPacket);
+						return;
+					}
+				} else {
+					CommandHandler.casMisses++;
+				}
+			}
+
+			olddc.writeLock.lock();
+			try {
+				olddc.prepend(command.getValue());	
+				cache.update(command.getKey(), olddc, olddc.getSize());
+			} finally {
+				olddc.writeLock.unlock();
+			}
+
+			if (OpCode.PREPEND.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				rh.setCas(olddc.getCas());
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else if (OpCode.DELETE.equals(opcode) || OpCode.DELETE_Q.equals(opcode)) {//Delete, DeleteQ
+			boolean falg = cache.delete(command.getKey());
+			if (falg == false) {
+				rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+				sendResponse(handler, binaryPacket);
+			} else {
+				if (OpCode.DELETE.equals(opcode)) {
+					rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 					sendResponse(handler, binaryPacket);
 				}
 			}
-		} catch (SocketException e) {
-			if(handler.isOpen()) {
-				logger.warning("SocketException: " + e);
-				if (QuickCached.DEBUG) {
-					e.printStackTrace();
+		} else if (OpCode.INCREMENT.equals(opcode) || OpCode.DECREMENT.equals(opcode) ||//Increment, Decrement
+				OpCode.INCREMENT_Q.equals(opcode) || OpCode.DECREMENT_Q.equals(opcode)) {//IncrementQ, DecrementQ
+			Extras extras = command.getExtras();
+
+			char op = ' ';
+			if (opcode.equals(OpCode.DECREMENT) || opcode.equals(OpCode.DECREMENT_Q)) {
+				op = 'D';
+			} else if (opcode.equals(OpCode.INCREMENT) || opcode.equals(OpCode.INCREMENT_Q)) {
+				op = 'I';
+			} else {
+				throw new IllegalStateException("We should not be here!! " + opcode);
+			}
+
+			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
+			if (olddc == null) {
+				if (extras.getExpiration().equals("ffffffff") == false) {//as per protocol
+					if (op == 'I') {
+						CommandHandler.incrMisses++;
+					} else {
+						CommandHandler.decrMisses++;
+					}
+					if (OpCode.INCREMENT.equals(opcode) || OpCode.DECREMENT.equals(opcode)) { //Increment, Decrement
+						rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				} else {
+					String value = "" + extras.getInitalValueInDec();
+					olddc = new DataCarrier(value.getBytes(HexUtil.getCharset()));
+
+					/*
+					if (extras.getFlags() != null) {
+					olddc.setFlags(extras.getFlags());
+					}
+					 */
+					olddc.setFlags("0");//as per protocol
+
+					cache.set(command.getKey(), olddc, olddc.getSize(), extras.getExpirationInSec());
+
+					if (op == 'I') {
+						CommandHandler.incrHits++;
+					} else {
+						CommandHandler.decrHits++;
+					}
+
+					if (OpCode.INCREMENT.equals(opcode) || OpCode.DECREMENT.equals(opcode)) {
+						binaryPacket.setValue(olddc.getData());
+						rh.setTotalBodyLength(rh.getKeyLength()
+								+ rh.getExtrasLength() + binaryPacket.getValue().length);
+						rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+						rh.setCas(olddc.getCas());
+
+						sendResponse(handler, binaryPacket);
+					}
+					return;
+				}
+			}
+
+			long value = 0;
+			try {
+				value = extras.getDeltaInDec();
+			} catch (Exception e) {
+				if(QuickCached.DEBUG) {
+					logger.log(Level.WARNING, "Error: {0}", e);
+				}
+				rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
+				sendResponse(handler, binaryPacket);
+				return;
+			}
+
+			try {
+				olddc.writeLock.lock();
+				try {
+					long oldvalue = Long.parseLong(new String(olddc.getData(), HexUtil.getCharset()));
+					if (op == 'I') {
+						value = oldvalue + value;
+					} else {
+						value = oldvalue - value;
+					}
+
+					if (value < 0) {
+						value = 0;
+					}
+					olddc.setData(("" + value).getBytes(HexUtil.getCharset()));
+					cache.update(command.getKey(), olddc, olddc.getSize());
+				} finally {
+					olddc.writeLock.unlock();
 				}
 
-				ResponseHeader rh = new ResponseHeader();
-				rh.setMagic("81");
-				rh.setOpcode(opcode);
-				rh.setOpaque(command.getHeader().getOpaque());
+				if (op == 'I') {
+					CommandHandler.incrHits++;
+				} else {
+					CommandHandler.decrHits++;
+				}
+			} catch (Exception e) {
+				if (op == 'I') {
+					CommandHandler.incrMisses++;
+				} else {
+					CommandHandler.decrMisses++;
+				}
 
-				BinaryPacket binaryPacket = new BinaryPacket();
-				binaryPacket.setHeader(rh);
+				if (OpCode.INCREMENT.equals(opcode) || OpCode.DECREMENT.equals(opcode)) {
+					rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+					sendResponse(handler, binaryPacket);
+					return;
+				}
+				return;
+			}
 
-				rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+			cache.update(command.getKey(), olddc, olddc.getSize());
+
+			if (OpCode.INCREMENT_Q.equals(opcode) || OpCode.DECREMENT_Q.equals(opcode)) {
+				return;
+			}
+
+			binaryPacket.setValue(Util.prefixZerros(
+					new String(olddc.getData(), HexUtil.getCharset()), 8).getBytes(HexUtil.getCharset()));
+
+			rh.setTotalBodyLength(rh.getKeyLength()
+					+ rh.getExtrasLength() + binaryPacket.getValue().length);
+			rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+			rh.setCas(olddc.getCas());
+
+			sendResponse(handler, binaryPacket);
+		} else if (OpCode.QUIT.equals(opcode) || OpCode.QUIT_Q.equals(opcode)) {//Quit,QuitQ
+			if (OpCode.QUIT.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 				sendResponse(handler, binaryPacket);
-			} else {
-				logger.fine("SocketException: " + e);
 			}
-		} catch (Exception e) {
-			logger.warning("Error: " + e);
-			if (QuickCached.DEBUG) {
-				e.printStackTrace();
+			handler.closeConnection();
+		} else if (OpCode.FLUSH.equals(opcode) || OpCode.FLUSH_Q.equals(opcode)) {//Flush, FlushQ
+			cache.flush();
+			if (OpCode.FLUSH.equals(opcode)) {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				sendResponse(handler, binaryPacket);
 			}
-			
-			ResponseHeader rh = new ResponseHeader();
-			rh.setMagic("81");
-			rh.setOpcode(opcode);
-			rh.setOpaque(command.getHeader().getOpaque());
+		} else if (OpCode.STAT.equals(opcode)) {//Stat
+			rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
 
-			BinaryPacket binaryPacket = new BinaryPacket();
-			binaryPacket.setHeader(rh);
+			Map stats = CommandHandler.getStats(handler.getServer());
+			Set keySet = stats.keySet();
+			Iterator iterator = keySet.iterator();
+			String key = null;
+			String value = null;
+			while (iterator.hasNext()) {
+				key = (String) iterator.next();
+				value = (String) stats.get(key);
+
+				binaryPacket.setKey(key);
+				rh.setKeyLength(binaryPacket.getKey().length());
+
+				binaryPacket.setValue(value.getBytes(HexUtil.getCharset()));
+
+				rh.setTotalBodyLength(rh.getKeyLength()
+						+ rh.getExtrasLength() + binaryPacket.getValue().length);
+
+				sendResponse(handler, binaryPacket);
+			}
+
+			binaryPacket.setKey(null);
+			rh.setKeyLength(0);
+
+			binaryPacket.setValue(null);
+			rh.setTotalBodyLength(0);
+			sendResponse(handler, binaryPacket);
+		} else if (OpCode.TOUCH.equals(opcode)) {
+			//Touch - TODO revist after protocol docs are updated.. touch or touchq with key ?
+			/*
+			if ("0C".equals(opcode) || "0D".equals(opcode)) {//TouchK, TouchKQ
+			binaryPacket.setKey(command.getKey());
+			rh.setKeyLength(binaryPacket.getKey().length());
+			}
+			 */
+			if (command.getExtras() == null) {
+				logger.log(Level.WARNING, "Extras not passed!!");
+				rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
+				sendResponse(handler, binaryPacket);
+				return;
+			}
+			boolean flag = cache.touch(command.getKey(), command.getExtras().getExpirationInSec());
+			if (flag == false) {
+				//if ("09".equals(opcode) == false && "0D".equals(opcode) == false) { //TouchQ, TouchKQ touch with key ?
+				rh.setStatus(ResponseHeader.KEY_NOT_FOUND);
+				sendResponse(handler, binaryPacket);
+				//}
+			} else {
+				rh.setStatus(ResponseHeader.STATUS_NO_ERROR);
+				/*
+				Extras extras = new Extras();
+				extras.setFlags(dc.getFlags());
+				binaryPacket.setExtras(extras);
+				rh.setExtrasLength(4);
 				
-			rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+				rh.setCas(dc.getCas());
+				binaryPacket.setValue(dc.getData());
+				
+				rh.setTotalBodyLength(rh.getKeyLength()
+				+ rh.getExtrasLength() + binaryPacket.getValue().length);
+				
+				rh.setCas(dc.getCas());
+				 * 
+				 */
+
+				sendResponse(handler, binaryPacket);
+			}
+		} else {
+			logger.log(Level.WARNING, "unknown binary command! {0}", opcode);
+			rh.setStatus(ResponseHeader.UNKNOWN_COMMAND);
 			sendResponse(handler, binaryPacket);
 		}
+
 	}
 
 	public void sendResponse(ClientHandler handler, BinaryPacket binaryPacket)
 			throws SocketTimeoutException, IOException {
-		if(QuickCached.DEBUG) {
+		if (QuickCached.DEBUG) {
 			logger.log(Level.FINE, "Res BinaryPacket: {0}", binaryPacket);
 		} else {
 			ResponseHeader rh = (ResponseHeader) binaryPacket.getHeader();
@@ -582,8 +617,8 @@ public class BinaryCommandProcessor {
 		}
 		byte data[] = binaryPacket.toBinaryByte();
 		if (handler.getCommunicationLogging() || QuickCached.DEBUG) {
-			logger.log(Level.FINE, "S: {0}", new String(data, HexUtil.getCharset()));			
-			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(data, HexUtil.getCharset())));			
+			logger.log(Level.FINE, "S: {0}", new String(data, HexUtil.getCharset()));
+			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(data, HexUtil.getCharset())));
 		} else {
 			logger.log(Level.FINE, "S: {0} bytes", data.length);
 		}
