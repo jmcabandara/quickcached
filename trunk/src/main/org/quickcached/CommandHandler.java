@@ -14,6 +14,8 @@ import java.util.logging.*;
 
 
 import org.quickcached.binary.BinaryPacket;
+import org.quickcached.binary.ResponseHeader;
+import org.quickcached.cache.CacheException;
 import org.quickcached.cache.CacheInterface;
 import org.quickcached.mem.MemoryWarningSystem;
 import org.quickserver.net.server.ClientBinaryHandler;
@@ -171,11 +173,11 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						return;
 					}
 				} catch(IllegalArgumentException e) {
-					logger.warning("Error: "+e);
-					textCommandProcessor.sendResponse(handler, "ERROR\r\n");
-				} catch(Exception e) {
-					logger.warning("Error: "+e);
-					textCommandProcessor.sendResponse(handler, "ERROR\r\n");
+					logger.log(Level.WARNING, "Error[iae]: "+e, e);
+					textCommandProcessor.sendResponse(handler, "CLIENT_ERROR "+e.getMessage()+"\r\n");
+				} catch(CacheException e) {
+					logger.log(Level.WARNING, "Error[ce]: "+e, e);
+					textCommandProcessor.sendResponse(handler, "SERVER_ERROR "+e.getMessage()+"\r\n");
 				}
 			}
 
@@ -186,13 +188,49 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 					try {
 						bp = data.getBinaryCommandHeader();
 					} catch (Exception ex) {
-						Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+						logger.log(Level.SEVERE, "Error: "+ex, ex);
 						throw new IOException(""+ex);
 					}
 
 					if(bp!=null) {
 						if(QuickCached.DEBUG) logger.fine("BinaryCommand Start");
-						binaryCommandProcessor.handleBinaryCommand(handler, bp);
+						try {
+							binaryCommandProcessor.handleBinaryCommand(handler, bp);
+						} catch(IllegalArgumentException e) {
+							logger.log(Level.WARNING, "Error[iae]: "+e, e);
+							
+							ResponseHeader rh = new ResponseHeader();
+							rh.setMagic("81");
+							rh.setOpcode(bp.getHeader().getOpcode());
+							rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
+							
+							BinaryPacket binaryPacket = new BinaryPacket();
+							binaryPacket.setHeader(rh);
+							
+							binaryPacket.setValue(e.getMessage().getBytes("utf-8"));
+							
+							rh.setTotalBodyLength(rh.getKeyLength()
+									+ rh.getExtrasLength() + binaryPacket.getValue().length);
+							
+							binaryCommandProcessor.sendResponse(handler, binaryPacket);
+						} catch(CacheException e) {
+							logger.log(Level.WARNING, "Error[ce]: "+e, e);
+							
+							ResponseHeader rh = new ResponseHeader();
+							rh.setMagic("81");
+							rh.setOpcode(bp.getHeader().getOpcode());
+							rh.setStatus(ResponseHeader.INTERNAL_ERROR);
+							
+							BinaryPacket binaryPacket = new BinaryPacket();
+							binaryPacket.setHeader(rh);
+							
+							binaryPacket.setValue(e.toString().getBytes("utf-8"));
+							
+							rh.setTotalBodyLength(rh.getKeyLength()
+									+ rh.getExtrasLength() + binaryPacket.getValue().length);
+							
+							binaryCommandProcessor.sendResponse(handler, binaryPacket);
+						}
 						if(QuickCached.DEBUG) logger.fine("BinaryCommand End");
 					} else {
 						break;
@@ -200,7 +238,15 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 				} else {
 					String cmd = data.getCommand();
 					if(cmd!=null) {
-						textCommandProcessor.handleTextCommand(handler, cmd);
+						try {
+							textCommandProcessor.handleTextCommand(handler, cmd);
+						} catch(IllegalArgumentException e) {
+							logger.log(Level.WARNING, "Error in text command [iae]: "+e, e);
+							textCommandProcessor.sendResponse(handler, "CLIENT_ERROR "+e.getMessage()+"\r\n");
+						} catch(CacheException e) {
+							logger.log(Level.WARNING, "Error in text command [ce]: "+e, e);
+							textCommandProcessor.sendResponse(handler, "SERVER_ERROR "+e.getMessage()+"\r\n");
+						}
 					} else {
 						break;
 					}
@@ -218,12 +264,13 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	public static void init(Map config) {
 		logger.fine("in init");
 		String implClass = (String) config.get("CACHE_IMPL_CLASS");
-		logger.fine("implClass: "+implClass);
+		logger.log(Level.FINE, "implClass: {0}", implClass);
 		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
 		try {
 			cache = (CacheInterface) Class.forName(implClass).newInstance();
 		} catch (Exception ex) {
 			Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
+			System.exit(-1);
 		}
 		
 		String computeAvgForSetCmdStr = (String) config.get("COMPUTE_AVG_FOR_SET_CMD");
@@ -263,7 +310,11 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 						logger.log(Level.WARNING, "After GC mem percent used: {0}", memPercentAfterGC);
 						if(memPercentAfterGC<0 || memPercentAfterGC > memLimit) {						
 							logger.warning("Flushing cache to save JVM.");
-							cache.flush();
+							try {
+								cache.flush();
+							} catch (CacheException ex) {
+								logger.log(Level.SEVERE, "Error: "+ex, ex);
+							}
 							System.gc();
 							gcCalls++;
 						}

@@ -15,15 +15,17 @@ public interface CacheInterface {
 	
 	public String getName();
 	
-	public void set(String key, Object value, int objectSize, long expInSec);
-	public boolean touch(String key, long expInSec);
-	public void update(String key, Object value, int objectSize);
-
-	public Object get(String key);
+	public void set(String key, Object value, int objectSize, int expInSec) throws CacheException;
+	public void update(String key, Object value, int objectSize, int expInSec) throws CacheException;
+	public void update(String key, Object value, int objectSize) throws CacheException;	
 	
-	public boolean delete(String key);
+	public boolean touch(String key, int expInSec) throws CacheException;	
+	
 
-	public void flush();
+	public Object get(String key) throws CacheException;		
+	public boolean delete(String key) throws CacheException;	
+
+	public void flush() throws CacheException;
 
 	/**
 	 *

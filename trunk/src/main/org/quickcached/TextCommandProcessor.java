@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.quickcached.cache.CacheException;
 import org.quickcached.cache.CacheInterface;
 import org.quickserver.net.server.ClientHandler;
 
@@ -31,46 +32,31 @@ public class TextCommandProcessor {
 	}
 
 	public void handleTextCommand(ClientHandler handler, String command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		if (QuickCached.DEBUG) {
 			logger.log(Level.FINE, "command: {0}", command);
 		} 
 
-		if (command.equals("version")) {
+		if (command.startsWith("get ") || command.startsWith("gets ")) {
+			handleGetCommands(handler, command);			
+		} else if (command.equals("version")) {
 			sendResponse(handler, versionOutput);
 		} else if (command.startsWith("set ") || command.startsWith("add ")
 				|| command.startsWith("replace ") || command.startsWith("append ")
 				|| command.startsWith("prepend ") || command.startsWith("cas ")) {
-			try {
-				handleStorageCommands(handler, command);
-				Data data = (Data) handler.getClientData();
-				if (data.isAllDataIn()) {
-					processStorageCommands(handler);
-					return;
-				} else {
-					return;
-				}
-			} catch (Exception e) {
-				logger.warning("Error: " + e);
-				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
-			}
-		} else if (command.startsWith("get ") || command.startsWith("gets ")) {
-			try {
-				handleGetCommands(handler, command);
-			} catch (Exception e) {
-				logger.warning("Error: " + e);
-				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
-			}
+			
+			handleStorageCommands(handler, command);
+			Data data = (Data) handler.getClientData();
+			if (data.isAllDataIn()) {
+				processStorageCommands(handler);
+				return;
+			} else {
+				return;
+			}			
 		} else if (command.startsWith("delete ")) {
-			try {
-				handleDeleteCommands(handler, command);
-			} catch (Exception e) {
-				logger.warning("Error: " + e);
-				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
-			}
+			handleDeleteCommands(handler, command);
 		} else if (command.startsWith("flush_all")) {
-			handleFlushAll(command);
-			sendResponse(handler, "OK\r\n");
+			handleFlushAll(handler, command);			
 		} else if (command.equals("stats")) {
 			Map stats = CommandHandler.getStats(handler.getServer());
 			Set keySet = stats.keySet();
@@ -84,32 +70,22 @@ public class TextCommandProcessor {
 			}
 			sendResponse(handler, "END\r\n");
 		} else if (command.startsWith("stats ")) {
-			//todo
+			//TODO
 			sendResponse(handler, "ERROR\r\n");
 		} else if (command.equals("quit")) {
 			handler.closeConnection();
 		} else if (command.startsWith("incr ") || command.startsWith("decr ")) {
-			try {
-				handleIncrDecrCommands(handler, command);
-			} catch (Exception e) {
-				logger.warning("Error: " + e);
-				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
-			}
+			handleIncrDecrCommands(handler, command);
 		} else if (command.startsWith("touch ")) {
-			try {
-				handleTouchCommands(handler, command);
-			} catch (Exception e) {
-				logger.warning("Error: " + e);
-				sendResponse(handler, "SERVER_ERROR " + e + "\r\n");
-			}
+			handleTouchCommands(handler, command);
 		} else {
-			logger.warning("unknown command! "+command);
+			logger.log(Level.WARNING, "unknown command! {0}", command);
 			sendResponse(handler, "ERROR\r\n");
 		}
 	}
 
-	private void handleFlushAll(String command)
-			throws SocketTimeoutException, IOException {
+	private void handleFlushAll(ClientHandler handler, String command)
+			throws SocketTimeoutException, IOException, CacheException {
 		/*
 		flush_all [exptime] [noreply]\r\n
 		 */
@@ -120,39 +96,49 @@ public class TextCommandProcessor {
 		if(QuickCached.DEBUG==false) {
 			logger.log(Level.FINE, "cmd: {0}", new Object[]{cmd});
 		}
+		
+		boolean noreplay = false;
 
-		if (cmdData.length >= 2) {
+		if(cmdData[cmdData.length-1].equals("noreply")) {
+			noreplay = true;
+		}
+
+		if (noreplay==false && cmdData.length >= 2) {
+			exptime = cmdData[1];
+		} else if (noreplay==true && cmdData.length >= 3) {
 			exptime = cmdData[1];
 		}
 
-		if (exptime == null) {
-			cache.flush();
+		if (exptime == null) {			
+			cache.flush();			
 		} else {
 			final int sleeptime = Integer.parseInt(exptime);
 			Thread t = new Thread() {
-
 				public void run() {
 					try {
 						sleep(1000 * sleeptime);
 					} catch (InterruptedException ex) {
-						Logger.getLogger(TextCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
+						logger.log(Level.WARNING, "Error: "+ex, ex);
 					}
-					cache.flush();
+					try {
+						cache.flush();
+					} catch (CacheException ex) {
+						logger.log(Level.SEVERE, "Error: "+ex, ex);
+					}
 				}
 			};
 			t.start();
+		}		
+		
+		if (noreplay) {
+			return;
 		}
-
-		boolean noreplay = false;
-		if (cmdData.length == 3) {
-			if ("noreply".equals(cmdData[2])) {
-				noreplay = true;
-			}
-		}
+		
+		sendResponse(handler, "OK\r\n");
 	}
 
 	private void handleDeleteCommands(ClientHandler handler, String command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		/*
 		delete <key> [noreply]\r\n
 		 */
@@ -171,7 +157,8 @@ public class TextCommandProcessor {
 				noreplay = true;
 			}
 		}
-		boolean flag = cache.delete(key);
+		boolean flag = cache.delete(key);		
+		
 		if (noreplay) {
 			return;
 		}
@@ -184,7 +171,7 @@ public class TextCommandProcessor {
 	}
 	
 	private void handleTouchCommands(ClientHandler handler, String command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		/*
 		touch <key> <exptime> [noreply]\r\n
 		*/
@@ -192,7 +179,7 @@ public class TextCommandProcessor {
 		
 		String cmd = cmdData[0];
 		String key = cmdData[1];
-		long exptime = Integer.parseInt(cmdData[2]);
+		int exptime = Integer.parseInt(cmdData[2]);
 		
 		boolean noreplay = false;		
 		if (cmdData.length >= 4) {
@@ -207,22 +194,17 @@ public class TextCommandProcessor {
 		
 		boolean flag = cache.touch(key, exptime);
 		
-		DataCarrier dc = (DataCarrier) cache.get(key);
-		if (dc == null) {
-			if (noreplay == false) {
-				sendResponse(handler, "NOT_FOUND\r\n");				
-			}
-			return;
-		}
+		if(noreplay) return;
 		
-		cache.set(key, dc, dc.getSize(), exptime);
-		if (noreplay == false) {
+		if(flag==false) {
+			sendResponse(handler, "NOT_FOUND\r\n");				
+		} else {
 			sendResponse(handler, "TOUCHED\r\n");
-		}	
+		}
 	}
 
 	private void handleGetCommands(ClientHandler handler, String command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		/*
 		get <key>*\r\n
 		gets <key>*\r\n
@@ -263,7 +245,7 @@ public class TextCommandProcessor {
 	}
 
 	private void handleIncrDecrCommands(ClientHandler handler, String command)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		/*
 		incr <key> <value> [noreply]\r\n
 		decr <key> <value> [noreply]\r\n
@@ -321,27 +303,40 @@ public class TextCommandProcessor {
 			return;
 		}
 		
-		try {
-			synchronized (key) {
-				long oldvalue = Long.parseLong(new String(dc.getData(), HexUtil.getCharset()));
-				if (cmd.equals("incr")) {
-					value = oldvalue + value;
-				} else if (cmd.equals("decr")) {
-					value = oldvalue - value;
-					if (value < 0) {
-						value = 0;
-					}
+		StringBuilder sb = new StringBuilder();
+		
+		dc.writeLock.lock();
+		try {			
+			long oldvalue = Long.parseLong(new String(dc.getData(), 
+				HexUtil.getCharset()));
+			if (cmd.equals("incr")) {
+				value = oldvalue + value;
+			} else if (cmd.equals("decr")) {
+				value = oldvalue - value;
+				if (value < 0) {
+					value = 0;
 				}
-				dc.setData(("" + value).getBytes(HexUtil.getCharset()));
+			} else {
+				throw new IllegalArgumentException("Unknown command "+cmd);
 			}
-		} catch (Exception e) {
-			if (noreplay == false) {
+			
+			sb.append(value);
+			dc.setData(sb.toString().getBytes(HexUtil.getCharset()));
+			cache.update(key, dc, dc.getSize());
+		} catch(Exception e) {
+			if(noreplay == false) {
 				sendResponse(handler, "CLIENT_ERROR parse of server value failed\r\n");
 			}
+			if (cmd.equals("incr")) {
+				CommandHandler.incrMisses++;
+			} else if (cmd.equals("decr")) {
+				CommandHandler.decrMisses++;
+			}
 			return;
+		} finally {
+			dc.writeLock.unlock();
 		}		
 		
-		cache.update(key, dc, dc.getSize());
 		if (cmd.equals("incr")) {
 			CommandHandler.incrHits++;
 		} else if (cmd.equals("decr")) {
@@ -351,9 +346,7 @@ public class TextCommandProcessor {
 		if (noreplay) {
 			return;
 		}
-
-		StringBuilder sb = new StringBuilder();
-		sb.append(value);
+		
 		sb.append("\r\n");
 		sendResponse(handler, sb.toString());
 	}
@@ -370,7 +363,7 @@ public class TextCommandProcessor {
 		String cmd = cmdData[0];
 		String key = cmdData[1];
 		String flags = cmdData[2];
-		long exptime = Integer.parseInt(cmdData[3]);
+		int exptime = Integer.parseInt(cmdData[3]);
 		long bytes = Integer.parseInt(cmdData[4]);
 		String casunique = null;
 
@@ -399,7 +392,7 @@ public class TextCommandProcessor {
 	}
 
 	public void processStorageCommands(ClientHandler handler)
-			throws SocketTimeoutException, IOException {
+			throws SocketTimeoutException, IOException, CacheException {
 		Data data = (Data) handler.getClientData();
 		
 		if(QuickCached.DEBUG==false) {
@@ -412,7 +405,20 @@ public class TextCommandProcessor {
 		dc.setFlags(data.getFlags());
 
 		if (data.getCmd().equals("set")) {
-			cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
+			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
+			if(olddata==null) {
+				cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
+			} else {
+				olddata.writeLock.lock();
+				try {
+					olddata.setData(dc.getData());
+					olddata.setFlags(dc.getFlags());
+					
+					cache.update(data.getKey(), olddata, olddata.getSize(), data.getExptime());
+				} finally {
+					olddata.writeLock.unlock();
+				}
+			}
 			if (data.isNoreplay() == false) {
 				sendResponse(handler, "STORED\r\n");
 			}
@@ -429,9 +435,19 @@ public class TextCommandProcessor {
 				}
 			}
 		} else if (data.getCmd().equals("replace")) {
-			Object olddata = cache.get(data.getKey());
+			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
 			if (olddata != null) {
-				cache.update(data.getKey(), dc, dc.getSize());
+				olddata.writeLock.lock();
+				try {
+					olddata.setData(dc.getData());
+					cache.update(data.getKey(), olddata, olddata.getSize());
+				} finally {
+					olddata.writeLock.unlock();
+				}
+				
+				dc.setData(null);
+				dc = null;
+				
 				if (data.isNoreplay() == false) {
 					if (data.isNoreplay() == false) {
 						sendResponse(handler, "STORED\r\n");
@@ -445,8 +461,13 @@ public class TextCommandProcessor {
 		} else if (data.getCmd().equals("append")) {
 			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
 			if (olddata != null) {
-				olddata.append(dc.getData());
-				cache.update(data.getKey(), olddata, olddata.getSize());
+				olddata.writeLock.lock();
+				try {
+					olddata.append(dc.getData());
+					cache.update(data.getKey(), olddata, olddata.getSize());
+				} finally {
+					olddata.writeLock.unlock();
+				}
 				
 				dc.setData(null);
 				dc = null;
@@ -464,8 +485,14 @@ public class TextCommandProcessor {
 		} else if (data.getCmd().equals("prepend")) {
 			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
 			if (olddata != null) {
-				olddata.prepend(dc.getData());
-				cache.update(data.getKey(), olddata, olddata.getSize());
+				olddata.writeLock.lock();
+				try {
+					olddata.prepend(dc.getData());
+					cache.update(data.getKey(), olddata, olddata.getSize());
+				} finally {
+					olddata.writeLock.unlock();
+				}
+
 				dc.setData(null);
 				dc = null;
 
@@ -480,31 +507,46 @@ public class TextCommandProcessor {
 				}
 			}
 		} else if (data.getCmd().equals("cas")) {
-			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());
-			if (olddata != null) {
-				int oldcas = olddata.getCas();
-				int passedcas = Integer.parseInt(data.getCasUnique());
+			String reply = null;			
+			
+			DataCarrier olddata = (DataCarrier) cache.get(data.getKey());			
+			if(olddata != null) {
+				olddata.writeLock.lock();
+				try {
+					int oldcas = olddata.getCas();
+					int passedcas = Integer.parseInt(data.getCasUnique());
 
-				if (oldcas == passedcas) {
-					cache.set(data.getKey(), dc, dc.getSize(), data.getExptime());
-					CommandHandler.casHits++;
-					if (data.isNoreplay() == false) {
-						sendResponse(handler, "STORED\r\n");
+					if (oldcas == passedcas) {
+						olddata.setData(dc.getData());
+						cache.update(data.getKey(), olddata, olddata.getSize());
+						
+						dc.setData(null);
+						dc = null;
+						
+						CommandHandler.casHits++;
+						if (data.isNoreplay() == false) {
+							reply = "STORED\r\n";
+						}
+					} else {
+						CommandHandler.casBadval++;
+						if (data.isNoreplay() == false) {
+							reply = "EXISTS\r\n";
+						}
 					}
-				} else {
-					CommandHandler.casBadval++;
-					if (data.isNoreplay() == false) {
-						sendResponse(handler, "EXISTS\r\n");
-					}
+				} finally {
+					olddata.writeLock.unlock();
 				}
 			} else {
 				CommandHandler.casMisses++;
 				if (data.isNoreplay() == false) {
-					sendResponse(handler, "NOT_FOUND\r\n");
+					reply = "NOT_FOUND\r\n";
 				}
+			}		
+			
+			if(reply!=null) {
+				sendResponse(handler, reply);
 			}
 		}
-
 		data.clear();
 	}
 
