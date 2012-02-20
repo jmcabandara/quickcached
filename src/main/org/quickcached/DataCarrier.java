@@ -1,58 +1,69 @@
 package org.quickcached;
 
-import java.util.logging.Logger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
- * @author akshath
+ * @author Akshath
  */
 public class DataCarrier implements java.io.Serializable {
-	private static final Logger logger = Logger.getLogger(DataCarrier.class.getName());
+	private final ReentrantReadWriteLock rwlock = new ReentrantReadWriteLock();
+	public final Lock readLock = rwlock.readLock();
+    public final Lock writeLock = rwlock.writeLock();
 
 	private byte data[];
 	private String flags;
 	private int cas;
 	
 	public int getSize() {
-		if(data==null) return 0;
-		return data.length;
+		readLock.lock();
+		try {
+			if(data==null) return 0;
+			return data.length;
+		} finally {
+			readLock.unlock();
+		}
 	}
-
+	
+	private void incCas() {
+		cas = cas + 1;//no need of explicit locking.. private method
+	}
 	
 	public void append(byte chunk[]) {
-		int newlen = data.length + chunk.length;
-		byte data_new[] = new byte[newlen];
+		writeLock.lock();
+		try {
+			int newlen = data.length + chunk.length;
+			byte data_new[] = new byte[newlen];
 
-		int i=0;
-		for(int k=0;k<data.length;k++) {
-			data_new[i++] = data[k];
+			System.arraycopy(data, 0, data_new, 0, data.length);
+			System.arraycopy(chunk, 0, data_new, data.length, chunk.length);
+
+			data = data_new;
+			data_new = null;
+
+			incCas();
+		} finally {
+			writeLock.unlock();
 		}
-		for(int k=0;k<chunk.length;k++) {
-			data_new[i++] = chunk[k];
-		}
-
-		data = data_new;
-		data_new = null;
-
-		setCas(getCas() + 1);
-	}
+	}	
 
 	public void prepend(byte chunk[]) {
-		int newlen = data.length + chunk.length;
-		byte data_new[] = new byte[newlen];
+		writeLock.lock();
+		try {
+			int newlen = data.length + chunk.length;
+			byte data_new[] = new byte[newlen];
 
-		int i=0;
-		for(int k=0;k<chunk.length;k++) {
-			data_new[i++] = chunk[k];
+			System.arraycopy(chunk, 0, data_new, 0, chunk.length);
+			System.arraycopy(data, 0, data_new, chunk.length, data.length);
+
+			data = data_new;
+			data_new = null;
+
+			incCas();
+		} finally {
+			writeLock.unlock();
 		}
-		for(int k=0;k<data.length;k++) {
-			data_new[i++] = data[k];
-		}
-
-		data = data_new;
-		data_new = null;
-
-		setCas(getCas() + 1);
 	}
 
 	public String getFlags() {
@@ -68,12 +79,22 @@ public class DataCarrier implements java.io.Serializable {
 	}
 
 	public byte[] getData() {
-		return data;
+		readLock.lock();
+		try {
+			return data;
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	public void setData(byte[] data) {
-		this.data = data;
-		setCas(getCas() + 1);
+		writeLock.lock();
+		try {
+			this.data = data;
+			incCas();
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	public int getCas() {
