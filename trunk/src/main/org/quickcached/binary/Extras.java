@@ -23,11 +23,11 @@ public class Extras {
 		return expiration;
 	}
 
-	public long getExpirationInSec() {
+	public int getExpirationInSec() {
 		if(expiration==null) {
 			return 0;
 		} else {
-			 return Long.parseLong(expiration, 16);
+			 return Integer.parseInt(expiration, 16);
 		}
 	}
 
