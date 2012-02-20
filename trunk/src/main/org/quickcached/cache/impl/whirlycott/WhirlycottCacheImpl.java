@@ -65,13 +65,18 @@ public class WhirlycottCacheImpl extends BaseCacheImpl {
 		return cache.size();
 	}
 	public void setToCache(String key, Object value, int objectSize, 
-			long expInSec) throws Exception {
+			int expInSec) throws Exception {
 		cache.store(key, value, expInSec*1000);
 	}
 	
 	public void updateToCache(String key, Object value, int objectSize) throws Exception {
-		cache.store(key, value);
+		//no action required here for ref based cache	
 	}
+	
+	public void updateToCache(String key, Object value, int objectSize, int expInSec) throws Exception {
+		cache.store(key, value, expInSec*1000);
+	}
+	
 	
 	public Object getFromCache(String key) throws Exception {
 		return cache.retrieve(key);

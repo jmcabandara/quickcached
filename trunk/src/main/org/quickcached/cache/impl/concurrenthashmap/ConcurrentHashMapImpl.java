@@ -101,16 +101,28 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 	}
 	
 	public void setToCache(String key, Object value, int objectSize, 
-			long expInSec) throws Exception {
+			int expInSec) throws Exception {
 		map.put(key, value);
 		if (expInSec != 0) {
 			mapTtl.put(key, new Date(System.currentTimeMillis()+expInSec*1000));
+		} else {
+			mapTtl.remove(key);//just in case
 		}
 	}
 	
 	public void updateToCache(String key, Object value, int objectSize) throws Exception {
-		map.put(key, value);
+		//no action required here for ref based cache		
 	}
+	
+	public void updateToCache(String key, Object value, int objectSize, int expInSec) throws Exception {
+		//no action required here for ref based cache		
+		if (expInSec != 0) {
+			mapTtl.put(key, new Date(System.currentTimeMillis()+expInSec*1000));
+		} else {
+			mapTtl.remove(key);//just in case
+		}
+	}
+	
 	
 	public Object getFromCache(String key) throws Exception {
 		Object object = map.get(key);

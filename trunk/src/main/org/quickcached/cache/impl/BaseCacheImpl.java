@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import org.quickcached.CommandHandler;
 import org.quickcached.DataCarrier;
 import org.quickcached.QuickCached;
+import org.quickcached.cache.CacheException;
 import org.quickcached.cache.CacheInterface;
 
 /**
@@ -18,9 +19,11 @@ public abstract class BaseCacheImpl implements CacheInterface {
 	
 	public abstract String getName();
 	public abstract long getSize();
-	public abstract void setToCache(String key, Object value, int objectSize, 
-			long expInSec) throws Exception;
+	
+	public abstract void setToCache(String key, Object value, int objectSize, int expInSec) throws Exception;
+	public abstract void updateToCache(String key, Object value, int objectSize, int expInSec) throws Exception;
 	public abstract void updateToCache(String key, Object value, int objectSize) throws Exception;
+	
 	public abstract Object getFromCache(String key) throws Exception;
 	public abstract boolean deleteFromCache(String key) throws Exception;
 	public abstract void flushCache() throws Exception;
@@ -92,7 +95,7 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		}
 	}
 
-	public void set(String key, Object value, int objectSize, long expInSec) {
+	public void set(String key, Object value, int objectSize, int expInSec) throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "set key: {0}; objectsize: {1};", 
 				new Object[]{key, objectSize});
 		
@@ -125,10 +128,11 @@ public abstract class BaseCacheImpl implements CacheInterface {
 			}
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
 		}		
 	}
 	
-	public boolean touch(String key, long expInSec) {
+	public boolean touch(String key, int expInSec) throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "touch key: {0}", key);
 		cmdTouchs++;
 		
@@ -143,17 +147,29 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		}
 	}
 	
-	public void update(String key, Object value, int objectSize) {
+	public void update(String key, Object value, int objectSize) throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", 
 				new Object[]{key, objectSize});
 		try {
 			updateToCache(key, value, objectSize);
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
+		}
+	}
+	
+	public void update(String key, Object value, int objectSize, int expInSec) throws CacheException {
+		if(QuickCached.DEBUG) logger.log(Level.FINE, "update key: {0}; objectsize: {1};", 
+				new Object[]{key, objectSize});
+		try {
+			updateToCache(key, value, objectSize, expInSec);
+		} catch (Exception ex) {
+			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
 		}
 	}
 
-	public Object get(String key) {
+	public Object get(String key) throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "get key: {0}", key);
 		cmdGets++;
 		Object obj = get_(key);
@@ -167,17 +183,18 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		return obj;
 	}
 	
-	private Object get_(String key) {		
+	private Object get_(String key) throws CacheException {
 		Object obj = null;
 		try {
 			obj = getFromCache(key);			
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
 		}
 		return obj;
 	}
 
-	public boolean delete(String key) {		
+	public boolean delete(String key) throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "delete key: {0};", key);
 		cmdDeletes++;
 		
@@ -186,6 +203,7 @@ public abstract class BaseCacheImpl implements CacheInterface {
 			flag = deleteFromCache(key);
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
 		}
 		if(flag) {
 			deleteHits++;
@@ -195,13 +213,14 @@ public abstract class BaseCacheImpl implements CacheInterface {
 		return flag;
 	}	
 
-	public void flush() {
+	public void flush() throws CacheException {
 		if(QuickCached.DEBUG) logger.log(Level.FINE, "flush");
 		try {
 			flushCache();
 			cmdFlushs++;
 		} catch (Exception ex) {
 			Logger.getLogger(BaseCacheImpl.class.getName()).log(Level.SEVERE, "Error: "+ex, ex);
+			throw new CacheException(ex.toString());
 		}		
 	}
 }
