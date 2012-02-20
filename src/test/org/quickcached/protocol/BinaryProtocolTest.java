@@ -42,52 +42,64 @@ public class BinaryProtocolTest extends ProtocolTest {
         junit.textui.TestRunner.run(BinaryProtocolTest.class);
     }
 	
-	public void testTouch() throws TimeoutException {		
-        Date value = new Date();
-
-		c.set("someKeyT1", 50, value);
-		Date readObject = (Date) c.get("someKeyT1");
-
-		assertNotNull(readObject);
-		assertEquals(value.getTime(),  readObject.getTime());
+	public void testTouch() throws TimeoutException {
+		String readObject = null;
+		String key = null;
+		String value = null;
 		
-		c.touch("someKeyT1", 3600);
-		
-		readObject = (Date) c.get("someKeyT1");
+		//1
+		key = "testtuc1";
+        Date datevalue = new Date();
 
-		assertNotNull(readObject);
-		assertEquals(value.getTime(),  readObject.getTime());
-	}
+		c.set(key, 50, datevalue);
+		Date readObjectDate = (Date) c.get(key);
+
+		assertNotNull(readObjectDate);
+		assertEquals(datevalue.getTime(),  readObjectDate.getTime());
+		
+		c.touch(key, 3600);
+		
+		readObjectDate = (Date) c.get(key);
+
+		assertNotNull(readObjectDate);
+		assertEquals(datevalue.getTime(),  readObjectDate.getTime());
 	
-	public void testTouch2() throws TimeoutException {		
-		c.set("someKeyT2", 50, "World");
-		String readObject = (String) c.get("someKeyT2");
+		//2
+		key = "testtuc2";
+		c.set(key, 50, "World");
+		readObject = (String) c.get(key);
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
 		
-		c.touch("someKeyT2", 3600);
+		c.touch(key, 3600);
 		
-		readObject = (String) c.get("someKeyT2");
+		readObject = (String) c.get(key);
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
 	}
 	
 	public void testGat() throws TimeoutException {		
-		c.set("someKeyGAT1", 50, "World");
-		String readObject = (String) c.gat("someKeyGAT1", 3600);
+		String readObject = null;
+		String key = null;
+		String value = null;
+		
+		//1
+		key = "testgat1";
+		c.set(key, 50, "World");
+		readObject = (String) c.gat(key, 3600);
 
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);	
-	}
 	
-	public void testGat2() throws TimeoutException {	
-		Date value = new Date();
-		c.set("someKeyGAT2", 50, value);
-		Date readObject = (Date) c.gat("someKeyGAT2", 3600);
+		//2
+		key = "testgat2";
+		Date datevalue = new Date();
+		c.set(key, 50, datevalue);
+		Date readObjectDate = (Date) c.gat(key, 3600);
 
-		assertNotNull(readObject);
-		assertEquals(value.getTime(),  readObject.getTime());
+		assertNotNull(readObjectDate);
+		assertEquals(datevalue.getTime(),  readObjectDate.getTime());
 	}
 }

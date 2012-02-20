@@ -3,15 +3,18 @@
 +++++++++++++++++++++++++++++++++++
 
 
-Current Version: 1.1.0
+Current Version: 2.0.0
 
-version 2.0.0 [11-Feb-2012]
+version 2.0.0 [21-Feb-2012]
 ---------------------------
++ Added Touch command in Text Interface.
++ Added Touch, GAT, GATQ  command in Binary Interface.
 + Implemented alternate cache impl using SoftReference in a ConcurrentHashMap (now default)
 + Added support for saving state b/w re-start (by default this is turned off.. see xml)
 - Removed -Xconcurrentio from jvm flags
-+ Added Touch command in Text Interface.
-+ Added Touch, GAT, GATQ  command in Binary Interface.
+! Bug fixes
+# Improved concurrency, cache update handling
+
 
 version 1.1.0 [11-Sep-2011]
 ---------------------------
