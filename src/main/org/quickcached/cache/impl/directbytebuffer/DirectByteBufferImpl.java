@@ -100,18 +100,29 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 	}
 	
 	public void setToCache(String key, Object value, int objectSize, 
-			long expInSec) throws Exception {
+			int expInSec) throws Exception {
 		ByteBuffer buffer = getByteBuffer(value);
 		map.put(key, buffer);
 		if (expInSec != 0) {
 			mapTtl.put(key, new Date(System.currentTimeMillis()+expInSec*1000));
+		} else {
+			mapTtl.remove(key);//just in case
 		}
 	}
 	
 	public void updateToCache(String key, Object value, int objectSize) throws Exception {
 		ByteBuffer buffer = getByteBuffer(value);
 		map.put(key, buffer);
-	}		
+	}
+	
+	public void updateToCache(String key, Object value, int objectSize, int expInSec) throws Exception {
+		updateToCache(key, value, objectSize);
+		if (expInSec != 0) {
+			mapTtl.put(key, new Date(System.currentTimeMillis()+expInSec*1000));
+		} else {
+			mapTtl.remove(key);//just in case
+		}
+	}	
 	
 	public Object getFromCache(String key) throws IOException, ClassNotFoundException {
 		ByteBuffer buffer = (ByteBuffer) map.get(key);

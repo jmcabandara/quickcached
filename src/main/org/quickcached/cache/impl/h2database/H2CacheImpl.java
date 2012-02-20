@@ -38,7 +38,7 @@ public class H2CacheImpl extends BaseCacheImpl {
 	}
 	
 	public void setToCache(String key, Object value, int objectSize, 
-			long expInSec) throws Exception {
+			int expInSec) throws Exception {
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		
@@ -47,8 +47,8 @@ public class H2CacheImpl extends BaseCacheImpl {
 
 		if (expInSec != 0) {
 			expTime = new java.sql.Timestamp(System.currentTimeMillis() + expInSec * 1000);
-		}		
-
+		}
+		
 		try {
 			con = getConnection();
 
@@ -71,14 +71,14 @@ public class H2CacheImpl extends BaseCacheImpl {
 					pstmt = con.prepareStatement(
 						"UPDATE DATA_CACHE SET DATA=?, SIZE=?, CREATION_TIME_STAMP=?, EXPIRY_TIME_STAMP=?, LAST_ACCESS_TIME=? WHERE KEY=?");
 					int k = 1;
-					
+
 					pstmt.setObject(k++, value);
 					pstmt.setInt(k++, objectSize);
 
 					pstmt.setTimestamp(k++, currentTime);
 					pstmt.setTimestamp(k++, expTime);
 					pstmt.setTimestamp(k++, currentTime);
-					
+
 					pstmt.setString(k++, key);
 
 					pstmt.executeUpdate();
@@ -120,6 +120,50 @@ public class H2CacheImpl extends BaseCacheImpl {
 			pstmt.setInt(k++, objectSize);
 
 			pstmt.setTimestamp(k++, currentTime);
+			
+			pstmt.setString(k++, key);
+
+			pstmt.executeUpdate();
+		} catch (Exception er) {
+			logger.log(Level.WARNING, "Update Error: " + er, er);
+			throw er;
+		} finally {
+			try {
+				pstmt.close();
+			} catch (SQLException e1) {
+				logger.log(Level.WARNING, "Error: " + e1, e1);
+			}
+			try {
+				con.close();
+			} catch (SQLException e1) {
+				logger.log(Level.WARNING, "Error: " + e1, e1);
+			}
+		}
+	}
+	
+	public void updateToCache(String key, Object value, int objectSize, int expInSec) throws Exception {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+				
+		try {
+			java.sql.Timestamp currentTime = new java.sql.Timestamp(System.currentTimeMillis());
+			
+			java.sql.Timestamp expTime = null;
+
+			if (expInSec != 0) {
+				expTime = new java.sql.Timestamp(System.currentTimeMillis() + expInSec * 1000);
+			}	
+			
+			con = getConnection();
+			pstmt = con.prepareStatement(
+				"UPDATE DATA_CACHE SET DATA=?, SIZE=?, LAST_ACCESS_TIME=?, EXPIRY_TIME_STAMP=? WHERE KEY=?");
+			int k = 1;
+
+			pstmt.setObject(k++, value);
+			pstmt.setInt(k++, objectSize);
+
+			pstmt.setTimestamp(k++, currentTime);
+			pstmt.setTimestamp(k++, expTime);
 			
 			pstmt.setString(k++, key);
 
