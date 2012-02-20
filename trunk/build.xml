@@ -116,7 +116,7 @@
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" /-->
 			<sysproperty key="org.quickcached.client.defaultImpl"
-                   value="SpyMemcached" />
+                   value="XMemcached" />
 		</java>
 	</target>
 	<!-- junit task -->
