@@ -126,9 +126,10 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		return flag.booleanValue();
 	}
 	
-	public boolean append(long cas, String key, Object value, long timeoutMiliSec) 
+	public boolean append(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
-		Future <Boolean> f = getCache().append(cas, key, value);
+		CASValue casv = getCache().gets(key);		
+		Future <Boolean> f = getCache().append(casv.getCas(), key, value);
 		Boolean flag = false;
 		try {
 			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
@@ -139,9 +140,10 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		return flag.booleanValue();
 	}
 	
-	public boolean prepend(long cas, String key, Object value, long timeoutMiliSec) 
+	public boolean prepend(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException {
-		Future <Boolean> f = getCache().prepend(cas, key, value);
+		CASValue casv = getCache().gets(key);
+		Future <Boolean> f = getCache().prepend(casv.getCas(),key, value);
 		Boolean flag = false;
 		try {
 			flag = (Boolean) f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
