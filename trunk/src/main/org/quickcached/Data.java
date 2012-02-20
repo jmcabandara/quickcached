@@ -4,13 +4,12 @@ import org.quickserver.net.server.*;
 
 import java.io.*;
 import java.util.Date;
-import java.util.logging.Logger;
 import org.quickcached.binary.BinaryPacket;
 import org.quickcached.binary.RequestHeader;
 
 
 public class Data implements ClientData {
-	private static final Logger logger = Logger.getLogger(Data.class.getName());
+	//private static final Logger logger = Logger.getLogger(Data.class.getName());
 
 	private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -18,7 +17,7 @@ public class Data implements ClientData {
 	private String cmd;
 	private String key;
 	private String flags;
-	private long exptime = -1;
+	private int exptime = -1;//sec
 	private String casunique;
 	private boolean noreplay;
 	
@@ -167,17 +166,17 @@ public class Data implements ClientData {
 		this.flags = flags;
 	}
 
-	public long getExptime() {
+	public int getExptime() {
 		return exptime;
 	}
 
-	public void setExptime(long exptime) {
-		this.exptime = exptime;
+	public void setExptime(int exptimeInSec) {
+		this.exptime = exptimeInSec;
 		//todo check 1970 thing
 		//60*60*24*30 = 30 days in sec
-		if(exptime>2592000) {
-			Date time = new Date(exptime*1000);//in mili
-			this.exptime = (time.getTime() - System.currentTimeMillis())/1000;//in sec
+		if(exptimeInSec>2592000) {
+			Date time = new Date(exptimeInSec*1000);//in mili
+			this.exptime = (int) (time.getTime() - System.currentTimeMillis())/1000;//in sec
 		}
 	}
 
