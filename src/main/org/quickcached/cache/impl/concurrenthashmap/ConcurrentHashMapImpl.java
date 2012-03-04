@@ -145,7 +145,7 @@ public class ConcurrentHashMapImpl extends BaseCacheImpl {
 		map.clear();
 	}
 
-	private String fileName = "./ConcurrentHashMapImpl.dat";
+	private String fileName = "./"+getName()+"_"+QuickCached.getPort()+".dat";
 	public boolean saveToDisk() {
 		System.out.println("Saving state to disk..");
 		ObjectOutputStream oos = null;

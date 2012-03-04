@@ -271,7 +271,7 @@ public class SoftReferenceMapImpl extends BaseCacheImpl {
 		}
 	}
 	
-	private String fileName = "./SoftReferenceMapImpl.dat";
+	private String fileName = "./"+getName()+"_"+QuickCached.getPort()+".dat";
 	public boolean saveToDisk() {
 		System.out.print("Saving state to disk.. ");
 		ObjectOutputStream oos = null;

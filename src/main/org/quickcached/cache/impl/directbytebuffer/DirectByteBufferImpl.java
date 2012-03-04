@@ -167,7 +167,7 @@ public class DirectByteBufferImpl extends BaseCacheImpl {
 		return object;
 	}
 	
-	private String fileName = "./DirectByteBufferImpl.dat";
+	private String fileName = "./"+getName()+"_"+QuickCached.getPort()+".dat";
 	public boolean saveToDisk() {
 		System.out.print("Saving state to disk.. ");
 		ObjectOutputStream oos = null;
