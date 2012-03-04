@@ -14,6 +14,7 @@ public class QuickCached {
     public static String version = "1.1.0";
     public static boolean DEBUG = false;
     private static final int KEY_MAX_LENGTH = 250;
+	private static QuickServer quickcached;
 
     public static void main(String args[]) throws Exception {
         int i = 0;
@@ -56,7 +57,7 @@ public class QuickCached {
         String confFile = "conf" + File.separator + "QuickCached.xml";
         Object config[] = new Object[]{confFile};
 
-        QuickServer quickcached = new QuickServer();
+        quickcached = new QuickServer();
         quickcached.initService(config);
 		
 		Map configMap = quickcached.getConfig().getApplicationConfiguration();
@@ -123,6 +124,10 @@ public class QuickCached {
 		int i = pid.indexOf("@");
 		pid = pid.substring(0, i);
 		return pid;
+	}
+	
+	public static int getPort() {
+		return quickcached.getPort();
 	}
 
 	public static void printHelp() {
