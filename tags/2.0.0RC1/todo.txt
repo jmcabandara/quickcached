@@ -1,0 +1,28 @@
+++++++++++++++++++++++++++++
+|  Todo for QuickCached    |
+++++++++++++++++++++++++++++
+
+Current Version: 1.1.0
+
+This document contains a list of todo items that needs to be implemented
+or improved upon in future releases of QuickServer. This is not a 
+comprehensive list. There might be other features, which have/may been/be  
+incorporated but not mentioned here.
+
+------------------------------------------------------------------------
+ #  Description						Version  Status
+------------------------------------------------------------------------
+ 1  Need to add memory warning to impl to free memory	 - 	   -
+    on periodic basic
+ 2  Add csv stats output			 	 1.1.0	   Done
+------------------------------------------------------------------------
+
+If you have a suggestions on a feature or need to request a new feature do
+post it at http://www.quickcached.org/
+
+
+Last Dated: 21 Aug 2011
+------------------------
+
+Copyright (C) 2011 QuickCached.org
+http://www.quickcached.org/  
