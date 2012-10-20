@@ -9,9 +9,9 @@ import java.util.Map;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class QuickCached {
-	public static final String app_version = "1.1.0";
+	public static final String app_version = "2.0.0";
 	
-    public static String version = "1.1.0";
+    public static String version = "2.0.0";
     public static boolean DEBUG = false;
     private static final int KEY_MAX_LENGTH = 250;
 	private static QuickServer quickcached;
