@@ -3,9 +3,9 @@
 +++++++++++++++++++++++++++++++++++
 
 
-Current Version: 2.0.0
+Current Version: 2.0.0 RC1 
 
-version 2.0.0 [21-Feb-2012]
+version 2.0.0 RC1 [20-Oct-2012]
 ---------------------------
 + Added Touch command in Text Interface.
 + Added Touch, GAT, GATQ  command in Binary Interface.
