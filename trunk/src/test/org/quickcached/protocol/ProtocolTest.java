@@ -26,7 +26,7 @@ public class ProtocolTest extends TestCase  {
 	public void testGet() throws TimeoutException {
 		String readObject = null;
 		String key = null;
-		//1
+		//1 - String
 		key = "testget1";
 		c.set(key, 3600, "World");
 		readObject = (String) c.get(key);
@@ -34,7 +34,7 @@ public class ProtocolTest extends TestCase  {
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
     
-		//2
+		//2 - native obj
         Date value = new Date();
 		key = "testget2";
 		c.set(key, 3600, value);
@@ -43,9 +43,20 @@ public class ProtocolTest extends TestCase  {
 		assertNotNull(readObjectDate);
 		assertEquals(value.getTime(),  readObjectDate.getTime());
 		
-		//3
-		Object client = c.getBaseClient();
+		//3 - custom obj
+        TestObject testObject = new TestObject();
+		testObject.setName(key);
 		key = "testget3";
+		c.set(key, 3600, testObject);
+		TestObject readTestObject = (TestObject) c.get(key);
+
+		assertNotNull(readTestObject);
+		assertEquals(testObject.getName(),  readTestObject.getName());
+		
+	
+		//4 - no reply
+		Object client = c.getBaseClient();
+		key = "testget4";
 		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
 			net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
 			
