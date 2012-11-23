@@ -409,7 +409,7 @@ public class BinaryCommandProcessor {
 
 			DataCarrier olddc = (DataCarrier) cache.get(command.getKey());
 			if (olddc == null) {
-				if (extras.getExpiration().equals("ffffffff") == false) {//as per protocol
+				if (extras.getExpiration().equals("ffffffff") == true) {//as per protocol
 					if (op == 'I') {
 						CommandHandler.incrMisses++;
 					} else {
