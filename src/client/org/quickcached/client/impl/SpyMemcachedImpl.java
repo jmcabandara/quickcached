@@ -19,7 +19,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 	private String hostList;
 	private boolean binaryConnection = true;
 	
-	private int poolSize = 20;
+	private int poolSize = 5;
 	
 	public SpyMemcachedImpl() {
 		
