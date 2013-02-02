@@ -20,7 +20,7 @@ public class XMemcachedImpl extends MemcachedClient {
 	private net.rubyeye.xmemcached.MemcachedClient c = null;
 	private String hostList;
 	private boolean binaryConnection = true;
-	private int poolSize = 10;
+	private int poolSize = 5;
 
 	public void setUseBinaryConnection(boolean flag) {
 		binaryConnection = flag;

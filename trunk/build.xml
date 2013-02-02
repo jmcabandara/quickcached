@@ -6,6 +6,7 @@
 	<property name="test.build.dir"  value="build/testcases" />
 	<property name="client.build.dir"  value="build/clientcases" />
 	<property name="dist.dir"   value="dist" />
+	<property name="flag.debug"   value="true" />
 
 	<target name="clean">
 		<!--delete dir="${build.dir}" /-->
@@ -22,14 +23,17 @@
 	<path id="project.classpath.client">
 		<fileset dir="./libtest/">
 			<include name="**/*.jar"/>
+		</fileset>
+		<fileset dir="./dist/">
+			<include name="**/QuickCached-Client.jar"/>
 		</fileset>		
 	</path>
 
 	<!-- main jar -->
 	<target name="main_compile"  depends="clean">
 		<mkdir dir="${main.build.dir}"/>
-		<javac srcdir="src/main/" destdir="${main.build.dir}" debug="off" 
-				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
+		<javac srcdir="src/main/" destdir="${main.build.dir}" debug="${flag.debug}" 
+				deprecation="on" optimize="on" includeantruntime="false" source="1.5" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath"/>
 		</javac>
@@ -46,8 +50,8 @@
 	<!-- client jar -->
 	<target name="client_compile"  depends="clean">
 		<mkdir dir="${client.build.dir}"/>
-		<javac srcdir="src/client/" destdir="${client.build.dir}" debug="off" 
-				deprecation="on" optimize="on" includeantruntime="false" target="1.5">
+		<javac srcdir="src/client/" destdir="${client.build.dir}" debug="${flag.debug}" 
+				deprecation="on" optimize="on" includeantruntime="false" source="1.5" target="1.5">
 			<include name="**/*.java"/>
 			<classpath refid="project.classpath.client"/>
 		</javac>
@@ -93,7 +97,7 @@
 	<target name="compileTests">
 		<mkdir dir="${test.build.dir}"/>
 		<javac srcdir="src/test/" destdir="${test.build.dir}" 
-				includeantruntime="false"  debug="on"  target="1.5">
+				includeantruntime="false"  debug="${flag.debug}"  source="1.5" target="1.5">
 			<classpath refid="project.classpath.test"/>
 			<include name="**/*.java"/>
 		</javac>
@@ -115,8 +119,10 @@
                    value="SpyMemcached" /-->
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="QuickCached" /-->
 			<sysproperty key="org.quickcached.client.defaultImpl"
-                   value="XMemcached" />
+                   value="QuickCached" />
 		</java>
 	</target>
 	<!-- junit task -->
@@ -124,19 +130,21 @@
 	<target name="loadtest" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.LoadTest"
             taskname="loadtest" failonerror="true">
-			<arg line="m 10 127.0.0.1:11211,127.0.0.1:11212  100"/>
+			<arg line="m 20 127.0.0.1:11211 1000"/>
 			<!--arg line="m 10 127.0.0.1:11211,127.0.0.1:11212 100"/-->
 			
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="SpyMemcached" /-->
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="QuickCached" /-->
 				   
 			<sysproperty key="org.quickcached.client.defaultImpl"
-                   value="XMemcached" />
+                   value="QuickCached" />
 				   
 			<sysproperty key="org.quickcached.client.binaryConnection"
-                   value="true" />			
+                   value="false" />			
 				   
 			<classpath refid="project.classpath.test"/>
 			<classpath>
@@ -152,15 +160,17 @@
 	<target name="warmup" depends="compileTests">
 		<java fork="yes" classname="org.quickcached.load.LoadTest"
             taskname="warmup" failonerror="true">
-			<arg line="m 20 127.0.0.1:11211,127.0.0.1:11212 2000"/>
+			<arg line="m 20 127.0.0.1:11211 100"/>
 			<!--arg line="m 20 127.0.0.1:11211,127.0.0.1:11212 100"/-->
 			
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="SpyMemcached" /-->
 			<!--sysproperty key="org.quickcached.client.defaultImpl"
                    value="XMemcached" /-->
+			<!--sysproperty key="org.quickcached.client.defaultImpl"
+                   value="QuickCached" /-->
 			<sysproperty key="org.quickcached.client.defaultImpl"
-                   value="XMemcached" />
+                   value="QuickCached" />
 			
 			<sysproperty key="org.quickcached.client.binaryConnection"
                    value="true" />

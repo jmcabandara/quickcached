@@ -11,6 +11,7 @@ import java.util.Map;
 public abstract class MemcachedClient {
 	public static final String SpyMemcachedImpl = "SpyMemcached";
 	public static final String XMemcachedImpl = "XMemcached";
+	public static final String QuickCachedImpl = "QuickCached";
 	
 	private static String defaultImpl = XMemcachedImpl;	
 	
@@ -22,6 +23,7 @@ public abstract class MemcachedClient {
 	static {
 		registerImpl(SpyMemcachedImpl, "org.quickcached.client.impl.SpyMemcachedImpl");
 		registerImpl(XMemcachedImpl, "org.quickcached.client.impl.XMemcachedImpl");
+		registerImpl(QuickCachedImpl, "org.quickcached.client.impl.QuickCachedClientImpl");
 		
 		String impl = System.getProperty("org.quickcached.client.defaultImpl");
 		if(impl!=null) {
@@ -37,7 +39,10 @@ public abstract class MemcachedClient {
 	public static MemcachedClient getInstance(String implName) 
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 		String fullClassName = (String) implMap.get(implName);
-		if(fullClassName==null) fullClassName = (String) implMap.get(defaultImpl);
+		
+		if(fullClassName==null) {
+			fullClassName = (String) implMap.get(defaultImpl);
+		}
 		
 		MemcachedClient client = (MemcachedClient) Class.forName(fullClassName).newInstance();
 		
