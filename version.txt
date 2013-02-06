@@ -9,7 +9,7 @@ Current Version: 2.0.0 RC1
 version 2.0.0 [20-Oct-2012]
 ---------------------------
 + Added QuickCached Client
-
++ Added slow res in stats
 
 
 version 2.0.0 RC1 [20-Oct-2012]
