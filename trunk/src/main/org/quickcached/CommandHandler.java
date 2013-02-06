@@ -22,17 +22,16 @@ import org.quickserver.net.server.ClientBinaryHandler;
 import org.quickserver.net.server.QuickServer;
 
 public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
+
 	private static final Logger logger = Logger.getLogger(CommandHandler.class.getName());
 	private static final SimpleDateFormat sdfDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 	private static CacheInterface cache = null;
 	private static TextCommandProcessor textCommandProcessor = null;
 	private static BinaryCommandProcessor binaryCommandProcessor = null;
-
 	private volatile static long totalConnections;
 	private volatile static long bytesRead;
 	private volatile static long bytesWritten;
-	protected volatile static long gcCalls;	
+	protected volatile static long gcCalls;
 	protected volatile static long incrMisses;
 	protected volatile static long incrHits;
 	protected volatile static long decrMisses;
@@ -40,14 +39,25 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 	protected volatile static long casMisses;
 	protected volatile static long casHits;
 	protected volatile static long casBadval;
-	
+
+	protected volatile static long slowResponseCount;
 	private static boolean computeAvgForSetCmd = false;
+	private static long slowResponseThreshold = 500;
+
+	public static long getSlowResponseThreshold() {
+		return slowResponseThreshold;
+	}
+
+	public static void setSlowResponseThreshold(long slowResponseThreshold) {
+		CommandHandler.slowResponseThreshold = slowResponseThreshold;
+	}
 
 	public static Map getStats(QuickServer server) {
 		return getStats(server, null);
 	}
+
 	public static Map getStats(QuickServer server, Map stats) {
-		if(stats==null) {
+		if (stats == null) {
 			stats = new LinkedHashMap(30);
 		}
 
@@ -61,9 +71,9 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 
 		//time - current UNIX time according to the server 
 		long timeMili = System.currentTimeMillis();
-		stats.put("time", ""+(timeMili/1000));		
+		stats.put("time", "" + (timeMili / 1000));
 		//stats.put("current_time_millis", "" + timeMili);
-		
+
 		stats.put("datetime", sdfDateTime.format(new Date(timeMili)));
 
 		//version
@@ -82,22 +92,22 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		stats.put("bytes_written", "" + bytesWritten);
 
 		//bytes - Current number of bytes used by this server to store items
-		long usedMemory = Runtime.getRuntime().totalMemory() - 
-				Runtime.getRuntime().freeMemory();			        
+		long usedMemory = Runtime.getRuntime().totalMemory()
+			- Runtime.getRuntime().freeMemory();
 		stats.put("bytes", "" + usedMemory);
 
 		//limit_maxbytes    Number of bytes this server is allowed to use for storage.
 		long heapMaxSize = Runtime.getRuntime().maxMemory();
 		stats.put("limit_maxbytes", "" + heapMaxSize);
-		
-		long mem_percent_used = (long) (100.0*usedMemory/heapMaxSize);
+
+		long mem_percent_used = (long) (100.0 * usedMemory / heapMaxSize);
 		stats.put("mem_percent_used", "" + mem_percent_used);
-		
+
 		//threads           Number of worker threads requested.
 		//stats.put("threads", );
 
 		cache.saveStats(stats);
-		
+
 		stats.put("incr_misses", "" + incrMisses);
 		stats.put("incr_hits", "" + incrHits);
 		stats.put("decr_misses", "" + decrMisses);
@@ -105,56 +115,59 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		stats.put("cas_misses", "" + casMisses);
 		stats.put("cas_hits", "" + casHits);
 		stats.put("cas_badval", "" + casBadval);
-		
+
 		stats.put("app_version", QuickCached.app_version);
 		stats.put("app_impl_used", cache.getName());
-		
-		stats.put("gc_calls", ""+gcCalls);
+
+		stats.put("gc_calls", "" + gcCalls);
+		stats.put("slow_res", "" + slowResponseCount);
 
 		return stats;
 	}
-
-	
 
 	public CommandHandler() {
 		logger.log(Level.FINE, "PID: {0}", QuickCached.getPID());
 		logger.log(Level.FINE, "App Version: {0}", QuickCached.app_version);
 		logger.log(Level.FINE, "Memcached Version: {0}", QuickCached.version);
-		logger.log(Level.FINE, "Cache: {0}", cache);		
+		logger.log(Level.FINE, "Cache: {0}", cache);
 	}
-
 
 	//--ClientEventHandler
 	public void gotConnected(ClientHandler handler)
-			throws SocketTimeoutException, IOException {
+		throws SocketTimeoutException, IOException {
 		totalConnections++;
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection opened: {0}", 
+		if (QuickCached.DEBUG) {
+			logger.log(Level.FINE, "Connection opened: {0}",
 				handler.getHostAddress());
+		}
 	}
 
-	public void lostConnection(ClientHandler handler) 
-			throws IOException {
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection Lost: {0}", 
-				handler.getSocket().getInetAddress());
+	public void lostConnection(ClientHandler handler)
+		throws IOException {
+		if (QuickCached.DEBUG) {
+			logger.log(Level.FINE, "Connection Lost: {0}",
+				handler.getHostAddress());
+		}
 	}
-	public void closingConnection(ClientHandler handler) 
-			throws IOException {
-		if(QuickCached.DEBUG) logger.log(Level.FINE, "Connection closed: {0}", 
-				handler.getSocket().getInetAddress());
+
+	public void closingConnection(ClientHandler handler)
+		throws IOException {
+		if (QuickCached.DEBUG) {
+			logger.log(Level.FINE, "Connection closed: {0}",
+				handler.getHostAddress());
+		}
 	}
 	//--ClientEventHandler
 
-	
-
 	public void handleBinary(ClientHandler handler, byte command[])
-			throws SocketTimeoutException, IOException {
-		if(handler.getCommunicationLogging() || QuickCached.DEBUG) {
+		throws SocketTimeoutException, IOException {
+		if (handler.getCommunicationLogging() || QuickCached.DEBUG) {
 			logger.log(Level.FINE, "C: {0}", new String(command, HexUtil.getCharset()));
 			logger.log(Level.FINE, "H: {0}", HexUtil.encode(new String(command, HexUtil.getCharset())));
 		} else {
 			logger.log(Level.FINE, "C: {0} bytes", command.length);
 		}
-		
+
 
 		Data data = (Data) handler.getClientData();
 		data.addBytes(command);
@@ -164,88 +177,138 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		
 		try {
 
-			if(data.getDataRequiredLength()!=0) {//only used by text mode
+			if (data.getDataRequiredLength() != 0) {//only used by text mode
+				long start = 0;
 				try {
-					if(data.isAllDataIn()) {
+					if (data.isAllDataIn()) {
+						start = System.currentTimeMillis();
 						textCommandProcessor.processStorageCommands(handler);
 						return;
 					} else {
 						return;
 					}
-				} catch(IllegalArgumentException e) {
-					logger.log(Level.WARNING, "Error[iae]: "+e, e);
-					textCommandProcessor.sendResponse(handler, "CLIENT_ERROR "+e.getMessage()+"\r\n");
-				} catch(CacheException e) {
-					logger.log(Level.WARNING, "Error[ce]: "+e, e);
-					textCommandProcessor.sendResponse(handler, "SERVER_ERROR "+e.getMessage()+"\r\n");
+				} catch (IllegalArgumentException e) {
+					logger.log(Level.WARNING, "Error[iae]: " + e, e);
+					textCommandProcessor.sendResponse(handler, "CLIENT_ERROR " + e.getMessage() + "\r\n");
+				} catch (CacheException e) {
+					logger.log(Level.WARNING, "Error[ce]: " + e, e);
+					textCommandProcessor.sendResponse(handler, "SERVER_ERROR " + e.getMessage() + "\r\n");
+				} finally {
+					long end = System.currentTimeMillis();
+					long timeTaken = end - start;
+					if (timeTaken > slowResponseThreshold) {
+						slowResponseCount++;
+						if (QuickCached.DEBUG) {
+							logger.log(Level.WARNING, "Time Taken to process :{0}", timeTaken);
+						}
+					}
 				}
 			}
 
-			while(data.isMoreCommandToProcess()) {
-				if(data.isBinaryCommand()) {
-					if(QuickCached.DEBUG) logger.fine("BinaryCommand");
+			while (data.isMoreCommandToProcess()) {
+				if (data.isBinaryCommand()) {
+					if (QuickCached.DEBUG) {
+						logger.fine("BinaryCommand");
+					}
 					BinaryPacket bp = null;
+					long start = 0;
 					try {
+						start = System.currentTimeMillis();
 						bp = data.getBinaryCommandHeader();
 					} catch (Exception ex) {
-						logger.log(Level.SEVERE, "Error: "+ex, ex);
-						throw new IOException(""+ex);
+						logger.log(Level.SEVERE, "Error: " + ex, ex);
+						throw new IOException("" + ex);
+					} finally {
+						long end = System.currentTimeMillis();
+						long timeTaken = end - start;
+						if (timeTaken > slowResponseThreshold) {
+							slowResponseCount++;
+							if (QuickCached.DEBUG) {
+								logger.log(Level.WARNING, "Time Taken to process :{0}", timeTaken);
+							}
+						}
 					}
 
-					if(bp!=null) {
-						if(QuickCached.DEBUG) logger.fine("BinaryCommand Start");
+					if (bp != null) {
+						if (QuickCached.DEBUG) {
+							logger.fine("BinaryCommand Start");
+						}
+						start = 0;
 						try {
+							start = System.currentTimeMillis();
 							binaryCommandProcessor.handleBinaryCommand(handler, bp);
-						} catch(IllegalArgumentException e) {
-							logger.log(Level.WARNING, "Error[iae]: "+e, e);
-							
+						} catch (IllegalArgumentException e) {
+							logger.log(Level.WARNING, "Error[iae]: " + e, e);
+
 							ResponseHeader rh = new ResponseHeader();
 							rh.setMagic("81");
 							rh.setOpcode(bp.getHeader().getOpcode());
 							rh.setStatus(ResponseHeader.INVALID_ARGUMENTS);
-							
+
 							BinaryPacket binaryPacket = new BinaryPacket();
 							binaryPacket.setHeader(rh);
-							
+
 							binaryPacket.setValue(e.getMessage().getBytes("utf-8"));
-							
+
 							rh.setTotalBodyLength(rh.getKeyLength()
-									+ rh.getExtrasLength() + binaryPacket.getValue().length);
-							
+								+ rh.getExtrasLength() + binaryPacket.getValue().length);
+
 							binaryCommandProcessor.sendResponse(handler, binaryPacket);
-						} catch(CacheException e) {
-							logger.log(Level.WARNING, "Error[ce]: "+e, e);
-							
+						} catch (CacheException e) {
+							logger.log(Level.WARNING, "Error[ce]: " + e, e);
+
 							ResponseHeader rh = new ResponseHeader();
 							rh.setMagic("81");
 							rh.setOpcode(bp.getHeader().getOpcode());
 							rh.setStatus(ResponseHeader.INTERNAL_ERROR);
-							
+
 							BinaryPacket binaryPacket = new BinaryPacket();
 							binaryPacket.setHeader(rh);
-							
+
 							binaryPacket.setValue(e.toString().getBytes("utf-8"));
-							
+
 							rh.setTotalBodyLength(rh.getKeyLength()
-									+ rh.getExtrasLength() + binaryPacket.getValue().length);
-							
+								+ rh.getExtrasLength() + binaryPacket.getValue().length);
+
 							binaryCommandProcessor.sendResponse(handler, binaryPacket);
+						} finally {
+							long end = System.currentTimeMillis();
+							long timeTaken = end - start;
+							if (timeTaken > slowResponseThreshold) {
+								slowResponseCount++;
+								if (QuickCached.DEBUG) {
+									logger.log(Level.WARNING, "Time Taken to process :{0}", timeTaken);
+								}
+							}
 						}
-						if(QuickCached.DEBUG) logger.fine("BinaryCommand End");
+						if (QuickCached.DEBUG) {
+							logger.fine("BinaryCommand End");
+						}
 					} else {
 						break;
 					}
 				} else {
 					String cmd = data.getCommand();
-					if(cmd!=null) {
+					if (cmd != null) {
+						long start = 0;
 						try {
+							start = System.currentTimeMillis();
 							textCommandProcessor.handleTextCommand(handler, cmd);
-						} catch(IllegalArgumentException e) {
-							logger.log(Level.WARNING, "Error in text command [iae]: "+e, e);
-							textCommandProcessor.sendResponse(handler, "CLIENT_ERROR "+e.getMessage()+"\r\n");
-						} catch(CacheException e) {
-							logger.log(Level.WARNING, "Error in text command [ce]: "+e, e);
-							textCommandProcessor.sendResponse(handler, "SERVER_ERROR "+e.getMessage()+"\r\n");
+						} catch (IllegalArgumentException e) {
+							logger.log(Level.WARNING, "Error in text command [iae]: " + e, e);
+							textCommandProcessor.sendResponse(handler, "CLIENT_ERROR " + e.getMessage() + "\r\n");
+						} catch (CacheException e) {
+							logger.log(Level.WARNING, "Error in text command [ce]: " + e, e);
+							textCommandProcessor.sendResponse(handler, "SERVER_ERROR " + e.getMessage() + "\r\n");
+						} finally {
+							long end = System.currentTimeMillis();
+							long timeTaken = end - start;
+							if (timeTaken > slowResponseThreshold) {
+								slowResponseCount++;
+								if (QuickCached.DEBUG) {
+									logger.log(Level.WARNING, "Time Taken to process :{0}", timeTaken);
+								}
+							}
 						}
 					} else {
 						break;
@@ -257,7 +320,6 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 			handler.resetTotalWrittenBytes();
 		}
 	}
-
 	private static boolean lowMemoryActionInit;
 	private static MemoryWarningSystem mws = new MemoryWarningSystem();
 
@@ -265,16 +327,18 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		logger.fine("in init");
 		String implClass = (String) config.get("CACHE_IMPL_CLASS");
 		logger.log(Level.FINE, "implClass: {0}", implClass);
-		if(implClass==null) throw new NullPointerException("Cache impl class not specified!");
+		if (implClass == null) {
+			throw new NullPointerException("Cache impl class not specified!");
+		}
 		try {
 			cache = (CacheInterface) Class.forName(implClass).newInstance();
 		} catch (Exception ex) {
 			Logger.getLogger(CommandHandler.class.getName()).log(Level.SEVERE, null, ex);
 			System.exit(-1);
 		}
-		
+
 		String computeAvgForSetCmdStr = (String) config.get("COMPUTE_AVG_FOR_SET_CMD");
-		if("true".equals(computeAvgForSetCmdStr)) {
+		if ("true".equals(computeAvgForSetCmdStr)) {
 			computeAvgForSetCmd = true;
 		}
 
@@ -285,35 +349,36 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 		binaryCommandProcessor.setCache(cache);
 
 		String flushPercent = (String) config.get("FLUSH_ON_LOW_MEMORY_PERCENT");
-		if(flushPercent!=null && flushPercent.trim().equals("")==false) {
+		if (flushPercent != null && flushPercent.trim().equals("") == false) {
 			final double fpercent = Double.parseDouble(flushPercent);
 			MemoryWarningSystem.setPercentageUsageThreshold(fpercent);//.95=95%
 			logger.log(Level.INFO, "MemoryWarningSystem set to {0}; will flush if reached!", fpercent);
 
-			if(lowMemoryActionInit==false) {
+			if (lowMemoryActionInit == false) {
 				lowMemoryActionInit = true;
 				mws.addListener(new MemoryWarningSystem.Listener() {
+
 					public void memoryUsageHigh(long usedMemory, long maxMemory) {
 						logger.log(Level.INFO,
-								"Memory usage high!: UsedMemory: {0};maxMemory:{1}",
-								new Object[]{usedMemory, maxMemory});
-						double percentageUsed = (((double) usedMemory) / maxMemory)*100;
+							"Memory usage high!: UsedMemory: {0};maxMemory:{1}",
+							new Object[]{usedMemory, maxMemory});
+						double percentageUsed = (((double) usedMemory) / maxMemory) * 100;
 						logger.log(Level.SEVERE,
-								"Memory usage high! Percentage of memory used: {0}",
-								percentageUsed);
-						
+							"Memory usage high! Percentage of memory used: {0}",
+							percentageUsed);
+
 						long memLimit = (long) (fpercent * 100);
 						logger.warning("Calling GC to clear memory");
 						System.gc();
 						gcCalls++;
 						long memPercentAfterGC = MemoryWarningSystem.getMemUsedPercentage();
 						logger.log(Level.WARNING, "After GC mem percent used: {0}", memPercentAfterGC);
-						if(memPercentAfterGC<0 || memPercentAfterGC > memLimit) {						
+						if (memPercentAfterGC < 0 || memPercentAfterGC > memLimit) {
 							logger.warning("Flushing cache to save JVM.");
 							try {
 								cache.flush();
 							} catch (CacheException ex) {
-								logger.log(Level.SEVERE, "Error: "+ex, ex);
+								logger.log(Level.SEVERE, "Error: " + ex, ex);
 							}
 							System.gc();
 							gcCalls++;
@@ -327,13 +392,14 @@ public class CommandHandler implements ClientBinaryHandler, ClientEventHandler {
 			mws.removeAllListener();
 			lowMemoryActionInit = false;
 		}
-		
+
 		String saveCacheToDiskBwRestarts = (String) 
 			config.get("SAVE_CACHE_TO_DISK_IF_SUPPORTED_BW_RESTARTS");
-		if(saveCacheToDiskBwRestarts!=null && saveCacheToDiskBwRestarts.equals("true")) {
+		if (saveCacheToDiskBwRestarts != null && saveCacheToDiskBwRestarts.equals("true")) {
 			Runtime.getRuntime().addShutdownHook(new Thread() {
-				public void run() {				
-					cache.saveToDisk();				
+
+				public void run() {
+					cache.saveToDisk();
 				}
 			});
 			cache.readFromDisk();

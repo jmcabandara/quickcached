@@ -40,6 +40,13 @@ public class PrepareHook implements ServerHook {
 				String enableStatsReportStr = (String) config.get("ENABLE_STATS_REPORT");
 				boolean enableStatsReport = false;
 
+				String slowResponseThreshold = (String) config.get("SLOW_RESPONSE_LIMIT_MS_STATS");
+				if(slowResponseThreshold!=null) {
+					CommandHandler.setSlowResponseThreshold(Long.parseLong(slowResponseThreshold));
+				} else {
+					CommandHandler.setSlowResponseThreshold(500);
+				}
+				
 				if("true".equals(enableStatsReportStr)) {
 					enableStatsReport = true;
 				}
