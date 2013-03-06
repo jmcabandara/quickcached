@@ -1,6 +1,7 @@
 package org.quickcached.client;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +48,9 @@ public abstract class MemcachedClient {
 		MemcachedClient client = (MemcachedClient) Class.forName(fullClassName).newInstance();
 		
 		String binaryConnection = System.getProperty("org.quickcached.client.binaryConnection");
-		if(binaryConnection==null || binaryConnection.equalsIgnoreCase("true")) {
+		if(binaryConnection==null) {
+			client.setUseBinaryConnection(false);
+		} else if(binaryConnection.equalsIgnoreCase("true")) {
 			client.setUseBinaryConnection(true);
 		} else {
 			client.setUseBinaryConnection(false);
@@ -75,8 +78,19 @@ public abstract class MemcachedClient {
 	public abstract void removeServer(String list);
 	
 	public abstract void set(String key, int ttlSec, Object value, long timeoutMiliSec) 
-			throws TimeoutException;
-	public abstract Object get(String key, long timeoutMiliSec) throws TimeoutException;
+			throws TimeoutException;       
+	public abstract Object get(String key, long timeoutMiliSec) throws MemcachedException, TimeoutException;
+	
+	public abstract CASValue gets(String key, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	
+	public abstract CASResponse cas(String key, Object value, int ttlSec, long cas, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+        
+	public abstract <T> java.util.Map<java.lang.String,T> getBulk(Collection<String> keyCollection, 
+		long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+        
 	public abstract boolean delete(String key, long timeoutMiliSec) throws TimeoutException;
 	public abstract void flushAll() throws TimeoutException;
 	
@@ -94,11 +108,24 @@ public abstract class MemcachedClient {
 			throws TimeoutException;
 	public abstract boolean prepend(String key, Object value, long timeoutMiliSec) 
 			throws TimeoutException;
-	
-	public abstract void increment(String key, int value, long timeoutMiliSec) 
-			throws TimeoutException;
-	public abstract void decrement(String key, int value, long timeoutMiliSec) 
-			throws TimeoutException;
+
+	public abstract long increment(String key, int delta, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract long increment(String key, int delta, long defaultValue, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract long increment(String key, int delta, long defaultValue, int ttlSec, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract void incrementWithNoReply(String key, int delta)
+			throws MemcachedException;
+        
+	public abstract long decrement(String key, int delta, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract long decrement(String key, int delta, long defaultValue, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract long decrement(String key, int delta, long defaultValue, int ttlSec, long timeoutMiliSec) 
+			throws TimeoutException, MemcachedException;
+	public abstract void decrementWithNoReply(String key, int delta)
+			throws MemcachedException;
 	
 	public abstract Map getVersions() throws TimeoutException;	
 	
@@ -106,9 +133,24 @@ public abstract class MemcachedClient {
 			throws TimeoutException {
 		set(key, ttlSec, value, defaultTimeoutMiliSec);
 	}
-	public Object get(String key) throws TimeoutException {
+	public Object get(String key) throws MemcachedException, TimeoutException {
 		return get(key, defaultTimeoutMiliSec);
 	}
+
+	public CASValue gets(String key) throws TimeoutException, MemcachedException {
+		return gets(key, defaultTimeoutMiliSec);
+	}
+
+	public CASResponse cas(String key, Object value, int ttlSec, long cas) 
+			throws TimeoutException, MemcachedException {
+		return cas(key, value, ttlSec, cas, defaultTimeoutMiliSec);
+	}
+
+	public Map getBulk(Collection<String> keyCollections) 
+			throws TimeoutException, org.quickcached.client.MemcachedException {
+		return getBulk(keyCollections, defaultTimeoutMiliSec);
+	}        
+
 	public boolean delete(String key) throws TimeoutException {
 		return delete(key, defaultTimeoutMiliSec);
 	}
@@ -128,14 +170,33 @@ public abstract class MemcachedClient {
 			throws TimeoutException {
 		return prepend(key, value, defaultTimeoutMiliSec);
 	}
-	
-	public void increment(String key, int value) throws TimeoutException {
-		increment(key, value, defaultTimeoutMiliSec);
-	}
-	public void decrement(String key, int value) throws TimeoutException {
-		decrement(key, value, defaultTimeoutMiliSec);
-	}
-	
+        
+    public long increment(String key, int delta, int defaultValue) 
+			throws TimeoutException, MemcachedException{
+		return increment(key, delta, defaultValue, defaultTimeoutMiliSec);
+    }
+    public long increment(String key, int delta) 
+			throws TimeoutException, MemcachedException{
+		return increment(key, delta, defaultTimeoutMiliSec);
+    }	
+    public long increment(String key, int delta, int defaultValue, int ttlSec) 
+			throws TimeoutException, MemcachedException{
+		return increment(key, delta, defaultValue, ttlSec, defaultTimeoutMiliSec);
+    }
+    
+	public long decrement(String key, int delta, int defaultValue) 
+			throws TimeoutException, MemcachedException{
+		return decrement(key, delta, defaultValue, defaultTimeoutMiliSec);
+    }
+    public long decrement(String key, int delta) 
+			throws TimeoutException, MemcachedException{
+		return decrement(key, delta, defaultTimeoutMiliSec);
+    }	
+    public long decrement(String key, int delta, int defaultValue, int ttlSec) 
+			throws TimeoutException, MemcachedException{
+		return decrement(key, delta, defaultValue, ttlSec, defaultTimeoutMiliSec);
+    }
+
 	public boolean touch(String key, int ttlSec) throws TimeoutException {
 		return touch(key, ttlSec, defaultTimeoutMiliSec);
 	}
