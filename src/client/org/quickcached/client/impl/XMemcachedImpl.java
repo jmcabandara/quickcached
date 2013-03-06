@@ -1,6 +1,7 @@
 package org.quickcached.client.impl;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.rubyeye.xmemcached.MemcachedClientBuilder;
@@ -11,6 +12,9 @@ import net.rubyeye.xmemcached.utils.AddrUtil;
 import org.quickcached.client.MemcachedClient;
 import org.quickcached.client.TimeoutException;
 import java.util.Map;
+import net.rubyeye.xmemcached.GetsResponse;
+import org.quickcached.client.CASResponse;
+import org.quickcached.client.CASValue;
 
 /**
  *
@@ -20,7 +24,7 @@ public class XMemcachedImpl extends MemcachedClient {
 	private net.rubyeye.xmemcached.MemcachedClient c = null;
 	private String hostList;
 	private boolean binaryConnection = true;
-	private int poolSize = 5;
+	private int poolSize = 10;
 
 	public void setUseBinaryConnection(boolean flag) {
 		binaryConnection = flag;
@@ -157,6 +161,38 @@ public class XMemcachedImpl extends MemcachedClient {
 		return flag;
 	}
 	
+	public CASResponse cas(String key, Object value, int ttlSec, long cas, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException{
+		try {
+			if(c.cas(key, ttlSec, value, timeoutMiliSec, cas)) return CASResponse.OK;
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ie) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException " + ie);
+		} catch (MemcachedException me) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException " + me);
+		}
+		return CASResponse.ERROR;
+	}
+	
+	public org.quickcached.client.CASValue gets(String key, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException{
+		org.quickcached.client.CASValue value = null;
+		try {
+			GetsResponse<Object> result = c.gets(key, timeoutMiliSec);
+			if(result != null){
+				value = new CASValue(result.getCas(), result.getValue());
+			}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+		}
+		return value;
+	}
+
 	public Object gat(String key, int ttlSec, long timeoutMiliSec) throws TimeoutException {
 		Object readObject = null;
 		try {
@@ -186,9 +222,25 @@ public class XMemcachedImpl extends MemcachedClient {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
 					"MemcachedException", ex);
 		}
+		
 		return readObject;
 	}
 
+    public <T> java.util.Map<java.lang.String,T> getBulk(Collection<String> keyCollection, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException{
+		Map<java.lang.String,T> objectList = null;
+		try {
+			objectList = c.get(keyCollection, timeoutMiliSec);			
+		} catch(java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch(InterruptedException ex) {
+			throw new TimeoutException("InterruptedException "+ex);
+		} catch(MemcachedException ex) {
+			throw new TimeoutException("MemcachedException "+ex);
+		}
+		return objectList;
+	}
+                
 	public boolean delete(String key, long timeoutMiliSec) throws TimeoutException {
 		try {
 			return c.delete(key, timeoutMiliSec);
@@ -224,10 +276,56 @@ public class XMemcachedImpl extends MemcachedClient {
 		return c.getStats();
 	}
 	
-	public void increment(String key, int value, long timeoutMiliSec) 
-			throws TimeoutException {
+	/**
+	 * Increments the object count, this method doesn't accept default value
+	 * "increment" are used to change data for some item in-place, incrementing it. The data for the item is 
+	 * treated as decimal representation of a 64-bit unsigned integer. If the current data value does not
+	 * conform to such a representation, the commands behave as if the value were 0. Also, the item must
+	 * already exist for "increment" to work; these commands won't pretend that a non-existent key exists with 
+	 * value 0; 
+	 * 
+	 * 
+	 * @param key  
+	 * @param value Increment by this value(delta) 
+	 * @param timeoutMiliSec  
+	 * @return new count value of the object
+	 */ 
+	public long increment(String key, int delta, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException{
+		long newval = -1;        
 		try {
-			long newval = c.incr(key, value);
+			newval = c.incr(key, delta);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+			}
+			return newval;
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"InterruptedException:", ex);
+			throw new TimeoutException("InterruptedException:"+ ex);
+		} catch (MemcachedException ex) {
+			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
+					"MemcachedException", ex);
+			throw new TimeoutException("MemcachedException:"+ ex);
+		}	
+	}
+	
+	/**
+	 * Increments the object count
+	 *
+	 * @param key  
+	 * @param value  Increment by this value(delta) 
+	 * @param defaultValue  this value is set if the object doesn't exists
+	 * @param timeoutMiliSec  
+	 * @return new count value of the object
+	 */
+	public long increment(String key, int delta, long defaultValue, long timeoutMiliSec) 
+		throws TimeoutException, org.quickcached.client.MemcachedException {
+		long newval = -1;        
+		try {
+			newval = c.incr(key, delta);
 			if(newval==-1) {
 				throw new TimeoutException("Timeout ");
 			}
@@ -236,16 +334,30 @@ public class XMemcachedImpl extends MemcachedClient {
 		} catch (InterruptedException ex) {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
 					"InterruptedException:", ex);
+			throw new TimeoutException("InterruptedException:"+ ex);
 		} catch (MemcachedException ex) {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
 					"MemcachedException", ex);
-		}	
+			throw new TimeoutException("MemcachedException:"+ ex);
+		}
+		return newval;
 	}
 	
-	public void decrement(String key, int value, long timeoutMiliSec) 
-			throws TimeoutException {
+	/**
+	 * Increments the object count
+	 *
+	 * @param key  
+	 * @param value  
+	 * @param defaultValue  this value is set if the object doesn't exists 
+	 * @param ttlSec Time to leave in sec 
+	 * @param timeoutMiliSec 
+	 * @return new count value of the object
+	 */
+	public long increment(String key, int delta, long defaultValue, int ttlSec, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException {
+		long newval = -1;
 		try {
-			long newval = c.decr(key, value);
+			newval = c.incr(key, delta);
 			if(newval==-1) {
 				throw new TimeoutException("Timeout ");
 			}
@@ -258,8 +370,96 @@ public class XMemcachedImpl extends MemcachedClient {
 			Logger.getLogger(XMemcachedImpl.class.getName()).log(Level.SEVERE, 
 					"MemcachedException", ex);
 		}
+		return newval;
 	}
-	
+
+	/**
+	 * Increments the object count, doesn't return the current count value.
+	 * The item must already exist for "increment" to work; these commands won't pretend 
+	 * that a non-existent key exists with value 0; 
+	 * 
+	 * Object is not created if object doesn't exists. 
+	 * 
+	 * @param key  
+	 * @param value  - Delta value to increment the object count.
+	 * 
+	 */
+	public void incrementWithNoReply(String key, int delta) 
+			throws org.quickcached.client.MemcachedException{      
+		try {
+			c.incrWithNoReply(key, delta);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+	}
+	}
+
+	public long decrement(String key, int delta, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException{
+		long newval = -1;   
+		try {
+			newval = c.decr(key, delta, timeoutMiliSec);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+	}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+		}
+		return newval;
+	}
+
+	public long decrement(String key, int delta, long defaultValue, long timeoutMiliSec) 
+		throws TimeoutException, org.quickcached.client.MemcachedException {
+		long newval = -1;   
+		try {
+			newval = c.decr(key, delta, defaultValue, timeoutMiliSec);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+			}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+		}
+		return newval;		
+	}
+
+	public long decrement(String key, int delta, long defaultValue, int ttlSec, long timeoutMiliSec) 
+			throws TimeoutException, org.quickcached.client.MemcachedException {
+		long newval = -1;   
+		try {
+			newval = c.decr(key, delta, defaultValue, timeoutMiliSec, ttlSec);
+			if(newval==-1) {
+				throw new TimeoutException("Timeout ");
+			}
+		} catch (java.util.concurrent.TimeoutException ex) {
+			throw new TimeoutException("Timeout "+ex);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+		}
+		return newval;
+	}
+
+	public void decrementWithNoReply(String key, int delta) 
+			throws org.quickcached.client.MemcachedException{      
+		try {
+			c.decrWithNoReply(key, delta);
+		} catch (InterruptedException ex) {
+			throw new org.quickcached.client.MemcachedException("InterruptedException "+ex);
+		} catch (MemcachedException ex) {
+			throw new org.quickcached.client.MemcachedException("MemcachedException "+ex);
+		}		
+	}
+
 	public Map getVersions() throws TimeoutException {
 		try {
 			return c.getVersions();
