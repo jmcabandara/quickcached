@@ -85,6 +85,7 @@ public class BinaryProtocolTest extends ProtocolTest {
 		}
 	}
 	
+	/*
 	public void testGat() throws TimeoutException {		
 		String readObject = null;
 		String key = null;
@@ -106,5 +107,5 @@ public class BinaryProtocolTest extends ProtocolTest {
 
 		assertNotNull(readObjectDate);
 		assertEquals(datevalue.getTime(),  readObjectDate.getTime());
-	}
+	}*/
 }

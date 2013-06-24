@@ -20,7 +20,7 @@ public class AllJUnitTests extends TestCase {
 
 		//suite.addTest(new TestSuite(BasicTest.class));
         suite.addTest(new TestSuite(TextProtocolTest.class));
-		//suite.addTest(new TestSuite(BinaryProtocolTest.class));
+		suite.addTest(new TestSuite(BinaryProtocolTest.class));
 		//suite.addTest(new TestSuite(UDPTest.class));
         return suite;
    }
