@@ -20,7 +20,7 @@ import org.quickcached.client.*;
  */
 public class ProtocolTest extends TestCase  {
 	protected MemcachedClient c = null;
-	public static String server = "127.0.0.1:11211"//"192.168.1.2:11211 192.168.1.2:11212";
+	public static String server = "127.0.0.1:11211"; //"192.168.1.2:11211 192.168.1.2:11212";
 
 	public ProtocolTest(String name) {
         super(name);
