@@ -133,7 +133,7 @@ public class LoadTest {
 				//c.setUseBinaryConnection(useBinaryConnection);
 				c.setAddresses(hostList);
 				c.setDefaultTimeoutMiliSec(3000);//3 sec
-				c.setConnectionPoolSize(30);
+				c.setConnectionPoolSize(40);
 				c.init();
 				
 				Thread.sleep(4000);
