@@ -214,7 +214,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			}catch(java.util.concurrent.TimeoutException te){
 				throw new TimeoutException("Timeout "+ te);
 			}finally{
-				f.cancel(false);
+				f.cancel();
 			}
 		}catch(IllegalStateException ise){
 			throw new org.quickcached.client.MemcachedException("IllegalStateException "+ ise);
@@ -240,7 +240,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 		try {
 			casv = f.get(timeoutMiliSec, TimeUnit.MILLISECONDS);
 		} catch(Exception e) {
-			f.cancel(false);
+			f.cancel();
 			throw new TimeoutException("Timeout "+e);
 		}		
 		return casv.getValue();
@@ -299,7 +299,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			}catch(java.util.concurrent.TimeoutException te){
 				throw new TimeoutException("Timeout "+ te);
 			}finally{
-				f.cancel(false);
+				f.cancel();
 			}
 		}catch(IllegalStateException ise){
 			throw new org.quickcached.client.MemcachedException("IllegalStateException "+ ise);
@@ -372,7 +372,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			}catch(ExecutionException ee){
 				throw new org.quickcached.client.MemcachedException("ExecutionException "+ ee);
 			}finally{
-				f.cancel(false);
+				f.cancel();
 			}
 		}catch(IllegalStateException ise){
 			throw new org.quickcached.client.MemcachedException("IllegalStateException "+ ise);
@@ -394,7 +394,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			}catch(java.util.concurrent.TimeoutException te){
 				throw new TimeoutException("Timeout "+ te);
 			}finally{
-				f.cancel(false);
+				f.cancel();
 			}
 		}catch(IllegalStateException ise){
 			throw new org.quickcached.client.MemcachedException("IllegalStateException "+ ise);
@@ -440,7 +440,7 @@ public class SpyMemcachedImpl extends MemcachedClient {
 			}catch(ExecutionException ee){
 				throw new org.quickcached.client.MemcachedException("ExecutionException "+ ee);
 			}finally{
-				f.cancel(false);
+				f.cancel();
 			}
 		}catch(IllegalStateException ise){
 			throw new org.quickcached.client.MemcachedException("IllegalStateException "+ ise);

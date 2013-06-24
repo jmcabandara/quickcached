@@ -14,7 +14,7 @@ public class AllJUnitTests extends TestCase {
     public AllJUnitTests(String name) {
         super(name);
     }
-
+	
     public static Test suite() {
         TestSuite suite = new TestSuite(SkeletonTest.class);
 
