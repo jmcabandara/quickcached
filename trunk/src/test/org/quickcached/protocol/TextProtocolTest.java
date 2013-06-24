@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import java.util.logging.*;
 import org.quickcached.client.MemcachedClient;
+import org.quickcached.client.TimeoutException;
 
 
 /**
@@ -19,7 +20,7 @@ public class TextProtocolTest extends ProtocolTest {
 		try {
 			c = MemcachedClient.getInstance();
 			c.setUseBinaryConnection(false);
-			c.setAddresses("localhost:11211");
+			c.setAddresses(ProtocolTest.server);
 			c.setDefaultTimeoutMiliSec(3000);//3 sec
 			c.setConnectionPoolSize(1);
 			c.init();
@@ -37,8 +38,8 @@ public class TextProtocolTest extends ProtocolTest {
 			}
 		}
 	}
-
-    public static void main(String args[]) {
+	
+	public static void main(String args[]) {
         junit.textui.TestRunner.run(TextProtocolTest.class);
     }
 	

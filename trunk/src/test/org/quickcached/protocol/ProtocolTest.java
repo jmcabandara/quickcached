@@ -1,15 +1,17 @@
 package org.quickcached.protocol;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import junit.framework.TestCase;
 
-import net.rubyeye.xmemcached.exception.MemcachedException;
 import org.quickcached.client.*;
 
 /**
@@ -18,14 +20,16 @@ import org.quickcached.client.*;
  */
 public class ProtocolTest extends TestCase  {
 	protected MemcachedClient c = null;
+	public static String server = "127.0.0.1:11211"//"192.168.1.2:11211 192.168.1.2:11212";
 
 	public ProtocolTest(String name) {
         super(name);
     }
-
-	public void testGet() throws TimeoutException {
+	
+	public void testGet() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
+		
 		//1 - String
 		key = "testget1";
 		c.set(key, 3600, "World");
@@ -33,10 +37,11 @@ public class ProtocolTest extends TestCase  {
 		
 		assertNotNull(readObject);
 		assertEquals("World",  readObject);
-    
-		//2 - native obj
+        
+        
+		//3 - native obj
         Date value = new Date();
-		key = "testget2";
+		key = "testget3";
 		c.set(key, 3600, value);
 		Date readObjectDate = (Date) c.get(key);
 
@@ -45,18 +50,18 @@ public class ProtocolTest extends TestCase  {
 		
 		//3 - custom obj
         TestObject testObject = new TestObject();
-		testObject.setName(key);
-		key = "testget3";
+		key = "testget4";
+		testObject.setName("TestName");
 		c.set(key, 3600, testObject);
 		TestObject readTestObject = (TestObject) c.get(key);
-
-		assertNotNull(readTestObject);
-		assertEquals(testObject.getName(),  readTestObject.getName());
 		
-	
+		assertNotNull(readTestObject);
+		assertEquals("TestName",  readTestObject.getName());
+		
 		//4 - no reply
 		Object client = c.getBaseClient();
-		key = "testget4";
+		key = "testget5";
+        
 		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
 			net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
 			
@@ -64,7 +69,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.setWithNoReply(key, 3600, "World");			
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -73,16 +78,84 @@ public class ProtocolTest extends TestCase  {
 			assertEquals("World",  readObject);
 		} else if (client instanceof net.spy.memcached.MemcachedClient) {
 			net.spy.memcached.MemcachedClient smc = (net.spy.memcached.MemcachedClient) client;
-			
 			//does not support noreply
+		}		
+	}
+	
+	public void testGets() throws TimeoutException, MemcachedException {
+		String readObject = null;
+		String key = "testGetCAS";
+		String value = "Value";
+		
+		long casVal = 1; //default cas value is 1, and increments on each set
+		
+		c.set(key, 3600, value);
+		CASValue casResult = c.gets(key, 1000);
+		
+		assertNotNull(casResult);
+		assertEquals(casResult.getValue(), value);
+		assertEquals(casResult.getCas(), casVal);
+		
+		casVal++;
+		value = "Value2";
+		
+		c.set(key, 3600, value);
+		CASValue casResult2 = c.gets(key, 1000);
+		
+		assertNotNull(casResult2);
+		assertEquals(casResult2.getValue(), value);
+		assertEquals(casResult2.getCas(), casVal);
+	}
+	
+	public void testCAS() throws TimeoutException, MemcachedException {
+		String key = "testcas1";		
+		
+		Object client = c.getBaseClient();
+		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
+			//ERROR
+			CASResponse testRslt1 = c.cas(key, "value", 3000, 1);
+			assertNotNull(testRslt1);
+			assertEquals(CASResponse.ERROR,  testRslt1);
+
+			String result = (String)c.get(key);
+			assertNull(result);
+		} else if (client instanceof org.quickcached.client.impl.QuickCachedClientImpl) {			
+			//NOT_FOUND
+			CASResponse testRslt1 = c.cas(key, "value", 3000, 1);
+			assertNotNull(testRslt1);
+			assertEquals(CASResponse.NOT_FOUND,  testRslt1);
+
+			String result = (String)c.get(key);
+			assertNull(result);
 		}
 		
+		c.set(key, 3000, "value");
+		//Default value of cas is 1
+		CASResponse testRslt2 = c.cas(key, "value2", 3000, 1);
+		assertNotNull(testRslt2);
+		assertEquals(CASResponse.OK,  testRslt2);
+		
+		//Increment the cas, it should match the current cas, so saving current CAS
+		CASResponse testRslt3 = c.cas(key, "value2", 3000, 2);
+		assertNotNull(testRslt3);
+		assertEquals(CASResponse.OK,  testRslt3);
+		
+		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
+			//Increment the cas, passing wrong CAS value, expecting rslt as "ERROR"
+			CASResponse testRslt4 = c.cas(key, "value3", 3000, 6);
+			assertNotNull(testRslt4);
+			assertEquals(CASResponse.ERROR,  testRslt4);
+		} else if (client instanceof org.quickcached.client.impl.QuickCachedClientImpl) {			
+			//Increment the cas, passing wrong CAS value, expecting rslt as "EXISTS"
+			CASResponse testRslt4 = c.cas(key, "value3", 3000, 6);
+			assertNotNull(testRslt4);
+			assertEquals(CASResponse.EXISTS,  testRslt4);
+		}
 	}
-
-	public void testAppend() throws TimeoutException {
+	
+	public void testAppend() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
-		String value = null;
 		
 		//1
 		key = "testapp1";
@@ -103,7 +176,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.appendWithNoReply(key,"XYZ");				
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -115,7 +188,7 @@ public class ProtocolTest extends TestCase  {
 		}		
 	}
 
-	public void testPrepend() throws TimeoutException {
+	public void testPrepend() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -139,7 +212,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.prependWithNoReply(key,"XYZ");				
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -151,7 +224,7 @@ public class ProtocolTest extends TestCase  {
 		}
 	}
 
-	public void testAdd() throws TimeoutException {
+	public void testAdd() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -187,7 +260,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.addWithNoReply(key, 3600, value);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -208,7 +281,7 @@ public class ProtocolTest extends TestCase  {
 		
 	}
 
-	public void testReplace() throws TimeoutException {
+	public void testReplace() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -245,7 +318,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.replaceWithNoReply(key, 3600, value);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -263,7 +336,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.replaceWithNoReply(key, 3600, "XYZ");
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -275,18 +348,20 @@ public class ProtocolTest extends TestCase  {
 		}			
 	}
 
-	public void testIncrement() throws TimeoutException {
+	public void testIncrement() throws TimeoutException, org.quickcached.client.MemcachedException {
 		String readObject = null;
 		String key = null;
+		String randomKey = null;
 		String value = null;
+		Long currentValue = null;
+		Long defaultValue = 410L;
+	
+		key = "testinc3";
+        value = "10";				
 		
-		//1
-		key = "testinc1";
-        value = "10";		
-
 		c.set(key, 3600, value);
 		c.increment(key, 10);
-
+		
 		readObject = (String) c.get(key);
 		assertNotNull(readObject);
 		assertEquals("20", readObject);
@@ -298,25 +373,26 @@ public class ProtocolTest extends TestCase  {
 		
 		//2
 		Object client = c.getBaseClient();
-		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
+		if(client instanceof net.rubyeye.xmemcached.MemcachedClient){
 			net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
 			try {
 				xmc.incrWithNoReply(key, 4);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
 			readObject = (String) c.get(key);
 			assertNotNull(readObject);
 			assertEquals("25", readObject);
-		} else if (client instanceof net.spy.memcached.MemcachedClient) {			
+		}else if (client instanceof net.spy.memcached.MemcachedClient){
 			//does not support noreply
-		}		
+		}
+		
 	}
 
-	public void testDecrement() throws TimeoutException {
+	public void testDecrement() throws TimeoutException, org.quickcached.client.MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -343,9 +419,9 @@ public class ProtocolTest extends TestCase  {
 			net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
 			try {
 				xmc.decrWithNoReply(key, 4);
-			} catch (InterruptedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -354,11 +430,10 @@ public class ProtocolTest extends TestCase  {
 			assertEquals("10", readObject);
 		} else if (client instanceof net.spy.memcached.MemcachedClient) {			
 			//does not support noreply
-		}
-		
+		}		
 	}
 
-	public void testDelete() throws TimeoutException {
+	public void testDelete() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -389,7 +464,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.deleteWithNoReply(key);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -426,8 +501,27 @@ public class ProtocolTest extends TestCase  {
 			//System.out.println("Stat for "+key+" " +stats.get(key));
 		}
 	}
+	
+	public void testTouch() throws TimeoutException {
+		Object client = c.getBaseClient();
+		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
+			//Not supported touch in text protocol
+		} else if (client instanceof org.quickcached.client.impl.QuickCachedClientImpl) {			
+			String key = null;
+			String value = null;
 
-	public void testFlush() throws TimeoutException {
+			//1
+			value = "ABCD";
+			key = "testtouch";
+
+			c.set(key, 3600, "World");
+
+			boolean flag = c.touch(key, 3600);
+			assertTrue(flag);
+		}
+	}
+
+	public void testFlush() throws TimeoutException, MemcachedException {
 		String readObject = null;
 		String key = null;
 		String value = null;
@@ -459,7 +553,7 @@ public class ProtocolTest extends TestCase  {
 				xmc.flushAllWithNoReply();
 			} catch (InterruptedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
+			} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
 				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
 			}
 			
@@ -472,65 +566,71 @@ public class ProtocolTest extends TestCase  {
 	}
 	
 	public void testDoubleSet1() throws TimeoutException {
-		String readObject = null;
-		String key = null;
-		String value = null;
-		
-		//1
-		key = "testdset1";
-        value = "v1";
-		c.set(key, 3600, value);
-		readObject = (String) c.get(key);
+		try {
+			String readObject = null;
+			String key = null;
+			String value = null;
 
-		assertNotNull(readObject);
-		assertEquals("v1",  readObject);
-		
-		value = "v2";
-		c.set(key, 3600, value);
-		readObject = (String) c.get(key);
+			//1
+			key = "testdset1";
+			value = "v1";
+			c.set(key, 3600, value);
+			readObject = (String) c.get(key);
 
-		assertNotNull(readObject);
-		assertEquals("v2",  readObject);
+			assertNotNull(readObject);
+			assertEquals("v1",  readObject);
 
-		//2
-		key = "testdset2";
-        Map valuemap = new HashMap();
-		valuemap.put("key1", "v1");
-		
-		c.set(key, 3600, valuemap);
-		Map readObjectMap = (Map) c.get(key);
+			value = "v2";
+			c.set(key, 3600, value);
+			readObject = (String) c.get(key);
 
-		assertNotNull(readObjectMap);
-		assertEquals(valuemap,  readObjectMap);
-		
-		valuemap.put("key2", "v2");
-		c.set(key, 3600, valuemap);
-		readObjectMap = (Map) c.get(key);
+			assertNotNull(readObject);
+			assertEquals("v2",  readObject);
 
-		assertNotNull(readObjectMap);
-		assertEquals(valuemap,  readObjectMap);
-		
-		//3
-		valuemap.put("key2", "v3");
-		Object client = c.getBaseClient();
-		if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
-			net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
-			try {
-				xmc.setWithNoReply(key, 3600, valuemap);
-			} catch (InterruptedException ex) {
-				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (MemcachedException ex) {
-				Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
-			}
-			
+			//2
+			key = "testdset2";
+			Map valuemap = new HashMap();
+			valuemap.put("key1", "v1");
+
+			c.set(key, 3600, valuemap);
+			Map readObjectMap = (Map) c.get(key);
+
+			assertNotNull(readObjectMap);
+			assertEquals(valuemap,  readObjectMap);
+
+			valuemap.put("key2", "v2");
+			c.set(key, 3600, valuemap);
 			readObjectMap = (Map) c.get(key);
 
 			assertNotNull(readObjectMap);
 			assertEquals(valuemap,  readObjectMap);
-		} else if (client instanceof net.spy.memcached.MemcachedClient) {			
-			//does not support noreply
+
+			//3
+			valuemap.put("key2", "v3");
+			Object client = c.getBaseClient();
+			if(client instanceof net.rubyeye.xmemcached.MemcachedClient) {
+				net.rubyeye.xmemcached.MemcachedClient xmc = (net.rubyeye.xmemcached.MemcachedClient) client;
+				try {
+					xmc.setWithNoReply(key, 3600, valuemap);
+				} catch (InterruptedException ex) {
+					Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
+				} catch (net.rubyeye.xmemcached.exception.MemcachedException ex) {
+					Logger.getLogger(ProtocolTest.class.getName()).log(Level.SEVERE, null, ex);
+				}
+
+				readObjectMap = (Map) c.get(key);
+
+				assertNotNull(readObjectMap);
+				assertEquals(valuemap,  readObjectMap);
+			} else if (client instanceof net.spy.memcached.MemcachedClient) {			
+				//does not support noreply
+			}
+		} catch (MemcachedException e) {
+			throw new TimeoutException("Memcached exception");
 		}
+		
 		
 	}
 
+	
 }

@@ -23,7 +23,7 @@ public class LoadMemTest {
 	public static void main(String args[]) {
 		String mode = "m";
 		int threads = 10;
-		String host = "127.0.0.1:11211";
+		String host = ProtocolTest.server;
 		int txn = 100000;
 
 		if(args.length==4) {
@@ -184,6 +184,8 @@ public class LoadMemTest {
 				readObject = (String) c.get(key);
 			} catch (TimeoutException ex) {
 				Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, "Timeout: "+ex, ex);
+			} catch (MemcachedException ex) {
+				Logger.getLogger(LoadMemTest.class.getName()).log(Level.SEVERE, "MemCached Exception: "+ex, ex);
 			}
 			if(readObject==null) {
 				System.out.println("get was null! for "+key);
