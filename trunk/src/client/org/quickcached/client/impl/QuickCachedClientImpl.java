@@ -63,6 +63,8 @@ public class QuickCachedClientImpl extends MemcachedClient {
 	private BlockingClientPool blockingClientPool;
 	private HostList hostListObj;
 	private boolean debug;
+	
+	private HostStateListener hsl = null;
 
 	private void updatePoolSizes() {
 		minPoolSize = poolSize / 2;
@@ -204,7 +206,7 @@ public class QuickCachedClientImpl extends MemcachedClient {
 		blockingClientPool.setIdlePoolSize(idlePoolSize);
 		blockingClientPool.setMaxPoolSize(maxPoolSize);
 
-		HostStateListener hsl = new HostStateListener() {
+		hsl = new HostStateListener() {
 			public void stateChanged(Host host, char oldstatus, char newstatus) {
 				if (oldstatus != Host.UNKNOWN) {
 					logger.log(Level.SEVERE, "State changed: {0}; old state: {1};new state: {2}",
@@ -221,6 +223,7 @@ public class QuickCachedClientImpl extends MemcachedClient {
 	}
 
 	public void stop() throws IOException {
+		blockingClientPool.getHostMonitoringService().removeHostStateListner(hsl);
 		blockingClientPool.close();
 		blockingClientPool = null;
 	}
