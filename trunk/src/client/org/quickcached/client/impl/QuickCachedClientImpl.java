@@ -56,7 +56,7 @@ public class QuickCachedClientImpl extends MemcachedClient {
 	private int idlePoolSize = 8;
 	private int maxPoolSize = 16;
 	
-	private long noOpTimeIntervalMiliSec = 1000*60;//60 sec
+	private long noOpTimeIntervalMiliSec = 1000 * 60;//60 sec
 	private int hostMonitoringIntervalInSec = 15;//15sec
 	private int maxIntervalForBorrowInSec = 4;//4 sec
 	private int logPoolIntervalTimeMin = 10;//10min
@@ -101,24 +101,24 @@ public class QuickCachedClientImpl extends MemcachedClient {
 		for (int i = 0; i < servers.length; i++) {
 			server = servers[i].split(":");
 			try {
-				sbh = new SocketBasedHost(server[0].trim(), 
-					Integer.parseInt(server[1].trim()));
+				sbh = new SocketBasedHost(server[0].trim(),
+										  Integer.parseInt(server[1].trim()));
 			} catch (Exception ex) {
 				Logger.getLogger(QuickCachedClientImpl.class.getName()).log(
 					Level.SEVERE, "Error: " + ex, ex);
 			}
-			sbh.setTimeout((int)getDefaultTimeoutMiliSec());
+			sbh.setTimeout((int) getDefaultTimeoutMiliSec());
 			sbh.setRequestText("version\r\n");
 			sbh.setResponseTextToExpect("VERSION ");
-			
+
 			hostListObj.add(sbh);
 		}
-		
+
 		final SocketMonitor sm = new SocketMonitor();
-		
+
 		final LoadDistributor ld = new LoadDistributor(hostListObj);
 		ld.setLoadPattern(new HashedLoadPattern());
-		
+
 		PoolableBlockingClient poolableBlockingClient = new PoolableBlockingClient() {
 			public HostMonitor getHostMonitor() {
 				return sm;
@@ -132,7 +132,7 @@ public class QuickCachedClientImpl extends MemcachedClient {
 				BlockingClient bc = new BlockingClient();
 				try {
 					bc.connect(host.getInetAddress().getHostAddress(), host
-							.getInetSocketAddress().getPort());
+						.getInetSocketAddress().getPort());
 					bc.getSocket().setTcpNoDelay(true);
 					bc.getSocket().setSoTimeout((int) getDefaultTimeoutMiliSec());
 					bc.getSocket().setSoLinger(true, 10);
@@ -195,9 +195,9 @@ public class QuickCachedClientImpl extends MemcachedClient {
 				return maxIntervalForBorrowInSec;
 			}
 		};
-		
-		blockingClientPool = new BlockingClientPool("memcached_"+hostList,
-				poolableBlockingClient);
+
+		blockingClientPool = new BlockingClientPool("memcached_" + hostList,
+													poolableBlockingClient);
 		blockingClientPool.setDebug(isDebug());
 
 		blockingClientPool.setMinPoolSize(minPoolSize);
@@ -207,11 +207,11 @@ public class QuickCachedClientImpl extends MemcachedClient {
 		HostStateListener hsl = new HostStateListener() {
 			public void stateChanged(Host host, char oldstatus, char newstatus) {
 				if (oldstatus != Host.UNKNOWN) {
-					logger.log(Level.SEVERE, "State changed: {0}; old state: {1};new state: {2}", 
-						new Object[]{host, oldstatus, newstatus});
+					logger.log(Level.SEVERE, "State changed: {0}; old state: {1};new state: {2}",
+							   new Object[]{host, oldstatus, newstatus});
 				} else {
-					logger.log(Level.INFO, "State changed: {0}; old state: {1};new state: {2}", 
-						new Object[]{host, oldstatus, newstatus});
+					logger.log(Level.INFO, "State changed: {0}; old state: {1};new state: {2}",
+							   new Object[]{host, oldstatus, newstatus});
 				}
 			}
 		};
@@ -320,8 +320,10 @@ public class QuickCachedClientImpl extends MemcachedClient {
 			} else if (resMain.equals("END")) {
 				return null;
 			} else {
-				logger.log(Level.WARNING, "unknown res got! : {0}", resMain);
-				throw new TimeoutException("unknown res got! : " + resMain);
+				String resToLog = resMain.length()>10 ? resMain.substring(0,10) : resMain;
+
+				logger.log(Level.WARNING, "unknown res got! : {0}", resToLog);
+				throw new IOException("unknown res got! : " + resToLog);
 			}
 		} catch (IOException e) {
 			if (pbc != null) {
@@ -1279,8 +1281,10 @@ class MultiLineResCommandRunner implements Callable<List<GenericResponse>> {
 				} else if (resMain.equals("END")) {
 					break;
 				} else {
-					logger.log(Level.WARNING, "unknown res got! : {0}", resMain);
-					throw new MemcachedException("unknown res got! : " + resMain);
+					String resToLog = resMain.length()>10 ? resMain.substring(0,10) : resMain;
+					logger.log(Level.WARNING, "unknown res got! : {0}", resToLog);
+					exceptionOccured = true;
+					throw new MemcachedException("unknown res got! : " + resToLog);
 				}
 			}
 
