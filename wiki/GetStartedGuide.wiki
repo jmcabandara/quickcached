@@ -4,9 +4,9 @@
 = Installation =
 First download the latest build from https://github.com/QuickServerLab/QuickCached/archive/v2.0.0.zip
 
-Also Non-members may check out a read-only working copy anonymously over SVN.
+Also code  available at GitHub
 
-{{{svn checkout http://quickcached.googlecode.com/svn/trunk/ quickcached-read-only}}}
+https://github.com/QuickServerLab/QuickCached
 
 == Requirements ==
 QuickCached is a memcached server implementation in Java, so will work on any OS that supports Java VM. QuickCached needs Java VM v 1.5 or higher installed.
