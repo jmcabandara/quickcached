@@ -2,7 +2,7 @@
 #labels Featured,Phase-Deploy,Phase-Requirements
 
 = Installation =
-First download the latest build from http://code.google.com/p/quickcached/downloads/list
+First download the latest build from https://github.com/QuickServerLab/QuickCached/archive/v2.0.0.zip
 
 Also Non-members may check out a read-only working copy anonymously over SVN.
 
